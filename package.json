@@ -1,6 +1,6 @@
 {
   "name": "orbit",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",
+    "jspdf": "2.5.2",
+    "jspdf-autotable": "3.8.2",
     "next": "14.2.15",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "three": "0.160.1"
   }
 }

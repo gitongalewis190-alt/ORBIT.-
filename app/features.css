@@ -1,0 +1,214 @@
+/* Toasts ----------------------------------------------------------- */
+.toaster {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(92vw, 440px);
+  z-index: 40;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: toastIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.toast-info { border-left-color: var(--muted); }
+.toast-ok { border-left-color: #3fb67b; }
+.toast-err { border-left-color: #b34a3c; }
+.toast-warn { border-left-color: #d9a441; }
+.toast-badge { border-left-color: var(--accent); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Offline banner --------------------------------------------------- */
+.offline-banner {
+  max-width: 560px;
+  margin: 8px auto 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Award unlock ----------------------------------------------------- */
+.unlock {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.unlock-card {
+  width: min(92vw, 360px);
+  text-align: center;
+  position: relative;
+  padding: 22px 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+.unlock-glow {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 65%);
+  pointer-events: none;
+  animation: glowPulse 2.4s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(0.95); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+.unlock-medal {
+  position: relative;
+  margin: 6px auto 4px;
+  width: min(240px, 70vw);
+}
+.unlock-title {
+  font-size: 22px;
+  margin: 8px 0 4px;
+  letter-spacing: -0.01em;
+}
+
+/* Awards collection ------------------------------------------------ */
+.award-group { margin-top: 18px; }
+.award-cat {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.award-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.award-cell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 6px 10px;
+  text-align: center;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.award-cell:active { transform: scale(0.96); }
+.award-cell.earned { border-color: var(--accent); }
+.award-cell.locked { opacity: 0.55; }
+.award-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+.award-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.medal-host { margin: 0 auto; }
+.medal-canvas { display: block; margin: 0 auto; }
+.medal-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: var(--bar-track);
+  opacity: 0.6;
+}
+
+/* Detail sheet ----------------------------------------------------- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.2s ease-out both;
+}
+.sheet {
+  width: min(100vw, 560px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  padding: 18px 20px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  animation: sheetUp 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes sheetUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sheet-medal {
+  width: min(240px, 70vw);
+  margin: 4px auto 6px;
+}
+.sheet-tier {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.sheet-title {
+  font-size: 22px;
+  margin: 4px 0 6px;
+  letter-spacing: -0.01em;
+}
+
+/* Reduced motion --------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .unlock-glow,
+  .toast,
+  .sheet,
+  .sheet-backdrop { animation: none !important; }
+}
+
+/* Focus timer ------------------------------------------------------ */
+.focus-card { text-align: center; }
+.focus-clock {
+  font-size: 52px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin: 4px 0 6px;
+}
+
+/* Onboarding ------------------------------------------------------- */
+.onboard-card { text-align: center; max-height: 90vh; overflow-y: auto; }
+.onboard-card .kicker { text-align: center; }
+.onboard-title { font-size: 21px; margin: 6px 0 8px; letter-spacing: -0.01em; text-align: left; }
+.onboard-card .row { margin-top: 16px; }

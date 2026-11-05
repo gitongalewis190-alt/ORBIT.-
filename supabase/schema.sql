@@ -121,3 +121,95 @@ begin
     );
   end loop;
 end $$;
+
+-- ===== Version 2 =====
+alter table subfields add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
+drop policy if exists "read subfields" on subfields;
+create policy "read library and own subfields" on subfields for select to authenticated
+  using (user_id is null or user_id = auth.uid());
+create policy "insert own subfields" on subfields for insert to authenticated
+  with check (user_id = auth.uid());
+create policy "delete own subfields" on subfields for delete to authenticated
+  using (user_id = auth.uid());
+
+alter table journal_entries add column if not exists word_count int not null default 0;
+
+create table if not exists profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  daily_minutes int not null default 90 check (daily_minutes between 15 and 480),
+  word_goal int not null default 150 check (word_goal between 20 and 2000),
+  weekly_entry_goal int not null default 5 check (weekly_entry_goal between 1 and 7),
+  theme text not null default 'light' check (theme in ('light', 'dark', 'system')),
+  sound_on boolean not null default true,
+  sound_volume int not null default 70 check (sound_volume between 0 and 100),
+  timezone text not null default 'Africa/Nairobi',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists user_badges (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  badge_key text not null,
+  unlocked_on timestamptz not null default now(),
+  primary key (user_id, badge_key)
+);
+
+alter table profiles enable row level security;
+alter table user_badges enable row level security;
+
+create policy "own profile" on profiles for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own badges" on user_badges for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ===== Version 3: tags, freezes, focus sessions, age, onboarding, delete account =====
+alter table journal_entries add column if not exists tags text[] not null default '{}';
+alter table profiles add column if not exists onboarded boolean not null default false;
+alter table profiles add column if not exists age int check (age is null or age between 5 and 120);
+
+create table if not exists streak_freezes (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, day)
+);
+create table if not exists focus_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null,
+  minutes int not null check (minutes > 0 and minutes <= 480),
+  created_at timestamptz not null default now()
+);
+alter table streak_freezes enable row level security;
+alter table focus_sessions enable row level security;
+create policy "own freezes" on streak_freezes for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own focus sessions" on focus_sessions for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists idx_focus_user_day on focus_sessions(user_id, day);
+
+create or replace function delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not signed in';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+revoke all on function delete_my_account() from public;
+grant execute on function delete_my_account() to authenticated;
+
+-- ===== Version 4: personal profile details =====
+alter table profiles add column if not exists full_name text;
+alter table profiles add column if not exists date_of_birth date;
+alter table profiles add column if not exists location text;
+alter table profiles add column if not exists school_or_work text;
+alter table profiles add column if not exists learning_goal text;
+alter table profiles add column if not exists bio text;

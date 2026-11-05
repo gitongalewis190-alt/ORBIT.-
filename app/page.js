@@ -6,7 +6,19 @@ import { selectTopic, pickMode, adaptLevel, shuffle } from '../lib/selector';
 import { today, prettyDate } from '../lib/dates';
 import { logDecision } from '../lib/log';
 import { play } from '../lib/sound';
+import { toast } from '../lib/toast';
 import Reveal from '../components/Reveal';
+import DayRings from '../components/DayRings';
+import FocusTimer from '../components/FocusTimer';
+import Onboarding from '../components/Onboarding';
+
+const WHY = {
+  auto: 'Drawn from your library, weighted toward topics you marked More and away from those marked Less.',
+  cross: 'Chosen from a field linked to the one you studied last, to build a bridge between subjects.',
+  serendipity: 'A fully random draw, to surface something you would not have picked.',
+  reinforce: 'Chosen from a field where your recent confidence is low, to strengthen it.',
+  manual: 'You picked this field yourself.',
+};
 
 export default function Today() {
   const [user, setUser] = useState(null);
@@ -38,7 +50,8 @@ export default function Today() {
       supabase.from('fields').select('id,name').order('id'),
     ]);
     if (a.error || r.error || f.error) {
-      setErr((a.error || r.error || f.error).message);
+      const message = (a.error || r.error || f.error).message;
+      setErr(message);
       play('error');
     }
     setAssignment(a.data ?? null);
@@ -73,10 +86,12 @@ export default function Today() {
           if (error) {
             play('error');
             setErr(error.message);
+            toast(error.message, 'err');
           } else {
             await logDecision(user.id, 'generated', pick.topic.id, {
               mode: pick.mode, level, due_on: pick.dueOn, minutes: pick.minutes,
             });
+            toast(`Today's topic: ${pick.topic.title}`, 'info');
           }
           setReveal(null);
           setBusy(false);
@@ -86,6 +101,7 @@ export default function Today() {
     } catch (e) {
       play('error');
       setErr(e.message);
+      toast(e.message, 'err');
       setBusy(false);
     }
   }
@@ -96,6 +112,7 @@ export default function Today() {
     if (error) { play('error'); return setErr(error.message); }
     await logDecision(user.id, 'accepted', assignment.topic_id);
     play('success');
+    toast('Topic accepted. Good luck.', 'ok');
     load(user.id);
   }
 
@@ -105,6 +122,7 @@ export default function Today() {
     if (error) { play('error'); return setErr(error.message); }
     await logDecision(user.id, 'rejected', assignment.topic_id);
     setAssignment(null);
+    toast('Topic rejected. Choosing another.', 'warn');
     generate(null);
   }
 
@@ -115,6 +133,9 @@ export default function Today() {
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
       {err && <p className="err">{err}</p>}
+      <DayRings />
+      <FocusTimer />
+      <Onboarding />
 
       {reveal ? (
         <div className="card" style={{ marginTop: 16 }}>
@@ -128,6 +149,9 @@ export default function Today() {
           <span className="tag">{assignment.est_minutes} min</span>
           <span className="tag">done by {prettyDate(assignment.due_on)}</span>
           <span className="tag">{assignment.mode}</span>
+          <p className="muted" style={{ marginTop: 10, lineHeight: 1.5 }}>
+            {WHY[assignment.mode] ?? WHY.auto}
+          </p>
 
           {assignment.status === 'generated' ? (
             <div className="row">
