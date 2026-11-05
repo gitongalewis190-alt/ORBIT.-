@@ -1,0 +1,847 @@
+01. PSYCHOLOGY
+
+1.1 Cognitive Psychology
+    - Attention and concentration
+    - Human memory
+    - Perception
+    - Decision-making
+    - Problem-solving
+    - Cognitive biases
+    - Mental representations
+    - Learning and cognition
+    - Language processing
+    - Critical thinking
+
+1.2 Social Psychology
+    - Social influence
+    - Conformity
+    - Group behaviour
+    - Social identity
+    - Social perception
+    - Persuasion
+    - Prejudice and stereotypes
+    - Interpersonal relationships
+    - Bystander effect
+    - Group dynamics
+
+1.3 Human Behaviour
+    - Behavioural patterns
+    - Habit formation
+    - Motivation
+    - Behavioural conditioning
+    - Human reactions
+    - Decision patterns
+    - Reward systems
+    - Emotional responses
+    - Behavioural adaptation
+    - Environmental influence
+
+1.4 Developmental Psychology
+    - Childhood development
+    - Adolescent development
+    - Adult development
+    - Cognitive development
+    - Social development
+    - Moral development
+    - Attachment theory
+    - Developmental milestones
+
+1.5 Personality Psychology
+    - Personality theories
+    - Personality traits
+    - Temperament
+    - Individual differences
+    - Personality assessment
+    - Self-concept
+    - Identity formation
+
+1.6 Behavioural Psychology
+    - Classical conditioning
+    - Operant conditioning
+    - Reinforcement
+    - Punishment
+    - Behaviour modification
+    - Stimulus and response
+    - Observational learning
+
+1.7 Biological Psychology
+    - Brain and behaviour
+    - Hormones and behaviour
+    - Genetics and behaviour
+    - Nervous system and behaviour
+    - Biological influences on emotion
+
+1.8 Educational Psychology
+    - Learning theories
+    - Study behaviour
+    - Learning motivation
+    - Memory and education
+    - Learning difficulties
+    - Teaching psychology
+
+1.9 Evolutionary Psychology
+    - Evolution of behaviour
+    - Cooperation
+    - Human instincts
+    - Mate selection theories
+    - Survival behaviour
+    - Evolutionary explanations of social behaviour
+
+1.10 Industrial and Organizational Psychology
+    - Workplace behaviour
+    - Leadership psychology
+    - Employee motivation
+    - Organizational culture
+    - Team performance
+    - Workplace decision-making
+
+02. PHILOSOPHY
+
+2.1 Ethics
+    - Moral principles
+    - Applied ethics
+    - Virtue ethics
+    - Consequentialism
+    - Deontology
+    - Moral responsibility
+    - Justice and fairness
+    - Ethical dilemmas
+
+2.2 Logic
+    - Deductive reasoning
+    - Inductive reasoning
+    - Logical fallacies
+    - Propositional logic
+    - Predicate logic
+    - Argument analysis
+    - Validity and soundness
+
+2.3 Metaphysics
+    - Nature of reality
+    - Existence
+    - Free will
+    - Determinism
+    - Identity
+    - Time and space
+    - Mind and matter
+    - Causality
+
+2.4 Epistemology
+    - Nature of knowledge
+    - Truth
+    - Belief and justification
+    - Skepticism
+    - Rationalism
+    - Empiricism
+    - Sources of knowledge
+    - Limits of human knowledge
+
+2.5 Political Philosophy
+    - Authority
+    - Freedom
+    - Democracy
+    - Justice
+    - Power
+    - Rights
+    - Social contracts
+    - Political obligation
+
+2.6 Philosophy of Mind
+    - Consciousness
+    - Mind-body problem
+    - Mental states
+    - Personal identity
+    - Artificial intelligence and mind
+    - Intentionality
+
+2.7 Aesthetics
+    - Nature of beauty
+    - Philosophy of art
+    - Artistic expression
+    - Taste and judgment
+    - Creativity
+    - Meaning in art
+
+2.8 Existentialism
+    - Meaning of life
+    - Human freedom
+    - Individual responsibility
+    - Authenticity
+    - Absurdism
+    - Human existence
+
+2.9 Philosophy of Science
+    - Scientific knowledge
+    - Scientific methods
+    - Falsifiability
+    - Scientific revolutions
+    - Theory and evidence
+    - Nature of scientific explanation
+
+2.10 Philosophy of Technology
+    - Technology and society
+    - Human-machine relationships
+    - Technological ethics
+    - Digital existence
+    - Technology and human identity
+
+03. BUSINESS
+
+3.1 Entrepreneurship
+    - Business models
+    - Opportunity identification
+    - Startup development
+    - Innovation
+    - Business planning
+    - Entrepreneurial thinking
+    - Risk assessment
+
+3.2 Marketing
+    - Consumer behaviour
+    - Brand positioning
+    - Market research
+    - Digital marketing
+    - Advertising psychology
+    - Marketing strategy
+    - Customer acquisition
+
+3.3 Finance
+    - Financial literacy
+    - Cash flow
+    - Financial statements
+    - Investment fundamentals
+    - Capital management
+    - Business valuation
+    - Financial planning
+
+3.4 Economics
+    - Microeconomics
+    - Macroeconomics
+    - Supply and demand
+    - Inflation
+    - Interest rates
+    - Market structures
+    - Economic growth
+    - International trade
+
+3.5 Management
+    - Strategic management
+    - Operations management
+    - Organizational structures
+    - Resource management
+    - Performance management
+    - Business decision-making
+
+3.6 Leadership
+    - Leadership styles
+    - Team leadership
+    - Strategic leadership
+    - Organizational influence
+    - Conflict resolution
+    - Delegation
+    - Leadership communication
+
+3.7 Sales and Negotiation
+    - Sales psychology
+    - Negotiation techniques
+    - Customer relationships
+    - Value propositions
+    - Persuasive communication
+    - Objection handling
+
+3.8 Accounting
+    - Financial accounting
+    - Management accounting
+    - Bookkeeping
+    - Cost accounting
+    - Auditing
+    - Tax fundamentals
+
+3.9 Business Strategy
+    - Competitive advantage
+    - Market positioning
+    - SWOT analysis
+    - Strategic planning
+    - Business expansion
+    - Competitive analysis
+
+3.10 Operations and Supply Chain
+    - Logistics
+    - Inventory management
+    - Procurement
+    - Quality control
+    - Process optimization
+    - Supply chain management
+
+04. ART
+
+4.1 Traditional Drawing
+    - Human anatomy drawing
+    - Figure drawing
+    - Gesture drawing
+    - Perspective
+    - Composition
+    - Still life
+    - Portrait drawing
+    - Light and shadow
+    - Proportions
+
+4.2 Painting
+    - Oil painting
+    - Acrylic painting
+    - Watercolour
+    - Colour theory
+    - Painting techniques
+    - Brushwork
+    - Texture
+    - Layering
+    - Tonal painting
+
+4.3 Art History
+    - Renaissance art
+    - Baroque art
+    - Impressionism
+    - Expressionism
+    - Cubism
+    - Surrealism
+    - Modernism
+    - Contemporary art
+    - African art history
+
+4.4 Art Theory and Criticism
+    - Visual analysis
+    - Symbolism
+    - Artistic meaning
+    - Aesthetic principles
+    - Art interpretation
+    - Visual communication
+    - Art criticism
+
+4.5 Digital Art
+    - Digital illustration
+    - Digital painting
+    - Concept art
+    - Character design
+    - Digital composition
+    - Visual storytelling
+
+4.6 Graphic Design
+    - Typography
+    - Layout design
+    - Branding
+    - Visual hierarchy
+    - Colour systems
+    - Logo design
+    - Editorial design
+
+4.7 Sculpture and Three-Dimensional Art
+    - Modelling
+    - Form and volume
+    - Carving
+    - Installation art
+    - Materials and structure
+    - Three-dimensional composition
+
+4.8 Photography
+    - Portrait photography
+    - Lighting
+    - Composition
+    - Documentary photography
+    - Visual storytelling
+    - Colour grading
+
+4.9 Creative Psychology
+    - Creative thinking
+    - Artistic perception
+    - Creativity and cognition
+    - Creative problem-solving
+    - Artistic identity
+    - Creative discipline
+
+4.10 Art Business
+    - Art pricing
+    - Art collecting
+    - Gallery management
+    - Commission management
+    - Art marketing
+    - Artist branding
+    - Art entrepreneurship
+
+05. COMPUTER SCIENCE
+
+5.1 Programming Fundamentals
+    - Algorithms
+    - Data structures
+    - Variables and data types
+    - Control structures
+    - Functions
+    - Object-oriented programming
+    - Programming paradigms
+
+5.2 Software Engineering
+    - Software architecture
+    - System design
+    - Design patterns
+    - Software testing
+    - Debugging
+    - Version control
+    - Requirements engineering
+
+5.3 Web Development
+    - HTML
+    - CSS
+    - JavaScript
+    - Frontend architecture
+    - Backend development
+    - APIs
+    - Database integration
+    - Web security
+
+5.4 Computer Architecture
+    - CPU architecture
+    - Memory systems
+    - Computer processors
+    - Instruction sets
+    - Operating systems
+    - Input and output systems
+    - Computer hardware
+
+5.5 Databases
+    - Relational databases
+    - SQL
+    - Database normalization
+    - Database architecture
+    - Data modelling
+    - NoSQL databases
+    - Database security
+
+5.6 Networking
+    - Network protocols
+    - Internet architecture
+    - TCP/IP
+    - DNS
+    - Routing
+    - Wireless networking
+    - Network security
+
+5.7 Cybersecurity
+    - Information security
+    - Encryption fundamentals
+    - Authentication
+    - Access control
+    - Security architecture
+    - Privacy protection
+    - Threat modelling
+
+5.8 Human-Computer Interaction
+    - User interface design
+    - User experience
+    - Accessibility
+    - Interaction design
+    - Usability
+    - Interface psychology
+
+5.9 Cloud Computing
+    - Cloud architecture
+    - Cloud storage
+    - Distributed systems
+    - Server infrastructure
+    - Deployment
+    - Containerization
+
+5.10 Computer Graphics
+    - Rendering
+    - 3D modelling
+    - Graphics algorithms
+    - Animation principles
+    - Image processing
+    - Visual computing
+
+06. ARTIFICIAL INTELLIGENCE
+
+6.1 Machine Learning
+    - Supervised learning
+    - Unsupervised learning
+    - Reinforcement learning
+    - Model training
+    - Model evaluation
+    - Feature engineering
+
+6.2 Deep Learning
+    - Neural networks
+    - Convolutional neural networks
+    - Recurrent neural networks
+    - Transformers
+    - Representation learning
+    - Deep learning optimization
+
+6.3 Natural Language Processing
+    - Language models
+    - Text classification
+    - Sentiment analysis
+    - Language generation
+    - Machine translation
+    - Information retrieval
+
+6.4 Generative AI
+    - Large language models
+    - Image generation
+    - Audio generation
+    - Video generation
+    - Multimodal models
+    - Prompt engineering
+
+6.5 Computer Vision
+    - Image recognition
+    - Object detection
+    - Image segmentation
+    - Facial recognition concepts
+    - Visual classification
+    - Scene understanding
+
+6.6 AI Agents
+    - Autonomous agents
+    - Tool use
+    - Agent orchestration
+    - Multi-agent systems
+    - Memory systems
+    - Planning and reasoning
+
+6.7 AI Ethics and Governance
+    - Algorithmic bias
+    - AI accountability
+    - Data privacy
+    - Responsible AI
+    - AI regulation
+    - Human oversight
+
+6.8 Robotics and Intelligent Systems
+    - Robot perception
+    - Intelligent control
+    - Robot learning
+    - Human-robot interaction
+    - Autonomous systems
+
+6.9 AI Research
+    - Model architectures
+    - AI evaluation
+    - Explainable AI
+    - Artificial general intelligence
+    - Model efficiency
+    - AI safety research
+
+07. PARTICLE PHYSICS
+
+7.1 Fundamental Particles
+    - Quarks
+    - Leptons
+    - Electrons
+    - Neutrinos
+    - Fundamental interactions
+    - Antiparticles
+
+7.2 The Standard Model
+    - Standard Model structure
+    - Fermions
+    - Bosons
+    - Higgs boson
+    - Particle generations
+    - Fundamental forces
+
+7.3 Quantum Field Theory
+    - Quantum fields
+    - Field excitations
+    - Feynman diagrams
+    - Particle interactions
+    - Quantum electrodynamics
+    - Quantum chromodynamics
+
+7.4 Particle Accelerators
+    - Particle acceleration
+    - Collider physics
+    - Accelerator technology
+    - Particle beams
+    - Detector systems
+    - Experimental facilities
+
+7.5 Particle Detection
+    - Particle detectors
+    - Tracking detectors
+    - Calorimeters
+    - Detector signals
+    - Experimental measurements
+    - Particle identification
+
+7.6 Neutrino Physics
+    - Neutrino oscillations
+    - Neutrino mass
+    - Neutrino detection
+    - Neutrino interactions
+    - Neutrino astronomy
+
+7.7 Antimatter Physics
+    - Matter-antimatter symmetry
+    - Antiparticle production
+    - Antimatter detection
+    - CP violation
+    - Matter-antimatter asymmetry
+
+7.8 Beyond the Standard Model
+    - Dark matter candidates
+    - Supersymmetry
+    - Extra dimensions
+    - Grand unified theories
+    - New particle searches
+
+7.9 Particle Cosmology
+    - Early universe particles
+    - Primordial conditions
+    - Particle physics and cosmology
+    - Dark matter and the universe
+
+08. HUMAN BIOLOGY
+
+8.1 Human Anatomy
+    - Skeletal system
+    - Muscular system
+    - Cardiovascular anatomy
+    - Respiratory anatomy
+    - Digestive anatomy
+    - Nervous system anatomy
+    - Organ structure
+
+8.2 Human Physiology
+    - Homeostasis
+    - Blood circulation
+    - Respiration
+    - Digestion
+    - Kidney function
+    - Muscle contraction
+    - Body temperature regulation
+
+8.3 Human Genetics
+    - DNA structure
+    - Genes and chromosomes
+    - Genetic inheritance
+    - Gene expression
+    - Mutations
+    - Genetic variation
+    - Human genome
+
+8.4 Cell Biology
+    - Cell structure
+    - Cell membranes
+    - Organelles
+    - Cell division
+    - Cellular respiration
+    - Cell signalling
+    - Protein synthesis
+
+8.5 Human Immunology
+    - Immune system
+    - Antibodies
+    - White blood cells
+    - Innate immunity
+    - Adaptive immunity
+    - Immune responses
+    - Vaccination principles
+
+8.6 Endocrinology
+    - Hormones
+    - Endocrine glands
+    - Hormonal regulation
+    - Insulin
+    - Thyroid hormones
+    - Stress hormones
+    - Hormonal feedback
+
+8.7 Human Reproduction
+    - Reproductive anatomy
+    - Reproductive physiology
+    - Fertilization
+    - Human development
+    - Hormonal regulation
+    - Inheritance
+
+8.8 Microbiology and Human Health
+    - Human-associated microorganisms
+    - Bacteria
+    - Viruses
+    - Fungi
+    - Microbiome
+    - Pathogens
+    - Host-microbe interactions
+
+8.9 Human Biochemistry
+    - Proteins
+    - Carbohydrates
+    - Lipids
+    - Enzymes
+    - Metabolism
+    - Cellular energy
+    - Biochemical reactions
+
+8.10 Evolutionary Human Biology
+    - Human evolution
+    - Human adaptation
+    - Human variation
+    - Evolutionary anatomy
+    - Genetic ancestry concepts
+    - Human evolutionary history
+
+09. NEUROSCIENCE
+
+9.1 Cognitive Neuroscience
+    - Brain and memory
+    - Attention networks
+    - Decision-making
+    - Language and the brain
+    - Learning and neural activity
+    - Cognitive control
+
+9.2 Behavioural Neuroscience
+    - Neural basis of behaviour
+    - Motivation and the brain
+    - Reward processing
+    - Emotional behaviour
+    - Habit formation
+    - Brain-behaviour relationships
+
+9.3 Neuroanatomy
+    - Cerebral cortex
+    - Hippocampus
+    - Amygdala
+    - Cerebellum
+    - Brainstem
+    - Basal ganglia
+    - Neural pathways
+
+9.4 Neurophysiology
+    - Neurons
+    - Action potentials
+    - Synaptic transmission
+    - Neurotransmitters
+    - Neural circuits
+    - Electrical activity of the brain
+
+9.5 Neuroplasticity
+    - Synaptic plasticity
+    - Brain adaptation
+    - Long-term potentiation
+    - Neural development
+    - Experience-dependent learning
+
+9.6 Affective Neuroscience
+    - Emotional processing
+    - Fear and the brain
+    - Pleasure and reward
+    - Stress responses
+    - Emotional regulation
+
+9.7 Computational Neuroscience
+    - Neural modelling
+    - Brain computation
+    - Neural networks
+    - Information processing
+    - Mathematical models of neurons
+
+9.8 Clinical Neuroscience
+    - Neurological disorders
+    - Neurodegeneration
+    - Brain injury research
+    - Neurodevelopmental conditions
+    - Neurological assessment
+
+9.9 Sensory Neuroscience
+    - Vision
+    - Hearing
+    - Touch
+    - Taste
+    - Smell
+    - Sensory integration
+
+10. FUTURE / ADDITIONAL FIELDS
+
+10.1 Mathematics
+    - Algebra
+    - Geometry
+    - Calculus
+    - Statistics
+    - Probability
+    - Number theory
+    - Discrete mathematics
+    - Mathematical modelling
+
+10.2 Chemistry
+    - Organic chemistry
+    - Inorganic chemistry
+    - Physical chemistry
+    - Analytical chemistry
+    - Biochemistry
+    - Electrochemistry
+
+10.3 Astronomy and Astrophysics
+    - Stars
+    - Galaxies
+    - Black holes
+    - Exoplanets
+    - Stellar evolution
+    - Cosmology
+    - Gravitational waves
+
+10.4 Engineering
+    - Mechanical engineering
+    - Electrical engineering
+    - Mechatronics
+    - Robotics engineering
+    - Civil engineering
+    - Control systems
+    - Automation
+
+10.5 History
+    - Ancient civilizations
+    - African history
+    - World history
+    - Military history
+    - Economic history
+    - Intellectual history
+
+10.6 Sociology
+    - Social structures
+    - Culture
+    - Social institutions
+    - Social inequality
+    - Urban sociology
+    - Social change
+
+10.7 Linguistics
+    - Phonetics
+    - Phonology
+    - Syntax
+    - Semantics
+    - Pragmatics
+    - Language acquisition
+
+10.8 Geography
+    - Physical geography
+    - Human geography
+    - Geopolitics
+    - Cartography
+    - Climatology
+    - Environmental geography
+
+10.9 Law
+    - Constitutional law
+    - Criminal law
+    - International law
+    - Human rights
+    - Legal philosophy
+    - Business law
+
+10.10 Environmental Science
+    - Climate systems
+    - Ecosystems
+    - Conservation
+    - Environmental chemistry
+    - Sustainability
+    - Environmental policy
