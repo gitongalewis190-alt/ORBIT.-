@@ -8,7 +8,20 @@ import {
   syncBadges,
   unlockedMap,
 } from '../../lib/stats';
+import { AWARDS } from '../../lib/awards';
 import AwardsGallery from '../../components/AwardsGallery';
+
+function resolveDisplayName(profile, user) {
+  const candidates = [
+    profile?.display_name,
+    user?.user_metadata?.full_name,
+    user?.user_metadata?.name,
+    user?.email?.split('@')[0],
+  ];
+
+  return candidates.find(value => typeof value === 'string' && value.trim())?.trim()
+    || 'Learner';
+}
 
 export default function AwardsPage() {
   const [data, setData] = useState(null);
@@ -26,7 +39,6 @@ export default function AwardsPage() {
         if (!auth.user) throw new Error('Please sign in to view your awards.');
 
         const uid = auth.user.id;
-
         const profile = await getProfile(uid);
         const stats = await loadStats(uid, profile);
 
@@ -35,9 +47,10 @@ export default function AwardsPage() {
 
         // Load after synchronisation so new awards appear immediately.
         const unlocked = await unlockedMap(uid);
+        const displayName = resolveDisplayName(profile, auth.user);
 
         if (alive) {
-          setData({ stats, unlocked });
+          setData({ stats, unlocked, displayName });
         }
       } catch (e) {
         if (alive) setError(e.message || 'Could not load your awards.');
@@ -69,7 +82,7 @@ export default function AwardsPage() {
     );
   }
 
-  const earned = data.unlocked.size;
+  const earned = AWARDS.filter(award => data.unlocked.has(award.key)).length;
 
   return (
     <div className="fade-in">
@@ -89,7 +102,7 @@ export default function AwardsPage() {
             {earned}
           </strong>
           <span className="muted">
-            of {16} awards earned
+            of {AWARDS.length} awards earned
           </span>
         </div>
         <p className="muted" style={{ marginBottom: 0 }}>
@@ -100,6 +113,7 @@ export default function AwardsPage() {
       <AwardsGallery
         stats={data.stats}
         unlocked={data.unlocked}
+        displayName={data.displayName}
       />
     </div>
   );
