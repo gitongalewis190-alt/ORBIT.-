@@ -10,6 +10,9 @@ import { wordCount, loadStats } from '../../lib/stats';
 import { commitEntry } from '../../lib/journal';
 import { enqueue, isNetworkError, loadDraft, saveDraft, clearDraft } from '../../lib/offline';
 import { logDecision } from '../../lib/log';
+import { fieldColor, REFLECT_PROMPTS, EXTRA_PROMPTS } from '../../lib/palette';
+import { readBenefits } from '../../lib/benefits';
+import TopicPicker from '../../components/TopicPicker';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 
@@ -31,6 +34,9 @@ export default function Journal() {
   const [conf, setConf] = useState(null);
   const [mins, setMins] = useState('');
   const [open, setOpen] = useState(null);
+  const [mode, setMode] = useState('learn');
+  const [benefitIds, setBenefitIds] = useState([]);
+  useEffect(() => { setBenefitIds(readBenefits()); }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [streak, setStreak] = useState(0);
@@ -78,7 +84,15 @@ export default function Journal() {
 
       await load(id, p);
       const { data: tp, error } = await fetchAllTopics();
-      if (!error) setTopics(tp.map(t => ({ id: t.id, title: t.title })));
+      if (!error) {
+        setTopics(tp.map(t => ({
+          id: t.id,
+          title: t.title,
+          field: t.subfields?.fields?.name ?? '',
+          fieldId: t.subfields?.field_id ?? '',
+          section: t.subfields?.name ?? '',
+        })));
+      }
     });
   }, []);
 
@@ -91,7 +105,7 @@ export default function Journal() {
 
   async function load(id, p = profile) {
     const { data, error } = await supabase.from('journal_entries')
-      .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,topics(title)')
+      .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,topics(title,subfields(field_id))')
       .eq('user_id', id).order('created_at', { ascending: false }).limit(200);
     if (error) return setErr(error.message);
     setErr('');
@@ -128,7 +142,7 @@ export default function Journal() {
       confidence: conf,
       minutes_spent: mins ? Number(mins) : null,
       word_count: words,
-      tags: parseTags(tagText),
+      tags: mode === 'reflect' ? [...new Set([...parseTags(tagText), 'reflection'])] : parseTags(tagText),
       created_at: new Date().toISOString(),
     };
 
@@ -183,10 +197,6 @@ export default function Journal() {
     load(uid, profile);
   }
 
-  const matches = search.trim()
-    ? topics.filter(t => t.title.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 12)
-    : [];
-
   const memoryList = entries.filter(e => {
     const q = memorySearch.trim().toLowerCase();
     if (!q) return true;
@@ -212,17 +222,23 @@ export default function Journal() {
             <button className="btn sm" onClick={() => { setTopic(null); setAssignmentId(null); }}>Change</button>
           </div>
         ) : (
-          <>
-            <input placeholder="Search a topic" value={search} onChange={e => setSearch(e.target.value)} />
-            {matches.map(t => (
-              <div key={t.id} className="entry" onClick={() => { setTopic(t); setSearch(''); }}>
-                {t.title}
-              </div>
-            ))}
-          </>
+          <TopicPicker topics={topics} onPick={t => { setTopic(t); setSearch(''); }} />
         )}
 
-        <h2>What I learned</h2>
+        <div className="seg" style={{ marginBottom: 10 }} role="tablist" aria-label="Journal mode">
+          <button role="tab" aria-selected={mode === 'learn'} className={mode === 'learn' ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
+          <button role="tab" aria-selected={mode === 'reflect'} className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
+        </div>
+        {mode === 'reflect' && (
+          <div className="prompt-list">
+            {[...REFLECT_PROMPTS, ...(benefitIds.includes('reflection_prompts') ? EXTRA_PROMPTS : [])].map(prompt => (
+              <button key={prompt} className="prompt" onClick={() => setBody(b => (b ? `${b}\n\n` : '') + prompt + '\n')}>
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+        <h2>{mode === 'reflect' ? 'Reflection' : 'What I learned'}</h2>
         <textarea
           value={body}
           onChange={e => setBody(e.target.value)}
@@ -282,7 +298,7 @@ export default function Journal() {
         <p className="muted">{entries.length === 0 ? 'Nothing saved yet.' : 'No entries match that search.'}</p>
       )}
       {memoryList.map(e => (
-        <div key={e.id} className="entry" onClick={() => setOpen(open?.id === e.id ? null : e)}>
+        <div key={e.id} className="entry entry-card" style={{ borderLeft: `4px solid ${fieldColor(e.topics?.subfields?.field_id)}` }} onClick={() => setOpen(open?.id === e.id ? null : e)}>
           <div>{e.topics?.title ?? 'Removed topic'}</div>
           <div className="muted">
             {prettyDate(e.created_at.slice(0, 10))} · confidence {e.confidence ?? '-'} · {e.word_count ?? 0} words

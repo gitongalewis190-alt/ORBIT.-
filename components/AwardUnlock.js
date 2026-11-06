@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { play } from '../lib/sound';
 import { TIER_LABEL } from '../lib/awards';
+import { BENEFITS } from '../lib/benefits';
 
 const Medal3D = dynamic(() => import('./Medal3D'), {
   ssr: false,
@@ -55,6 +56,11 @@ export default function AwardUnlock() {
         </div>
         <h2 className="unlock-title">{current.name}</h2>
         <div className="muted">{TIER_LABEL[current.tier]} · {current.description}</div>
+        {current.benefit && BENEFITS[current.benefit] && (
+          <div className="unlock-benefit">
+            <strong>{BENEFITS[current.benefit].title}.</strong> {BENEFITS[current.benefit].text}
+          </div>
+        )}
         {queue.length > 1 && <div className="muted" style={{ marginTop: 6 }}>{queue.length - 1} more to see</div>}
         <div className="row" style={{ justifyContent: 'center' }}>
           <button className="btn accent" onClick={next}>

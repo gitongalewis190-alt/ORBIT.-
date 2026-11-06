@@ -6,8 +6,10 @@ import { toast } from '../lib/toast';
 import { today } from '../lib/dates';
 import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges } from '../lib/stats';
+import { readBenefits } from '../lib/benefits';
 
 const PRESETS = [25, 45, 60];
+const CUSTOM_KEY = 'orbit.focus.custom';
 const keyFor = uid => `orbit.focus.${uid}`;
 
 function clock(ms) {
@@ -22,6 +24,40 @@ function clock(ms) {
 export default function FocusTimer() {
   const [uid, setUid] = useState(null);
   const [planned, setPlanned] = useState(25);
+  const [custom, setCustom] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [draftMin, setDraftMin] = useState('');
+  const [benefitIds, setBenefitIds] = useState([]);
+  useEffect(() => { setBenefitIds(readBenefits()); }, []);
+  const unlockedPresets = [
+    benefitIds.includes('deep_focus') ? 90 : null,
+    benefitIds.includes('marathon') ? 180 : null,
+  ].filter(Boolean);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]');
+      if (Array.isArray(saved)) setCustom(saved.filter(v => Number.isInteger(v) && v >= 5 && v <= 240));
+    } catch {
+      localStorage.removeItem(CUSTOM_KEY);
+    }
+  }, []);
+
+  function addCustom() {
+    const value = Math.round(Number(draftMin));
+    if (!Number.isFinite(value) || value < 5 || value > 240) {
+      play('error');
+      toast('Choose between 5 and 240 minutes.', 'warn');
+      return;
+    }
+    const next = [...new Set([...custom, value])].sort((a, b) => a - b);
+    setCustom(next);
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+    setPlanned(value);
+    setDraftMin('');
+    setAdding(false);
+    play('select');
+  }
   const [sess, setSess] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
@@ -147,9 +183,25 @@ export default function FocusTimer() {
 
       {idle && (
         <div className="seg" style={{ marginTop: 12 }}>
-          {PRESETS.map(p => (
+          {[...PRESETS, ...unlockedPresets, ...custom.filter(v => !PRESETS.includes(v) && !unlockedPresets.includes(v))].map(p => (
             <button key={p} className={planned === p ? 'on' : ''} onClick={() => setPlanned(p)}>{p} min</button>
           ))}
+          <button className="chip-add" aria-label="Add a custom focus time" onClick={() => setAdding(v => !v)}>+</button>
+        </div>
+      )}
+      {idle && adding && (
+        <div className="focus-add">
+          <input
+            type="number"
+            inputMode="numeric"
+            min="5"
+            max="240"
+            placeholder="Minutes (5 to 240)"
+            value={draftMin}
+            onChange={e => setDraftMin(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') addCustom(); }}
+          />
+          <button className="btn accent sm" onClick={addCustom}>Add</button>
         </div>
       )}
 
