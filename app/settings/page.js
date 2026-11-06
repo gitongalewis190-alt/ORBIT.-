@@ -8,6 +8,7 @@ import { applyTheme } from '../../lib/theme';
 import { toast } from '../../lib/toast';
 import ProfileDetails from '../../components/ProfileDetails';
 import ExportPanel from '../../components/ExportPanel';
+import { APP_VERSION } from '../../lib/version';
 
 const TIMEZONES = [
   'Africa/Nairobi', 'Africa/Lagos', 'Africa/Johannesburg', 'Europe/London',
@@ -22,6 +23,7 @@ export default function Settings() {
   const [p, setP] = useState(null);
   const [confirmText, setConfirmText] = useState('');
   const [deleteText, setDeleteText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -131,13 +133,28 @@ export default function Settings() {
   }
 
   // Permanently deletes the account and every record in it.
+  // Deleting asks for the account password again, so a stray tap can never remove data.
   async function deleteAccount() {
     if (deleteText !== 'DELETE') {
       play('error');
       return toast('Type DELETE in capitals to confirm.', 'err');
     }
+    if (!deletePassword) {
+      play('error');
+      return toast('Enter your account password to continue.', 'warn');
+    }
     setBusy(true);
     try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: deletePassword,
+      });
+      if (authError) {
+        play('error');
+        toast('That password is not right. Nothing was deleted.', 'err', 5000);
+        setBusy(false);
+        return;
+      }
       const { error } = await supabase.rpc('delete_my_account');
       if (error) throw error;
       await supabase.auth.signOut();
@@ -241,6 +258,15 @@ export default function Settings() {
 
       <ExportPanel uid={uid} />
 
+      <h2>Guide and version</h2>
+      <div className="card">
+        <p className="muted" style={{ marginTop: 0 }}>The searchable manual explains every screen, rule and smart note.</p>
+        <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
+          <a className="btn accent" href="/guide">Open the guide</a>
+          <span className="muted">Version {APP_VERSION}</span>
+        </div>
+      </div>
+
       <h2>Account</h2>
       <div className="card">
         <div className="row" style={{ marginTop: 0 }}>
@@ -269,10 +295,14 @@ export default function Settings() {
           Permanently deletes your sign-in and every record tied to it. You will not be able to sign back in
           to this data. Use Reset if you only want a clean start.
         </p>
-        <input placeholder="Type DELETE to confirm" value={deleteText}
+        <div className="kicker">Type DELETE</div>
+        <input placeholder="DELETE" value={deleteText}
           onChange={e => setDeleteText(e.target.value)} />
+        <div className="kicker">Your account password</div>
+        <input type="password" autoComplete="current-password" placeholder="Password" value={deletePassword}
+          onChange={e => setDeletePassword(e.target.value)} />
         <div className="row">
-          <button className="btn danger" onClick={deleteAccount} disabled={busy || deleteText !== 'DELETE'}>
+          <button className="btn danger" onClick={deleteAccount} disabled={busy || deleteText !== 'DELETE' || !deletePassword}>
             {busy ? 'Working' : 'Delete my account'}
           </button>
         </div>

@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { activeTabIndex, tabIndexAt } from '../lib/tabs';
 
 // Five-tab bar. A warm orange pebble sits in a recessed hole under the active tab.
 // Tap a tab to open it, or press and drag along the bar: the pebble follows your
@@ -12,14 +13,14 @@ export default function TabBar({ tabs, path }) {
   const gesture = useRef({ down: false, moved: false, x: 0 });
   const suppressClick = useRef(false);
   const n = tabs.length;
-  const activeIndex = Math.max(0, tabs.findIndex(([href]) => href === path));
+  const activeIndex = activeTabIndex(tabs, path);
   const [dragIndex, setDragIndex] = useState(null);
   const shown = dragIndex ?? activeIndex;
+  const hidden = shown === -1;
 
   function indexAt(clientX) {
     const rect = trackRef.current.getBoundingClientRect();
-    const frac = (clientX - rect.left) / rect.width;
-    return Math.min(n - 1, Math.max(0, Math.floor(frac * n)));
+    return tabIndexAt(clientX, rect.left, rect.width, n);
   }
 
   function onPointerDown(e) {
@@ -73,8 +74,8 @@ export default function TabBar({ tabs, path }) {
         onClickCapture={onClickCapture}
       >
         <div
-          className={`tabbar-hole ${dragIndex !== null ? 'is-dragging' : ''}`}
-          style={{ width: `${100 / n}%`, transform: `translateX(${shown * 100}%)` }}
+          className={`tabbar-hole ${dragIndex !== null ? 'is-dragging' : ''} ${hidden ? 'is-hidden' : ''}`}
+          style={{ width: `${100 / n}%`, transform: `translateX(${Math.max(0, shown) * 100}%)` }}
           aria-hidden="true"
         >
           <span className="tabbar-pebble" />

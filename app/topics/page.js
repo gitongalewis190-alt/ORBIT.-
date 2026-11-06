@@ -6,6 +6,7 @@ import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 import { fetchAllTopics } from '../../lib/context';
 import { fieldColor } from '../../lib/palette';
+import { searchTopics, highlightSegments } from '../../lib/search';
 import Skeleton from '../../components/Skeleton';
 
 const MARKS = [
@@ -15,21 +16,18 @@ const MARKS = [
   ['archived', 'Archived'],
   ['removed', 'Removed'],
 ];
-const MARK_LABEL = {
-  normal: 'Normal',
-  show_more: 'More',
-  show_less: 'Less',
-  archived: 'Archived',
-  removed: 'Removed',
-};
-const SORTS = [
-  ['az', 'A to Z'],
-  ['field', 'By field'],
-  ['level', 'By level'],
-];
+const MARK_LABEL = { normal: 'Normal', show_more: 'More', show_less: 'Less', archived: 'Archived', removed: 'Removed' };
+const SORTS = [['relevance', 'Best match'], ['az', 'A to Z'], ['field', 'By field'], ['level', 'By level']];
 const LEVEL_RANK = { beginner: 0, intermediate: 1, advanced: 2 };
 const PAGE = 60;
 const NEW_SECTION = '__new__';
+
+// Renders text with matched words highlighted.
+function Highlighted({ text, query }) {
+  return highlightSegments(text, query).map((seg, i) =>
+    seg.hit ? <mark key={i} className="hit">{seg.text}</mark> : <span key={i}>{seg.text}</span>
+  );
+}
 
 export default function Topics() {
   const [uid, setUid] = useState(null);
@@ -42,7 +40,8 @@ export default function Topics() {
   const [q, setQ] = useState('');
   const [mark, setMark] = useState('all');
   const [fieldFilter, setFieldFilter] = useState('all');
-  const [sort, setSort] = useState('az');
+  const [level, setLevel] = useState('all');
+  const [sort, setSort] = useState('relevance');
   const [page, setPage] = useState(PAGE);
   const [openTopic, setOpenTopic] = useState(null);
 
@@ -91,7 +90,6 @@ export default function Topics() {
 
   const markOf = id => controls[id] ?? 'normal';
 
-  // Counts for the chips. Removed topics are left out of "All" and only show under "Removed".
   const counts = useMemo(() => {
     const all = topics ?? [];
     const byMark = Object.fromEntries(MARKS.map(([v]) => [v, 0]));
@@ -109,30 +107,26 @@ export default function Topics() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topics, controls]);
 
+  // Filter by mark, field and level first, then search, then sort.
   const filtered = useMemo(() => {
     if (!topics) return [];
-    const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    const list = topics.filter(t => {
+    const pool = topics.filter(t => {
       const m = markOf(t.id);
       if (mark === 'all' ? m === 'removed' : m !== mark) return false;
       if (fieldFilter !== 'all' && t.fieldId !== fieldFilter) return false;
-      if (words.length === 0) return true;
-      const haystack = `${t.title} ${t.field} ${t.section} ${t.difficulty}`.toLowerCase();
-      return words.every(w => haystack.includes(w));
+      if (level !== 'all' && t.difficulty !== level) return false;
+      return true;
     });
-    const sorted = [...list];
-    if (sort === 'az') sorted.sort((a, b) => a.title.localeCompare(b.title));
-    if (sort === 'field') sorted.sort((a, b) => a.field.localeCompare(b.field) || a.title.localeCompare(b.title));
-    if (sort === 'level') {
-      sorted.sort((a, b) => (LEVEL_RANK[a.difficulty] ?? 1) - (LEVEL_RANK[b.difficulty] ?? 1) || a.title.localeCompare(b.title));
-    }
-    return sorted;
+    const found = q.trim() ? searchTopics(pool, q) : pool.slice();
+    if (sort === 'relevance' && q.trim()) return found;
+    if (sort === 'az' || sort === 'relevance') return found.sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === 'field') return found.sort((a, b) => a.field.localeCompare(b.field) || a.title.localeCompare(b.title));
+    return found.sort((a, b) => (LEVEL_RANK[a.difficulty] ?? 1) - (LEVEL_RANK[b.difficulty] ?? 1) || a.title.localeCompare(b.title));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topics, controls, q, mark, fieldFilter, sort]);
+  }, [topics, controls, q, mark, fieldFilter, level, sort]);
 
   const visible = filtered.slice(0, page);
 
-  // Group the visible list by field when sorting by field.
   const groups = useMemo(() => {
     if (sort !== 'field') return [{ key: 'all', label: null, items: visible }];
     const map = new Map();
@@ -212,20 +206,22 @@ export default function Topics() {
   if (err) return <div className="fade-in"><h1>Topics</h1><p className="err">{err}</p></div>;
   if (!topics) return <div className="fade-in"><h1>Topics</h1><Skeleton lines={5} label="Loading your topics" /></div>;
 
-  const total = topics.length;
-
   return (
     <div className="fade-in">
       <h1>Topics</h1>
-      <p className="muted">{filtered.length} of {total} topics shown</p>
+      <p className="muted">{filtered.length} of {topics.length} topics shown</p>
 
-      <input
-        type="search"
-        placeholder="Search by title, field, section or level"
-        value={q}
-        onChange={e => { setQ(e.target.value); setPage(PAGE); }}
-        aria-label="Search topics"
-      />
+      <div className="search-box">
+        <input
+          type="search"
+          placeholder="Search: a word, part of a word, or a typo"
+          value={q}
+          onChange={e => { setQ(e.target.value); setPage(PAGE); }}
+          aria-label="Search topics"
+        />
+        {q && <button className="search-clear" onClick={() => setQ('')} aria-label="Clear search">×</button>}
+      </div>
+      <p className="muted search-hint">Several words all have to match. Field, section and level count too.</p>
 
       <div className="chip-row" role="group" aria-label="Filter by mark">
         {MARKS.map(([v, l]) => (
@@ -250,15 +246,19 @@ export default function Topics() {
         ))}
       </div>
 
+      <div className="chip-row" role="group" aria-label="Filter by level">
+        {[['all', 'Any level'], ['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['advanced', 'Advanced']].map(([v, l]) => (
+          <button key={v} className={`chip ${level === v ? 'on' : ''}`} onClick={() => { setLevel(v); setPage(PAGE); }}>{l}</button>
+        ))}
+      </div>
+
       <div className="seg" role="tablist" aria-label="Sort topics">
         {SORTS.map(([v, l]) => (
           <button key={v} role="tab" aria-selected={sort === v} className={sort === v ? 'on' : ''} onClick={() => setSort(v)}>{l}</button>
         ))}
       </div>
 
-      {filtered.length === 0 && (
-        <p className="muted">No topics match. Clear the search, or choose All.</p>
-      )}
+      {filtered.length === 0 && <p className="muted">No topics match. Clear the search, or widen the filters.</p>}
 
       {groups.map(group => (
         <section key={group.key}>
@@ -271,15 +271,10 @@ export default function Topics() {
           {group.items.map(t => {
             const m = markOf(t.id);
             return (
-              <button
-                key={t.id}
-                className="topic-row"
-                style={{ borderLeftColor: fieldColor(t.fieldId) }}
-                onClick={() => setOpenTopic(t)}
-              >
-                <span className="topic-title">{t.title}</span>
+              <button key={t.id} className="topic-row" style={{ borderLeftColor: fieldColor(t.fieldId) }} onClick={() => setOpenTopic(t)}>
+                <span className="topic-title"><Highlighted text={t.title} query={q} /></span>
                 <span className="muted topic-meta">
-                  {t.field && !group.label ? `${t.field} · ` : ''}{t.section} · {t.difficulty}
+                  {t.field && !group.label ? `${t.field} · ` : ''}<Highlighted text={t.section} query={q} /> · {t.difficulty}
                 </span>
                 {m !== 'normal' && <span className={`mark-tag mark-${m}`}>{MARK_LABEL[m]}</span>}
               </button>
@@ -299,13 +294,9 @@ export default function Topics() {
       {openTopic && (
         <div className="sheet-backdrop" onClick={() => setOpenTopic(null)}>
           <div className="sheet sheet-left" role="dialog" aria-modal="true" aria-label={openTopic.title} onClick={e => e.stopPropagation()}>
-            <div className="sheet-tier" style={{ color: fieldColor(openTopic.fieldId) }}>
-              {openTopic.field} · {openTopic.section}
-            </div>
+            <div className="sheet-tier" style={{ color: fieldColor(openTopic.fieldId) }}>{openTopic.field} · {openTopic.section}</div>
             <h2 className="sheet-title">{openTopic.title}</h2>
-            <p className="muted">
-              Level: {openTopic.difficulty}. Currently marked: {MARK_LABEL[markOf(openTopic.id)]}.
-            </p>
+            <p className="muted">Level: {openTopic.difficulty}. Currently marked: {MARK_LABEL[markOf(openTopic.id)]}.</p>
             <div className="row">
               <button className="btn" onClick={() => setState(openTopic.id, 'show_more', 'select')}>More</button>
               <button className="btn" onClick={() => setState(openTopic.id, 'show_less', 'select')}>Less</button>
@@ -314,9 +305,7 @@ export default function Topics() {
               <button className="btn" onClick={() => setState(openTopic.id, 'normal', 'tap')}>Reset</button>
             </div>
             {openTopic.userId === uid && (
-              <div className="row">
-                <button className="btn danger" onClick={() => deleteCustom(openTopic)}>Delete this topic</button>
-              </div>
+              <div className="row"><button className="btn danger" onClick={() => deleteCustom(openTopic)}>Delete this topic</button></div>
             )}
             <div className="row" style={{ justifyContent: 'center' }}>
               <button className="btn" onClick={() => setOpenTopic(null)}>Close</button>
@@ -326,39 +315,42 @@ export default function Topics() {
       )}
 
       <h2>Add topics</h2>
-      <div className="card">
+      <div className="card add-panel">
         {!panelOpen ? (
-          <div className="row" style={{ marginTop: 0 }}>
-            <button className="btn accent" onClick={() => setPanelOpen(true)}>Add topics</button>
-            <span className="muted">Paste many at once, one per line.</span>
+          <div className="add-start">
+            <p className="muted" style={{ margin: 0 }}>Paste as many topics as you like, one per line, into any section.</p>
+            <button className="btn accent big" onClick={() => setPanelOpen(true)}>Add topics</button>
           </div>
         ) : (
           <>
+            <div className="kicker">Topics, one per line</div>
             <textarea
-              style={{ minHeight: 120 }}
+              className="add-textarea"
               placeholder={'Stoic virtue ethics\nSpaced repetition\nBasic photosynthesis'}
               value={bulkText}
               onChange={e => setBulkText(e.target.value)}
             />
+            <div className="add-count">{bulkText.split('\n').filter(l => l.trim()).length} topics ready</div>
+
             <div className="kicker">Section</div>
-            <select value={bulkSub} onChange={e => setBulkSub(e.target.value)}>
+            <select className="big-select" value={bulkSub} onChange={e => setBulkSub(e.target.value)}>
               <option value="">Choose a section</option>
               <option value={NEW_SECTION}>+ Create a new section</option>
               {subs.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.fields.name} · {s.name}{s.user_id === uid ? ' (yours)' : ''}
-                </option>
+                <option key={s.id} value={s.id}>{s.fields.name} · {s.name}{s.user_id === uid ? ' (yours)' : ''}</option>
               ))}
             </select>
+
             {bulkSub === NEW_SECTION && (
-              <>
+              <div className="new-section">
                 <input placeholder="New section name" value={newSecName} onChange={e => setNewSecName(e.target.value)} />
-                <select value={newSecField} onChange={e => setNewSecField(e.target.value)}>
+                <select className="big-select" value={newSecField} onChange={e => setNewSecField(e.target.value)}>
                   <option value="">Under which field?</option>
                   {fields.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
-              </>
+              </div>
             )}
+
             <div className="kicker">Level</div>
             <div className="seg">
               {['beginner', 'intermediate', 'advanced'].map(d => (
@@ -367,9 +359,10 @@ export default function Topics() {
                 </button>
               ))}
             </div>
-            <div className="row">
-              <button className="btn accent" onClick={addBulk}>Add topics</button>
-              <button className="btn" onClick={() => setPanelOpen(false)}>Close</button>
+
+            <div className="row add-actions">
+              <button className="btn accent big" onClick={addBulk}>Add topics</button>
+              <button className="btn big" onClick={() => setPanelOpen(false)}>Close</button>
             </div>
           </>
         )}

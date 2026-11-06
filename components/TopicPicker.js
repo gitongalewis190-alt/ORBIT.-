@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fieldColor } from '../lib/palette';
+import { searchTopics } from '../lib/search';
 
 // A themed topic search. Type to filter, use the arrow keys to move, Enter to choose,
 // and Escape to close. Each result is marked with its field colour.
@@ -11,14 +12,8 @@ export default function TopicPicker({ topics, onPick, placeholder = 'Search your
   const boxRef = useRef(null);
 
   const results = useMemo(() => {
-    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (words.length === 0) return topics.slice(0, 8);
-    return topics
-      .filter(t => {
-        const haystack = `${t.title} ${t.field ?? ''} ${t.section ?? ''}`.toLowerCase();
-        return words.every(w => haystack.includes(w));
-      })
-      .slice(0, 30);
+    if (!query.trim()) return topics.slice(0, 8);
+    return searchTopics(topics, query).slice(0, 30);
   }, [query, topics]);
 
   useEffect(() => {

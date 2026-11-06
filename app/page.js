@@ -9,6 +9,8 @@ import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
 import Reveal from '../components/Reveal';
 import DayRings from '../components/DayRings';
+import SmartNotes from '../components/SmartNotes';
+import BenefitsPanel from '../components/BenefitsPanel';
 import FocusTimer from '../components/FocusTimer';
 import Onboarding from '../components/Onboarding';
 
@@ -134,6 +136,8 @@ export default function Today() {
       <p className="muted">{prettyDate(today())}</p>
       {err && <p className="err">{err}</p>}
       <DayRings />
+      <SmartNotes />
+      <BenefitsPanel />
       <FocusTimer />
       <Onboarding />
 

@@ -25,14 +25,15 @@ import {
 import { commitEntry } from '../lib/journal';
 import Toaster from './Toaster';
 import AwardUnlock from './AwardUnlock';
+import TabBar from './TabBar';
+import Skeleton from './Skeleton';
 
 const TABS = [
   ['/', 'Today'],
-  ['/journal', 'Journal'],
-  ['/stats', 'Stats'],
-  ['/awards', 'Awards'],
   ['/topics', 'Topics'],
-  ['/log', 'Log'],
+  ['/journal', 'Journal'],
+  ['/awards', 'Awards'],
+  ['/log', 'Logs'],
 ];
 
 // Chooses the sound for a click.
@@ -41,7 +42,7 @@ function soundFor(el) {
   const named = el.closest('[data-sound]');
 
   if (named) return named.dataset.sound;
-  if (el.closest('nav a')) return 'nav';
+  if (el.closest('.tabbar a')) return 'nav';
   if (el.closest('.btn.danger')) return 'warn';
   if (el.closest('.switch')) return 'toggle';
   if (el.closest('.seg button, .chip')) return 'select';
@@ -271,8 +272,8 @@ export default function Shell({ children }) {
   // Wait until authentication has been checked.
   if (authed !== true) {
     return (
-      <div className="wrap muted">
-        Loading
+      <div className="wrap">
+        <Skeleton lines={3} label="Loading Orbit" />
       </div>
     );
   }
@@ -321,6 +322,15 @@ export default function Shell({ children }) {
           <span>Orbit</span>
         </Link>
 
+        <div className="topbar-actions">
+        <Link href="/guide" className="gear" aria-label="Guide" data-sound="open">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M9 7.5h7M9 11h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </Link>
+
         <Link
           href="/settings"
           className="gear"
@@ -351,6 +361,7 @@ export default function Shell({ children }) {
             />
           </svg>
         </Link>
+        </div>
       </header>
 
       {!online && (
@@ -364,17 +375,7 @@ export default function Shell({ children }) {
         {children}
       </div>
 
-      <nav>
-        {TABS.map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            className={path === href ? 'on' : ''}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <TabBar tabs={TABS} path={path} />
 
       <Toaster />
       <AwardUnlock />

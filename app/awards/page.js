@@ -10,6 +10,8 @@ import {
 } from '../../lib/stats';
 import { AWARDS } from '../../lib/awards';
 import AwardsGallery from '../../components/AwardsGallery';
+import BenefitsPanel from '../../components/BenefitsPanel';
+import Skeleton from '../../components/Skeleton';
 
 function resolveDisplayName(profile, user) {
   const candidates = [
@@ -77,7 +79,7 @@ export default function AwardsPage() {
     return (
       <div className="fade-in">
         <h1>Awards</h1>
-        <p className="muted">Loading your collection…</p>
+        <Skeleton lines={4} label="Loading your collection" />
       </div>
     );
   }
@@ -109,6 +111,8 @@ export default function AwardsPage() {
           Every medal represents progress recorded in ORBIT.
         </p>
       </div>
+
+      <BenefitsPanel />
 
       <AwardsGallery
         stats={data.stats}
