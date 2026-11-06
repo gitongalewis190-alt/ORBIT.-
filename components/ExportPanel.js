@@ -1,19 +1,69 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
+import { today, addDays } from '../lib/dates';
 
-// Your whole record, for reading on paper or a computer, or for keeping safe.
+// Time windows for the printable record. 'all' means no limit.
+const WINDOWS = [
+  { key: '7', label: 'Last 7 days', days: 7 },
+  { key: '30', label: 'Last 30 days', days: 30 },
+  { key: '90', label: 'Last 90 days', days: 90 },
+  { key: 'all', label: 'All time', days: null },
+];
+
+const logKey = uid => `orbit.print-log.${uid}`;
+
+function readLog(uid) {
+  try {
+    return JSON.parse(localStorage.getItem(logKey(uid)) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+// Keeps the most recent 50 entries so the log stays small.
+function writeLog(uid, list) {
+  try {
+    localStorage.setItem(logKey(uid), JSON.stringify(list.slice(0, 50)));
+  } catch {}
+}
+
 export default function ExportPanel({ uid }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const [windowKey, setWindowKey] = useState('30');
+  const [log, setLog] = useState([]);
+
+  useEffect(() => {
+    if (uid) setLog(readLog(uid));
+  }, [uid]);
+
+  function rangeFor(key) {
+    const w = WINDOWS.find(x => x.key === key) ?? WINDOWS[1];
+    if (!w.days) return { label: w.label, range: null };
+    const now = today();
+    return { label: w.label, range: { from: addDays(now, -(w.days - 1)), to: now } };
+  }
 
   async function runPdf() {
     if (busy || !uid) return;
     setBusy(true);
+    setStatus('Starting');
+    const { label, range } = rangeFor(windowKey);
     try {
       const { buildRecordPdf } = await import('../lib/export');
-      const { pages, entries } = await buildRecordPdf(uid, setStatus);
+      const { pages, entries } = await buildRecordPdf(uid, setStatus, range);
+      const next = [{
+        at: new Date().toISOString(),
+        window: label,
+        from: range?.from ?? null,
+        to: range?.to ?? null,
+        pages,
+        entries,
+      }, ...readLog(uid)];
+      writeLog(uid, next);
+      setLog(next.slice(0, 50));
       play('export');
       toast(`Record saved: ${pages} pages, ${entries} journal entries.`, 'ok', 4500);
     } catch (e) {
@@ -42,20 +92,48 @@ export default function ExportPanel({ uid }) {
     }
   }
 
+  const fmt = iso => new Date(iso).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi',
+  });
+
   return (
     <>
       <h2>Export your record</h2>
       <div className="card">
         <p className="muted" style={{ marginTop: 0, lineHeight: 1.5 }}>
-          <strong>Printable record (PDF).</strong> Your profile, statistics, week in review, every award,
-          every journal entry in full, your study log, review schedule, focus time, topic library and the
-          decision log. Opens in any PDF reader, prints on A4, and needs no app or internet.
+          <strong>Printable record (PDF).</strong> Choose the period it covers. Journal entries, the decision log
+          and focus time are limited to that period, and only awards earned in it are printed, with the three
+          closest to unlocking. Every medal back carries your name.
         </p>
+
+        <div className="seg" role="radiogroup" aria-label="Time window" style={{ margin: '12px 0' }}>
+          {WINDOWS.map(w => (
+            <button
+              key={w.key}
+              type="button"
+              role="radio"
+              aria-checked={windowKey === w.key}
+              className={windowKey === w.key ? 'on' : ''}
+              onClick={() => setWindowKey(w.key)}
+              disabled={busy}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+
+        {busy && (
+          <div className="doc-progress" role="progressbar" aria-label="Building document" aria-busy="true">
+            <span />
+          </div>
+        )}
+
         <div className="row" style={{ marginTop: 0 }}>
           <button className="btn accent" onClick={runPdf} disabled={busy || !uid}>
             {busy && status ? status : 'Create PDF record'}
           </button>
         </div>
+
         <p className="muted" style={{ lineHeight: 1.5, marginTop: 14 }}>
           <strong>Backup (JSON).</strong> The same data in a machine-readable file, for keeping a copy or moving it
           to another tool.
@@ -63,6 +141,22 @@ export default function ExportPanel({ uid }) {
         <div className="row" style={{ marginTop: 0 }}>
           <button className="btn" onClick={runJson} disabled={busy || !uid}>Create JSON backup</button>
         </div>
+      </div>
+
+      <h2>Document log</h2>
+      <div className="card">
+        {log.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>No records made yet. Each PDF you create is listed here.</p>
+        ) : (
+          <ul className="print-log" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {log.map((l, i) => (
+              <li key={i} className="print-log-row">
+                <span>{fmt(l.at)}</span>
+                <span className="muted">{l.window} · {l.pages} pages · {l.entries} entries</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </>
   );

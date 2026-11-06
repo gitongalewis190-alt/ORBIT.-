@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { play } from '../lib/sound';
@@ -10,6 +10,43 @@ const Medal3D = dynamic(() => import('./Medal3D'), {
   ssr: false,
   loading: () => <div className="medal-placeholder" aria-hidden="true" />,
 });
+
+const CONFETTI_COLOURS = ['#c4623d', '#e8a87c', '#1c1b19', '#f2d7b6', '#8a4a2c', '#ffffff'];
+
+// A burst of paper confetti. Each piece gets its own colour, speed, drift and start delay.
+function Confetti({ seed }) {
+  const pieces = useMemo(() => Array.from({ length: 90 }, (_, i) => ({
+    left: Math.random() * 100,
+    dx: (Math.random() - 0.5) * 220,
+    rot: 360 + Math.random() * 900,
+    delay: Math.random() * 0.6,
+    d: 2.2 + Math.random() * 1.6,
+    w: 6 + Math.random() * 6,
+    h: 10 + Math.random() * 10,
+    c: CONFETTI_COLOURS[i % CONFETTI_COLOURS.length],
+  })), [seed]);
+
+  return (
+    <div className="confetti-layer" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            '--dx': `${p.dx}px`,
+            '--rot': `${p.rot}deg`,
+            '--delay': `${p.delay}s`,
+            '--d': `${p.d}s`,
+            '--w': `${p.w}px`,
+            '--h': `${p.h}px`,
+            '--c': p.c,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 const todayLabel = () => new Date().toLocaleDateString('en-GB', {
   day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Nairobi',
@@ -27,6 +64,7 @@ export default function AwardUnlock() {
   }, []);
 
   const current = queue[0];
+  const medalSize = typeof window === 'undefined' ? 280 : Math.min(window.innerWidth - 40, 400);
 
   useEffect(() => {
     if (current) play('badge');
@@ -38,6 +76,7 @@ export default function AwardUnlock() {
 
   return (
     <div className="unlock" role="dialog" aria-modal="true" aria-label="Award unlocked">
+      <Confetti seed={current.key} />
       <div className="unlock-card fade-in">
         <div className="kicker">Award unlocked</div>
         <div className="unlock-glow" aria-hidden="true" />
@@ -48,7 +87,7 @@ export default function AwardUnlock() {
             emblem={current.emblem}
             name={current.name}
             dateLabel={todayLabel()}
-            size={240}
+            size={medalSize}
             interactive
             autoSpin
             intro

@@ -1,5 +1,6 @@
 import './globals.css';
 import './features.css';
+import './orbit-chrome.css';
 import Shell from '../components/Shell';
 import { THEME_BOOT_SCRIPT } from '../lib/theme';
 
