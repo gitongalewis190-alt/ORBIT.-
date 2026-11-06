@@ -30,6 +30,7 @@ const TABS = [
   ['/', 'Today'],
   ['/journal', 'Journal'],
   ['/stats', 'Stats'],
+  ['/awards', 'Awards'],
   ['/topics', 'Topics'],
   ['/log', 'Log'],
 ];
