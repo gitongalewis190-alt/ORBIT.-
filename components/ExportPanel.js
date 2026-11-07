@@ -61,23 +61,6 @@ export default function ExportPanel({ uid }) {
     }
   }
 
-  async function runJson() {
-    if (busy || !uid) return;
-    setBusy(true);
-    try {
-      const { downloadSnapshot } = await import('../lib/backupSync');
-      const snap = await downloadSnapshot(uid);
-      play('export');
-      toast(`Backup saved with ${snap.journal.length} journal entries.`, 'ok', 4000);
-    } catch (e) {
-      play('error');
-      toast(`Could not build the backup: ${e.message}`, 'err', 6000);
-    } finally {
-      setBusy(false);
-      setStatus('');
-    }
-  }
-
   async function rowAction(record, action) {
     setRowBusy(record.id);
     try {
@@ -125,14 +108,6 @@ export default function ExportPanel({ uid }) {
         <button className="btn accent" onClick={() => window.dispatchEvent(new Event('orbit:open-print'))} disabled={!uid}>
             Create PDF record
           </button>
-        </div>
-
-        <p className="muted" style={{ lineHeight: 1.5, marginTop: 14 }}>
-          <strong>Backup (JSON).</strong> The same data in a machine-readable file, for keeping a copy or moving it
-          to another tool.
-        </p>
-        <div className="row" style={{ marginTop: 0 }}>
-          <button className="btn" onClick={runJson} disabled={busy || !uid}>Create JSON backup</button>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
 import { readAssist, writeAssist } from '../lib/assist';
+import { packBackup } from '../lib/backupFormat';
 import {
   connectDrive, downloadSnapshot, googleClientId, queueAutoBackup,
   readLocal, restoreSnapshot, saveGoogleClientId, uploadDrive, collectSnapshot,
@@ -41,8 +42,8 @@ export default function BackupPanel({ uid }) {
         <button className="btn accent" disabled={busy || !uid} onClick={() => run(async () => {
           const snap = await downloadSnapshot(uid);
           play('export');
-          toast(`Backup saved. ${snap.journal.length} journal entries.`, 'ok');
-        })}>Save backup</button>
+          toast(`Exported ${snap.journal.length} journal entries for restore.`, 'ok');
+        })}>Export</button>
         <button className="btn" disabled={busy || !uid} onClick={() => run(async () => {
           const local = await readLocal();
           if (!local) throw new Error('No backup is stored on this phone yet.');
@@ -86,7 +87,7 @@ export default function BackupPanel({ uid }) {
         <button className="btn" disabled={busy} onClick={() => run(async () => {
           if (clientId.trim()) saveGoogleClientId(clientId);
           await connectDrive();
-          const snap = await collectSnapshot(uid);
+          const snap = packBackup(await collectSnapshot(uid));
           await uploadDrive(snap);
           play('save');
           toast('Google Drive has this backup.', 'ok');

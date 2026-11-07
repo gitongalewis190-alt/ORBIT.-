@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { extractBackup, normalizeBackup } from '../lib/backupFormat.js';
+import { extractBackup, normalizeBackup, packBackup } from '../lib/backupFormat.js';
 import { askJournal, averageWords } from '../lib/assist.js';
 
 const doc = {
@@ -20,6 +20,24 @@ assert.equal(parsed.journal[0].id, 'j1');
 assert.equal(parsed.journal[0].created_at, '2026-03-01T08:00:00.000Z');
 assert.equal(parsed.awards.focus_first, '2026-01-02T00:00:00.000Z');
 assert.equal(parsed.profile.display_name, 'Lewis');
+
+const packed = packBackup({
+  profile: { display_name: 'Lewis', user_id: 'old', word_goal: 120 },
+  awards: { focus_first: '2026-01-02T00:00:00.000Z' },
+  journal: [{ id: 'j1', body: 'Kept.', created_at: '2026-03-01T08:00:00.000Z', topics: { title: 'Skip me' } }],
+  custom_topics: [{ id: 't1', subfield_id: 's1', title: 'Tools', extra: 'no' }],
+  custom_sections: [{ id: 's1', field_id: 'f1', name: 'Section', fields: { name: 'no' } }],
+  recall: [{ entry_id: 'j1', question: 'What?', answer: 'Kept.', score: 80 }],
+  assignments: [{ id: 'a1', topic_id: 't1', assigned_on: '2026-03-01', topics: { title: 'no' } }],
+});
+assert.equal(packed.version, 5);
+assert.equal(packed.profile.user_id, undefined);
+assert.equal(packed.journal[0].topics, undefined);
+assert.equal(packed.custom_topics[0].subfield_id, 's1');
+assert.equal(packed.custom_sections[0].field_id, 'f1');
+assert.equal(packed.custom_sections[0].fields, undefined);
+assert.equal(packed.recall[0].answer, 'Kept.');
+assert.equal(normalizeBackup(packed).journal[0].created_at, '2026-03-01T08:00:00.000Z');
 
 const entries = [
   { id: 'a', topic_id: 'tech', topic_title: 'Technology', body: 'I did a shift on technology and networks.', created_at: '2026-04-01', word_count: 8, confidence: 2 },
