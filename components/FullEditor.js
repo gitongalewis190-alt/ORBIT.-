@@ -1,10 +1,13 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { HIGHLIGHTS } from '../lib/richtext';
 
 // Full-screen editor for a published entry. Exit, Save, previous and next entry, formatting,
 // and twelve highlight colours. Markers match the journal: **bold**, *italic*, __underline__, ==colour:highlight==.
+// Portaled to document.body: .fade-in keeps transform: translateY(0) after its animation,
+// and a transformed ancestor traps position:fixed inside the memory card (and blocks typing on iOS).
 export default function FullEditor({ title, value, onSave, onClose, onPrev, onNext }) {
   const [draft, setDraft] = useState(value ?? '');
   const [colour, setColour] = useState('yellow');
@@ -40,9 +43,9 @@ export default function FullEditor({ title, value, onSave, onClose, onPrev, onNe
   const btn = { padding: '8px 14px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, cursor: 'pointer' };
   const dim = { ...btn, opacity: 0.4, cursor: 'default' };
 
-  return (
-    <div role="dialog" aria-modal="true" aria-label={`Edit entry: ${title}`}
-      style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'var(--surface-0)', display: 'flex', flexDirection: 'column',
+  const ui = (
+    <div role="dialog" aria-modal="true" aria-label={`Edit entry: ${title}`} className="orbit-editor"
+      style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--surface-0)', display: 'flex', flexDirection: 'column',
         paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div style={{ ...bar, justifyContent: 'space-between', padding: '12px 16px', borderBottom: '0.5px solid var(--border)' }}>
         <button type="button" style={btn} onClick={onClose} disabled={busy}>Exit</button>
@@ -81,7 +84,7 @@ export default function FullEditor({ title, value, onSave, onClose, onPrev, onNe
         value={draft}
         onChange={e => setDraft(e.target.value)}
         aria-label="Entry text"
-        style={{ flex: 1, margin: '0 16px', padding: 14, fontSize: 17, lineHeight: 1.7, border: 'none', outline: 'none',
+        style={{ flex: 1, width: 'auto', minHeight: 0, margin: '0 16px', padding: 14, fontSize: 17, lineHeight: 1.7, border: 'none', borderRadius: 0, outline: 'none',
           background: 'transparent', color: 'var(--text-primary)', resize: 'none' }}
       />
 
@@ -90,4 +93,7 @@ export default function FullEditor({ title, value, onSave, onClose, onPrev, onNe
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(ui, document.body);
 }
