@@ -420,6 +420,11 @@ export default function Journal() {
             const found = entries.find(e => e.id === hit.id);
             if (found) setOpen(found);
           }}
+          text={body}
+          onUse={(next, kind) => {
+            if (kind === 'points') setPoints(next);
+            else setBody(next);
+          }}
           onReview={topicId => {
             const found = entries.find(e => e.topic_id === topicId);
             if (found) relearn(found);

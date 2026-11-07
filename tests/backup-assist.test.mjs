@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { extractBackup, normalizeBackup, packBackup } from '../lib/backupFormat.js';
 import { askJournal, averageWords } from '../lib/assist.js';
+import { shorten, attend } from '../lib/attention.js';
 
 const doc = {
   format: 'orbit-backup',
@@ -52,4 +53,16 @@ const paraphrased = askJournal(entries, 'Why did the moral side of tech matter?'
 assert.equal(paraphrased.hits[0].id, 'a');
 assert.ok(answer.recommendations.some(r => r.kind === 'relearn' || r.kind === 'recall'));
 assert.equal(averageWords(entries), 24);
+
+const long = 'It is important to note that technology is not neutral. I think that design choices carry moral weight. A second unused remark about the weather sits here.';
+const short = shorten(long);
+assert.ok(short.length < long.length);
+assert.match(short, /not neutral/i);
+assert.doesNotMatch(short, /important to note/i);
+const job = attend({ entries, text: long, request: 'When did I do a shift on technology?' });
+assert.equal(job.name, 'Attention');
+assert.match(job.text, /2026-04-01/);
+const cut = attend({ entries, text: long, request: 'shorten' });
+assert.equal(cut.kind, 'shorten');
+assert.ok(cut.text.length < long.length);
 console.log('backup and assist ok');
