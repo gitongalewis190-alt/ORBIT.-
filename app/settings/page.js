@@ -35,6 +35,7 @@ const CATALOGUE = [
   { key: 'storage', title: 'Storage' },
   { key: 'help', title: 'Help' },
   { key: 'recall', title: 'Recall', href: '/recall' },
+  { key: 'recall-model', title: 'Recall model', href: '/log#recall-model' },
   { key: 'reset', title: 'Reset', danger: true },
   { key: 'delete', title: 'Delete account', danger: true },
 ];

@@ -6,6 +6,7 @@ import { loadStats, weeklyRecap, insights } from '../lib/stats';
 import { fieldColor } from '../lib/palette';
 import { prettyDate } from '../lib/dates';
 import Skeleton from './Skeleton';
+import RecallConstellation from './RecallConstellation';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -71,6 +72,7 @@ export default function LogStats() {
 
   return (
     <section className="log-stats" aria-label="Statistics">
+      <RecallConstellation />
       <div className="stat-grid">
         {totals.map(([label, value]) => (
           <div key={label} className="stat-tile">
