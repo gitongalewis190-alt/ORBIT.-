@@ -125,5 +125,223 @@ export default function Journal() {
     });
   }, []);
 
-  // ... rest of the file remains unchanged from the original with the synthesis handling added above
-  // (Full original content continues; this is the integrated version)
+  // Autosave the draft on this phone as you type.
+  useEffect(() => {
+    if (!uid) return;
+    if (!body && !points && !tagText && conf === null && !mins) return;
+    saveDraft(uid, { body, points, tagText, conf, mins, font });
+  }, [uid, body, points, tagText, conf, mins, font]);
+
+  async function load(id, p = profile) {
+    const { data, error } = await supabase.from('journal_entries')
+      .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,entry_kind,research_entry_id,editor_font,topics(title,subfields(field_id))')
+      .eq('user_id', id).order('created_at', { ascending: false }).limit(200);
+    if (error) return setErr(error.message);
+    setErr('');
+    setEntries(data ?? []);
+    if (p) {
+      const s = await loadStats(id, p);
+      setStreak(s.streak);
+      setWordsToday(s.wordsToday);
+    }
+  }
+
+  function validate() {
+    if (!topic) return 'Pick a topic first.';
+    if (words < 5) return 'Write at least a few words, in your own explanation.';
+    if (conf === null) return 'Rate your confidence from 0 to 5.';
+    return '';
+  }
+
+  async function save() {
+    if (busy) return;
+    const problem = validate();
+    if (problem) {
+      play('error');
+      toast(problem, 'err');
+      return;
+    }
+
+    const payload = {
+      id: crypto.randomUUID(),
+      topic_id: topic.id,
+      assignment_id: assignmentId,
+      body: body.trim(),
+      key_points: points.split('\n').map(s => s.trim()).filter(Boolean),
+      confidence: conf,
+      minutes_spent: mins ? Number(mins) : null,
+      word_count: words,
+      tags: parseTags(tagText),
+      entry_kind: isReflect ? 'reflection' : 'research',
+      research_entry_id: linkedResearch?.id ?? null,
+      editor_font: font,
+      created_at: new Date().toISOString(),
+    };
+
+    setBusy(true);
+    setPhase('saving');
+    const kind = isReflect ? 'reflection' : 'entry';
+    try {
+      const { next, fresh } = await commitEntry(uid, payload);
+      play(fresh.length ? 'badge' : 'save');
+      toast(`Saved. Next review ${prettyDate(next.due_on)}.`, 'ok');
+      scheduleAtlas(uid, payload.id);
+      finishSave();
+      setSavedKind(kind);
+      setPhase('saved');
+      queueAutoBackup(uid);
+      await load(uid, profile);
+    } catch (e) {
+      if (isNetworkError(e)) {
+        // No connection: keep the finished entry on the phone and sync it later.
+        enqueue(uid, { payload, queuedAt: Date.now() });
+        play('save');
+        toast('Saved on this phone. It will sync when you are back online.', 'warn', 4500);
+        finishSave();
+        setSavedKind(kind);
+        setPhase('saved');
+      } else {
+        play('error');
+        setPhase('idle');
+        toast(`Could not save: ${e.message}`, 'err', 6000);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function finishSave() {
+    setBody(''); setPoints(''); setTagText(''); setConf(null); setMins('');
+    setTopic(null); setAssignmentId(null); setDraftNote('');
+    clearDraft(uid);
+  }
+
+  async function relearn(entry) {
+    const { error } = await supabase.from('reviews').upsert(
+      { user_id: uid, topic_id: entry.topic_id, due_on: today() },
+      { onConflict: 'user_id,topic_id' }
+    );
+    if (error) { play('error'); return toast(error.message, 'err'); }
+    await logDecision(uid, 'relearn', entry.topic_id);
+    play('chime');
+    toast('Added to today’s reviews.', 'info');
+  }
+
+  // The entry before or after this one in the memory list, for the editor's Previous and Next buttons.
+  function neighbour(step, e) {
+    const list = filtered;
+    const i = list.findIndex(x => x.id === e.id);
+    if (i < 0) return null;
+    const n = list[i + step];
+    return n || null;
+  }
+
+  async function saveEdit(entry, text) {
+    const { error } = await supabase.from('journal_entries').update({
+      body: text,
+      word_count: wordCount(plainText(text)),
+    }).eq('id', entry.id).eq('user_id', uid);
+    if (error) { play('error'); return toast(error.message, 'err'); }
+    play('save');
+    toast('Updated.', 'ok');
+    setEditing(null);
+    await load(uid);
+  }
+
+  async function confirmRemove() {
+    const entry = pendingDelete;
+    setPendingDelete(null);
+    if (!entry) return;
+    const { error } = await supabase.from('journal_entries').delete().eq('id', entry.id).eq('user_id', uid);
+    if (error) { play('error'); return toast(error.message, 'err'); }
+    play('warn');
+    toast('Entry deleted.', 'info');
+    if (editing?.id === entry.id) setEditing(null);
+    await load(uid);
+  }
+
+  const filtered = entries.filter(e => {
+    if (!memorySearch.trim()) return true;
+    const q = memorySearch.toLowerCase();
+    return (e.body || '').toLowerCase().includes(q)
+      || (e.key_points || []).some(p => p.toLowerCase().includes(q))
+      || (e.topics?.title || '').toLowerCase().includes(q)
+      || (e.tags || []).some(t => t.includes(q));
+  });
+
+  return (
+    <div className="fade-in">
+      <h1>Journal</h1>
+      {err && <p className="err">{err}</p>}
+      {draftNote && <p className="muted">{draftNote}</p>}
+
+      <div className="seg">
+        <button type="button" className={mode === 'learn' ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
+        <button type="button" className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
+      </div>
+
+      <TopicPicker topics={topics} value={topic} onChange={setTopic} />
+
+      <RichEditor
+        value={body}
+        onChange={setBody}
+        font={font}
+        onFont={setFont}
+        placeholder={isReflect ? 'What did this make you think?' : 'Explain it in your own words.'}
+      />
+
+      <input value={points} onChange={e => setPoints(e.target.value)} placeholder="Key points, one per line" />
+      <input value={tagText} onChange={e => setTagText(e.target.value)} placeholder="Tags, comma separated" />
+
+      <div className="row">
+        {CONFIDENCE_WORD.map((w, i) => (
+          <button key={i} type="button" className={conf === i ? 'chip on' : 'chip'} onClick={() => setConf(i)}>{w}</button>
+        ))}
+      </div>
+
+      <input type="number" value={mins} onChange={e => setMins(e.target.value)} placeholder="Minutes spent" />
+
+      <div className="row">
+        <button className="btn accent" onClick={save} disabled={busy}>
+          {busy ? 'Saving' : 'Save'}
+        </button>
+        <span className="muted">{words} words · {pct}%</span>
+      </div>
+
+      <h2>Memory</h2>
+      <input value={memorySearch} onChange={e => setMemorySearch(e.target.value)} placeholder="Search entries" />
+
+      {filtered.map(e => (
+        <div key={e.id} className="card">
+          <div className="muted">{e.topics?.title || 'No topic'} · {prettyDate(e.created_at?.slice(0, 10))}</div>
+          <div dangerouslySetInnerHTML={{ __html: renderRich(e.body) }} />
+          <div className="row">
+            <button className="btn sm" onClick={() => setEditing(e)}>Edit</button>
+            <button className="btn sm" onClick={() => relearn(e)}>Review again</button>
+            <button className="btn sm danger" onClick={() => setPendingDelete(e)}>Delete</button>
+          </div>
+        </div>
+      ))}
+
+      {editing && (
+        <FullEditor
+          entry={editing}
+          onSave={saveEdit}
+          onClose={() => setEditing(null)}
+          neighbour={neighbour}
+        />
+      )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete this entry?"
+        danger
+        confirmLabel="Delete entry"
+        onConfirm={confirmRemove}
+        onCancel={() => setPendingDelete(null)}
+      >
+        <p style={{ marginTop: 0 }}>This cannot be undone. The rest of your journal stays.</p>
+      </ConfirmDialog>
+    </div>
+  );
+}
