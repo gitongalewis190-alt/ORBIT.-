@@ -208,6 +208,7 @@ export default function Today() {
       <p className="muted">{prettyDate(today())}</p>
       <div className="row" style={{ marginTop: 8 }}>
         <a className="btn" href="/study">Study</a>
+        <a className="btn" href="/resonance">Resonance</a>
       </div>
       {err && <p className="err">{err}</p>}
       <DayRings />
