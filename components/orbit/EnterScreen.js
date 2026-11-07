@@ -50,7 +50,8 @@ function PebbleInk() {
     const sizeOf = () => {
       const vv = window.visualViewport;
       const w = vv?.width ?? window.innerWidth;
-      const h = vv?.height ?? window.innerHeight;
+      const full = vv?.height ?? window.innerHeight;
+      const h = Math.max(220, full * 0.4);
       return { w, h };
     };
     const mountMessage = (index) => {

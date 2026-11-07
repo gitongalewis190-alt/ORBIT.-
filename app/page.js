@@ -140,12 +140,9 @@ export default function Today() {
     <div className="fade-in">
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
+      <a className="attention-link" href="/attention">Attention</a>
       {err && <p className="err">{err}</p>}
       <DayRings />
-      <SmartNotes />
-      <BenefitsPanel />
-      <FocusTimer />
-      <Onboarding />
 
       {reveal ? (
         <div className="card" style={{ marginTop: 16 }}>
@@ -208,6 +205,11 @@ export default function Today() {
           </div>
         </div>
       )}
+
+      <SmartNotes />
+      <BenefitsPanel />
+      <FocusTimer />
+      <Onboarding />
 
       <h2>Reviews due</h2>
       <div className="row" style={{ marginTop: 0 }}>

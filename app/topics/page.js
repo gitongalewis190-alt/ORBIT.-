@@ -8,6 +8,7 @@ import { fetchAllTopics } from '../../lib/context';
 import { fieldColor } from '../../lib/palette';
 import { searchTopics, highlightSegments } from '../../lib/search';
 import Skeleton from '../../components/Skeleton';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 const MARKS = [
   ['all', 'All'],
@@ -44,6 +45,7 @@ export default function Topics() {
   const [sort, setSort] = useState('relevance');
   const [page, setPage] = useState(PAGE);
   const [openTopic, setOpenTopic] = useState(null);
+  const [pendingTopic, setPendingTopic] = useState(null);
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
@@ -149,12 +151,18 @@ export default function Topics() {
   }
 
   async function deleteCustom(topic) {
-    if (!window.confirm(`Delete "${topic.title}" from your library?`)) return;
+    setPendingTopic(topic);
+  }
+
+  async function confirmDeleteTopic() {
+    const topic = pendingTopic;
+    if (!topic) return;
     const { error } = await supabase.from('topics').delete().eq('id', topic.id);
     if (error) { play('error'); return toast(error.message, 'err'); }
     await logDecision(uid, 'topic_deleted', null, { title: topic.title });
     play('delete');
     toast('Topic deleted.', 'info');
+    setPendingTopic(null);
     setOpenTopic(null);
     loadAll(uid);
   }
@@ -374,6 +382,18 @@ export default function Topics() {
           <div className="muted">{ownSections.map(s => s.name).join(' · ')}</div>
         </>
       )}
+      <ConfirmDialog
+        open={!!pendingTopic}
+        title="Delete this topic?"
+        danger
+        confirmLabel="Delete topic"
+        onConfirm={confirmDeleteTopic}
+        onCancel={() => setPendingTopic(null)}
+      >
+        <p style={{ marginTop: 0 }}>
+          {pendingTopic ? `"${pendingTopic.title}" leaves your library. Journal entries that used it stay, without that topic.` : ''}
+        </p>
+      </ConfirmDialog>
     </div>
   );
 }

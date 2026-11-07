@@ -1,8 +1,9 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { play } from '../lib/sound';
+import { downloadBlob, printBlob } from '../lib/download';
 import { toast } from '../lib/toast';
-import { WINDOWS, rangeFor, createRecord, listRecords, purgeExpired, downloadRecord, openRecord, deleteRecord } from '../lib/printRecord';
+import { WINDOWS, rangeFor, createRecord, listRecords, purgeExpired, loadRecordBlob, deleteRecord } from '../lib/printRecord';
 import { prettyDate, addDays } from '../lib/dates';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -19,6 +20,7 @@ export default function ExportPanel({ uid }) {
   const [loaded, setLoaded] = useState(false);
   const [toDelete, setToDelete] = useState(null);
   const [rowBusy, setRowBusy] = useState(null);
+  const [held, setHeld] = useState(null);
   const [loadError, setLoadError] = useState('');
 
   const refresh = useCallback(async () => {
@@ -43,18 +45,16 @@ export default function ExportPanel({ uid }) {
     setBusy(true);
     setStatus('Starting');
     const { label, range } = rangeFor(windowKey);
-    const preview = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
-      const res = await createRecord(uid, { windowLabel: label, range, preview }, setStatus);
+      const res = await createRecord(uid, { windowLabel: label, range }, setStatus);
       play('export');
       if (res.stored) {
         toast(`Record saved: ${res.pages} pages, ${res.entries} journal entries.`, 'ok', 4500);
         refresh();
       } else {
-        toast(`Downloaded, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
+        toast(`Built, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
       }
     } catch (e) {
-      preview?.close();
       play('error');
       toast(`Could not build the record: ${e.message}`, 'err', 6000);
     } finally {
@@ -63,18 +63,31 @@ export default function ExportPanel({ uid }) {
     }
   }
 
-  async function rowAction(record, action) {
+  async function hold(record) {
+    if (held?.id === record.id) return held;
     setRowBusy(record.id);
     try {
-      if (action === 'download') await downloadRecord(record);
-      if (action === 'open') await openRecord(record);
-      play('export');
+      const blob = await loadRecordBlob(record);
+      const next = { id: record.id, blob, title: record.title };
+      setHeld(next);
+      return next;
     } catch (e) {
       play('error');
       toast(`Could not open that record: ${e.message}`, 'err', 6000);
+      return null;
     } finally {
       setRowBusy(null);
     }
+  }
+
+  async function saveHeld(record) {
+    const file = held?.id === record.id ? held : await hold(record);
+    if (file && held?.id === record.id) downloadBlob(file.blob, file.title);
+  }
+
+  async function printHeld(record) {
+    const file = held?.id === record.id ? held : await hold(record);
+    if (file && held?.id === record.id) printBlob(file.blob);
   }
 
   async function confirmDelete() {
@@ -126,22 +139,41 @@ export default function ExportPanel({ uid }) {
         ) : records.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No records yet. Each PDF you create is kept here for as long as you choose when you make it.</p>
         ) : (
-          <ul className="print-log" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {records.map(r => (
-              <li key={r.id} className="print-log-row">
-                <div>
-                  <div>{when(r.created_at)}</div>
-                  <div className="muted">
-                    {r.window_label} · {r.pages} pages · {r.entries} entries · kept until {expires(r.expires_at)}
+          <ul className="print-log">
+            {records.map(r => {
+              const ready = held?.id === r.id;
+              const settings = r.settings || {};
+              return (
+                <li key={r.id} className="doc-card">
+                  <div className="doc-card-copy">
+                    <div>{when(r.created_at)}</div>
+                    <div className="muted">
+                      {r.window_label} · {r.pages} pages · {r.entries} entries
+                    </div>
+                    <div className="muted">
+                      {[settings.format, settings.orientation, settings.textSize, settings.colour === false ? 'black and white' : 'colour'].filter(Boolean).join(' · ') || 'Saved record'}
+                      {' · kept until '}{expires(r.expires_at)}
+                    </div>
                   </div>
-                </div>
-                <div className="print-log-actions">
-                  <button type="button" className="chip" onClick={() => rowAction(r, 'download')} disabled={rowBusy === r.id}>Download</button>
-                  <button type="button" className="chip" onClick={() => rowAction(r, 'open')} disabled={rowBusy === r.id}>Open to print</button>
-                  <button type="button" className="chip" onClick={() => setToDelete(r)} disabled={rowBusy === r.id}>Remove</button>
-                </div>
-              </li>
-            ))}
+                  {rowBusy === r.id && (
+                    <div className="doc-progress" role="status"><span /></div>
+                  )}
+                  <div className="doc-actions">
+                    <div>
+                      <button type="button" className="btn sm" onClick={() => saveHeld(r)} disabled={rowBusy === r.id}>
+                        {ready ? 'Save' : 'Open'}
+                      </button>
+                    </div>
+                    <div>
+                      <button type="button" className="btn sm" onClick={() => printHeld(r)} disabled={!ready || rowBusy === r.id}>Print</button>
+                    </div>
+                    <div>
+                      <button type="button" className="btn sm danger" onClick={() => setToDelete(r)} disabled={rowBusy === r.id}>Remove</button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

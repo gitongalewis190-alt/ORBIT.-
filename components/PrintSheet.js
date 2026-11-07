@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
 import { WINDOWS, rangeFor, customRange, createRecord } from '../lib/printRecord';
+import { downloadBlob, printBlob } from '../lib/download';
 import { today } from '../lib/dates';
 import { RETENTION_OPTIONS, TEXT_SIZES, ALIGNMENTS, MEDAL_RULES, DEFAULT_PRINT, retentionLabel } from '../lib/printSettings';
 
@@ -31,6 +32,8 @@ export default function PrintSheet({ open, onClose }) {
   const [opt, setOpt] = useState({ ...DEFAULT_PRINT });
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const [steps, setSteps] = useState([]);
+  const [ready, setReady] = useState(null);
 
   useEffect(() => {
     const d = ref.current;
@@ -54,27 +57,32 @@ export default function PrintSheet({ open, onClose }) {
       return;
     }
     setBusy(true);
+    setReady(null);
+    setSteps([]);
     setStatus('Starting');
-    const preview = typeof window !== 'undefined' ? window.open('', '_blank') : null;
+    const mark = (label) => {
+      setStatus(label);
+      setSteps(list => list.includes(label) ? list : [...list, label]);
+    };
     try {
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
       if (!uid) throw new Error('Sign in again to make a record.');
-      const res = await createRecord(uid, { windowLabel: choice.label, range: choice.range, options: opt, preview }, setStatus);
+      const res = await createRecord(uid, { windowLabel: choice.label, range: choice.range, options: opt }, mark);
       play('export');
+      setReady(res);
+      setStatus(res.stored ? 'Saved to your log' : 'Built, not yet in the log');
       if (res.stored) {
-        toast(`Record ready: ${res.pages} pages. Kept for ${retentionLabel(opt.retentionDays).toLowerCase()}.`, 'ok', 5000);
+        toast(`Record saved: ${res.pages} pages. Kept for ${retentionLabel(opt.retentionDays).toLowerCase()}.`, 'ok', 5000);
       } else {
-        toast(`Downloaded, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
+        toast(`Built, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
       }
-      onClose();
     } catch (e) {
-      preview?.close();
       play('error');
       toast(`Could not build the record: ${e.message}`, 'err', 6000);
+      setStatus('');
     } finally {
       setBusy(false);
-      setStatus('');
     }
   }
 
@@ -141,14 +149,24 @@ export default function PrintSheet({ open, onClose }) {
           {RETENTION_OPTIONS.map(r => <option key={r.days} value={r.days}>{r.label}</option>)}
         </Field>
 
-        {busy && (
-          <div className="doc-progress" role="progressbar" aria-label="Building document" aria-busy="true">
-            <span />
+        {(busy || steps.length > 0) && (
+          <div className="doc-progress" role="status" aria-live="polite">
+            <span style={busy ? undefined : { left: 0, width: '100%', animation: 'none' }} />
+            <ol className="doc-steps">
+              {steps.map(step => <li key={step}>{step}</li>)}
+              {busy && status && !steps.includes(status) && <li>{status}</li>}
+            </ol>
+          </div>
+        )}
+        {ready?.blob && (
+          <div className="doc-actions">
+            <div><button type="button" className="btn" onClick={() => downloadBlob(ready.blob, ready.fileName)}>Save</button></div>
+            <div><button type="button" className="btn" onClick={() => printBlob(ready.blob)}>Print</button></div>
           </div>
         )}
 
         <div className="sheet-actions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn" onClick={onClose} disabled={busy}>Cancel</button>
+          <button type="button" className="btn" onClick={onClose} disabled={busy}>{ready ? 'Done' : 'Cancel'}</button>
           <button type="button" className="btn accent" onClick={create} disabled={busy}>
             {busy && status ? status : 'Create PDF'}
           </button>

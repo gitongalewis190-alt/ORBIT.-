@@ -17,6 +17,7 @@ import { renderRich, plainText } from '../../lib/richtext';
 import TopicPicker from '../../components/TopicPicker';
 import RichEditor from '../../components/RichEditor';
 import AssistAsk from '../../components/AssistAsk';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { averageWords, assistPrefs, nextAdvice } from '../../lib/assist';
 import { queueAutoBackup } from '../../lib/backupSync';
 
@@ -45,6 +46,7 @@ export default function Journal() {
   const [mode, setMode] = useState('learn');
   const [benefitIds, setBenefitIds] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   useEffect(() => { setBenefitIds(readBenefits()); }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -228,13 +230,19 @@ export default function Journal() {
     load(uid, profile);
   }
 
-  async function removeEntry(entry) {
-    if (!window.confirm('Delete this entry? This cannot be undone.')) return;
+  function removeEntry(entry) {
+    setPendingDelete(entry);
+  }
+
+  async function confirmRemove() {
+    const entry = pendingDelete;
+    if (!entry) return;
     const { error } = await supabase.from('journal_entries').delete().eq('id', entry.id);
     if (error) { play('error'); return toast(error.message, 'err'); }
     await logDecision(uid, 'entry_deleted', entry.topic_id, { words: entry.word_count });
     play('trash');
     toast('Entry deleted.', 'info');
+    setPendingDelete(null);
     setOpen(null);
     load(uid, profile);
   }
@@ -475,6 +483,16 @@ export default function Journal() {
           {open?.id === e.id && <Expanded e={e} />}
         </div>
       ))}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete this entry?"
+        danger
+        confirmLabel="Delete entry"
+        onConfirm={confirmRemove}
+        onCancel={() => setPendingDelete(null)}
+      >
+        <p style={{ marginTop: 0 }}>This cannot be undone. The rest of your journal stays.</p>
+      </ConfirmDialog>
     </div>
   );
 }

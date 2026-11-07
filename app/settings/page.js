@@ -29,6 +29,7 @@ const CATALOGUE = [
   { key: 'sound', title: 'Sound' },
   { key: 'learning', title: 'Journal' },
   { key: 'assist', title: 'Assist' },
+  { key: 'attention', title: 'Attention', href: '/attention' },
   { key: 'export', title: 'Backups' },
   { key: 'storage', title: 'Storage' },
   { key: 'help', title: 'Help' },
