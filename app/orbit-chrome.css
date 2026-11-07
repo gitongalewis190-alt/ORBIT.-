@@ -1,7 +1,7 @@
 /* Navigation bar, confetti, document progress. Loaded last so it overrides older rules. */
 
-/* The sculpted bar. A fixed strip at the bottom: it never scrolls and sits above the page.
-   Its shape is drawn in JavaScript (lib/tabs.js barPath), so the carved notch follows the selector. */
+/* The bar is fixed to the bottom. It does not slide. It only disappears
+   on screens that are not one of the main tabs. */
 .obar {
   position: fixed;
   left: 0;
@@ -12,18 +12,18 @@
   justify-content: center;
   padding: 0 12px calc(env(safe-area-inset-bottom, 0px) + 10px);
   pointer-events: none;
-  transition: transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
 }
 .obar.is-hidden {
-  transform: translateY(calc(100% + 24px));
+  visibility: hidden;
   opacity: 0;
+  pointer-events: none;
 }
 .obar-body {
   position: relative;
   width: min(94vw, 480px);
   height: 60px;
   pointer-events: auto;
-  touch-action: pan-y;
+  touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -70,7 +70,6 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  transition: transform 0.2s ease;
 }
 .obar-name {
   margin-top: 1px;
@@ -81,7 +80,6 @@
   pointer-events: none;
 }
 .obar-item.on .obar-name { color: var(--ink, #1c1b19); }
-.obar-item:active .obar-ico { transform: scale(0.92); }
 .obar-item:focus-visible { outline: none; }
 .obar-item:focus-visible .obar-ico { box-shadow: 0 0 0 2px var(--accent, #c4623d); }
 
@@ -98,7 +96,6 @@
   display: grid;
   place-items: center;
   pointer-events: none;
-  will-change: transform;
 }
 
 /* Settings catalogue is a nav, and the old bottom-bar rule lays every nav out sideways.
