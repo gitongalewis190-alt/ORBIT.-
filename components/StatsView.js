@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges, unlockedMap, weeklyRecap, insights } from '../lib/stats';
 import { addDays, today, prettyDate } from '../lib/dates';
@@ -32,11 +33,11 @@ export default function StatsView() {
   }
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      setUid(data.user.id);
+    currentUser().then(async (user) => {
+      if (!user) return;
+      setUid(user.id);
       try {
-        await load(data.user.id);
+        await load(user.id);
       } catch (e) {
         setErr(e.message);
       }

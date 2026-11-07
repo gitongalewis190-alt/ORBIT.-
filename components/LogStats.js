@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { getProfile } from '../lib/profile';
 import { loadStats, weeklyRecap, insights } from '../lib/stats';
 import { fieldColor } from '../lib/palette';
@@ -18,11 +18,11 @@ export default function LogStats() {
 
   useEffect(() => {
     let alive = true;
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+    currentUser().then(async (user) => {
+      if (!user) return;
       try {
-        const p = await getProfile(data.user.id);
-        const stats = await loadStats(data.user.id, p);
+        const p = await getProfile(user.id);
+        const stats = await loadStats(user.id, p);
         if (!alive) return;
         setProfile(p);
         setS(stats);

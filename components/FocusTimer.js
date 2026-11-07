@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
 import { today } from '../lib/dates';
@@ -64,8 +65,8 @@ export default function FocusTimer() {
   const finishing = useRef(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUid(data.user.id);
+    currentUser().then((user) => {
+      if (user) setUid(user.id);
     });
   }, []);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { loadRecallView } from '../lib/memoryStore';
 
 // The personal recall model. This is not the Recall quiz.
@@ -11,13 +11,13 @@ export default function RecallConstellation() {
 
   useEffect(() => {
     let alive = true;
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
+    currentUser().then(async (user) => {
+      if (!user) {
         if (alive) setModel(null);
         return;
       }
       try {
-        const next = await loadRecallView(data.user.id);
+        const next = await loadRecallView(user.id);
         if (alive) setModel(next);
       } catch (e) {
         if (alive) setError(e.message || 'The recall model could not load.');

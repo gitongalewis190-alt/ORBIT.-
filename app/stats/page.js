@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { today, prettyDate } from '../../lib/dates';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
@@ -42,9 +43,9 @@ export default function Journal() {
   const pct = Math.min(100, Math.round((words / goal) * 100));
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const id = data.user.id;
+    currentUser().then(async (user) => {
+      if (!user) return;
+      const id = user.id;
       setUid(id);
       const p = await getProfile(id);
       setProfile(p);

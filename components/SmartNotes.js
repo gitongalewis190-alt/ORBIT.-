@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { getProfile } from '../lib/profile';
 import { loadStats } from '../lib/stats';
 import { smartNotes } from '../lib/smart';
@@ -13,11 +13,11 @@ export default function SmartNotes() {
 
   useEffect(() => {
     let alive = true;
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+    currentUser().then(async (user) => {
+      if (!user) return;
       try {
-        const profile = await getProfile(data.user.id);
-        const stats = await loadStats(data.user.id, profile);
+        const profile = await getProfile(user.id);
+        const stats = await loadStats(user.id, profile);
         if (alive) setNotes(smartNotes(stats, profile));
       } catch (e) {
         if (alive) setErr(e.message);

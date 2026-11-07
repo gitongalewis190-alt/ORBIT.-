@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { getProfile, saveProfile, DEFAULT_PROFILE } from '../../lib/profile';
 import { play, setSound, setVolume } from '../../lib/sound';
 import { applyTheme } from '../../lib/theme';
@@ -85,12 +86,12 @@ export default function Settings() {
 
   useEffect(() => {
     setAutoFix(autocorrectOn());
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      setUid(data.user.id);
-      setEmail(data.user.email ?? '');
+    currentUser().then(async (user) => {
+      if (!user) return;
+      setUid(user.id);
+      setEmail(user.email ?? '');
       try {
-        setP(await getProfile(data.user.id));
+        setP(await getProfile(user.id));
       } catch (e) {
         setErr(e.message);
       }
