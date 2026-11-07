@@ -91,6 +91,63 @@
   will-change: transform;
 }
 
+/* Settings catalogue is a nav, and the old bottom-bar rule lays every nav out sideways.
+   Stack each setting as its own row, with the words running down instead of across. */
+nav.settings-catalogue {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  background: transparent;
+  backdrop-filter: none;
+  border: 0;
+  padding: 0;
+  z-index: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+}
+
+/* Saved-entry actions sit above the text, one under the other, so they are reachable without scrolling. */
+.entry-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.entry-actions .btn { width: 100%; text-align: center; }
+
+/* Formatting tools: one control, then a vertical list. Never a row across the text. */
+.tool-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-height: 240px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.tool-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 0.5px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.35;
+  cursor: pointer;
+  white-space: normal;
+}
+.tool-menu button[aria-pressed="true"] { color: var(--accent); }
+
 /* The bar hides while a full-screen layer (award unlock or a dialog) is open. */
 body:has(.unlock) .obar,
 body:has(dialog[open]) .obar,

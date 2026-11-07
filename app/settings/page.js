@@ -34,9 +34,9 @@ const CATALOGUE = [
 ];
 
 const rowStyle = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%',
-  padding: '14px 4px', background: 'transparent', border: 0, borderBottom: '0.5px solid var(--border)',
-  color: 'inherit', textAlign: 'left', fontSize: 16, cursor: 'pointer',
+  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, width: '100%',
+  padding: '14px 2px', background: 'transparent', border: 0, borderBottom: '0.5px solid var(--border)',
+  color: 'inherit', textAlign: 'left', fontSize: 16, lineHeight: 1.35, cursor: 'pointer', whiteSpace: 'normal',
 };
 
 // Two-step confirmations. Each flow moves from step 1 (the warning) to step 2 (the final check).
@@ -360,14 +360,11 @@ export default function Settings() {
         <>
           <h1>Settings</h1>
           <p className="muted">{email}</p>
-          <nav aria-label="Settings catalogue">
+          <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map(c => (
               <button key={c.key} type="button" style={rowStyle} onClick={() => setView(c.key)}>
-                <span>
-                  <span style={{ display: 'block', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</span>
-                  <span className="muted" style={{ display: 'block', fontSize: 13 }}>{c.hint}</span>
-                </span>
-                <span aria-hidden="true" className="muted">›</span>
+                <span style={{ display: 'block', whiteSpace: 'normal', overflowWrap: 'break-word', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</span>
+                <span className="muted" style={{ display: 'block', whiteSpace: 'normal', overflowWrap: 'break-word', fontSize: 13 }}>{c.hint}</span>
               </button>
             ))}
           </nav>

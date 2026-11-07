@@ -264,8 +264,21 @@ export default function Journal() {
   }
 
   function Expanded({ e }) {
+    const actions = e.entry_kind === 'reflection' ? (
+      <div className="entry-actions">
+        <button className="btn" onClick={() => setEditing(e.id)}>Edit</button>
+        <button className="btn danger" onClick={() => removeEntry(e)}>Delete reflection</button>
+      </div>
+    ) : (
+      <div className="entry-actions">
+        <button className="btn" onClick={() => setEditing(e.id)}>Edit</button>
+        <button className="btn accent" onClick={() => relearn(e)}>Re-learn now</button>
+        <button className="btn danger" onClick={() => removeEntry(e)}>Delete</button>
+      </div>
+    );
     return (
       <div className="fade-in" style={{ marginTop: 10 }} onClick={ev => ev.stopPropagation()}>
+        {actions}
         <EntryBody e={e} />
         {editing === e.id && (
           <FullEditor
@@ -281,19 +294,6 @@ export default function Journal() {
           <ul style={{ paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
             {e.key_points.map((k, i) => <li key={i}>{k}</li>)}
           </ul>
-        )}
-        {e.entry_kind !== 'reflection' && (
-          <div className="row">
-            <button className="btn sm" onClick={() => setEditing(e.id)}>Edit</button>
-            <button className="btn sm accent" onClick={() => relearn(e)}>Re-learn now</button>
-            <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete</button>
-          </div>
-        )}
-        {e.entry_kind === 'reflection' && (
-          <div className="row">
-            <button className="btn sm" onClick={() => setEditing(e.id)}>Edit</button>
-            <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete reflection</button>
-          </div>
         )}
       </div>
     );

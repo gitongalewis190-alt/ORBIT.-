@@ -27,6 +27,7 @@ const SHORTCUTS = { b: 'bold', i: 'italic', u: 'underline' };
 export default function RichEditor({ value, onChange, placeholder, minHeight = 260, label, font = 'sans', onFont }) {
   const ref = useRef(null);
   const [auto, setAuto] = useState(true);
+  const [menu, setMenu] = useState(false);
 
   useEffect(() => { setAuto(autocorrectOn()); }, []);
 
@@ -35,6 +36,7 @@ export default function RichEditor({ value, onChange, placeholder, minHeight = 2
     if (!el) return;
     const result = applyFormat(value, el.selectionStart, el.selectionEnd, kind);
     onChange(result.text);
+    setMenu(false);
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(result.start, result.end);
@@ -76,31 +78,46 @@ export default function RichEditor({ value, onChange, placeholder, minHeight = 2
 
   return (
     <div className={`rich ${fontClass}`}>
-      <div className="rich-toolbar" role="toolbar" aria-label={label ?? 'Formatting'}>
-        {TOOLS.map(t => (
-          <button
-            key={t.kind}
-            type="button"
-            className={`rich-tool ${t.cls}`}
-            title={t.title}
-            aria-label={t.title}
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => run(t.kind)}
-          >
-            {t.label}
-          </button>
-        ))}
-        {onFont && (
-          <select
-            className="rich-font"
-            aria-label="Font"
-            value={font}
-            onChange={e => onFont(e.target.value)}
-          >
-            {FONTS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
-          </select>
-        )}
+      <div className="rich-toolbar">
+        <button
+          type="button"
+          className="rich-tool"
+          aria-expanded={menu}
+          aria-controls="write-tools"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setMenu(open => !open)}
+        >
+          {menu ? 'Close tools' : 'Tools'}
+        </button>
       </div>
+      {menu && (
+        <div id="write-tools" className="tool-menu" role="menu" aria-label={label ?? 'Formatting'}>
+          {TOOLS.map(t => (
+            <button
+              key={t.kind}
+              type="button"
+              role="menuitem"
+              className={t.cls}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => run(t.kind)}
+            >
+              {t.title}
+            </button>
+          ))}
+          {onFont && FONTS.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              role="menuitem"
+              aria-pressed={font === f.key}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { onFont(f.key); setMenu(false); }}
+            >
+              Font · {f.label}
+            </button>
+          ))}
+        </div>
+      )}
       <textarea
         ref={ref}
         className="rich-area"
