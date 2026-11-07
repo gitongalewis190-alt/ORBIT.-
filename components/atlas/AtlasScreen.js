@@ -99,6 +99,7 @@ export default function AtlasScreen({ focusId = null }) {
   return (
     <div className="fade-in atlas-screen">
       <Link href="/study" className="atlas-study">Study</Link>
+      <Link href="/resonance" className="atlas-study" style={{ marginLeft: 8 }}>Resonance</Link>
       <h1>Cognitive Atlas</h1>
       <p className="muted">Explore the structure of what you know.</p>
       {error && <p className="err">{error}</p>}
