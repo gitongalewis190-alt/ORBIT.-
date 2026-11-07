@@ -1,8 +1,9 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { activeTabIndex, tabIndexAt } from '../lib/tabs';
+import { activeTabIndex, tabIndexAt, tabCentre, barPath, NAV } from '../lib/tabs';
+import { stepSpring, settled, SPRING } from '../lib/spring';
 
 // Icons for each tab, keyed by route. Monoline, to match the app's icon style.
 const ICON = {
@@ -26,95 +27,252 @@ const ICON = {
   ),
 };
 
-// Floating glass bar. Fixed to the bottom of the screen, it sits above the page and never scrolls.
-// The centre tab is the journal, raised in the accent colour. Drag along the bar to switch tabs.
-export default function TabBar({ tabs, path }) {
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+function reducedMotion() {
+  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Light tactile tap where the device can vibrate (Android). iPhone Safari has no
+// vibration API for web pages, so the tab sound is the feedback there.
+function tick() {
+  try { navigator.vibrate?.(8); } catch {}
+}
+
+// The sculpted navigation bar.
+// A flat-topped bar carved by a circular notch. The selector is a solid circle that
+// sits in the notch and glides between the tabs on a damped spring. The notch is
+// redrawn on every frame, so the carved edge follows the selector exactly.
+// Drag along the bar to choose a tab, or tap one. The bar hides on screens outside the tabs.
+export default function TabBar({ tabs, path, visible = true }) {
   const router = useRouter();
-  const trackRef = useRef(null);
-  const gesture = useRef({ down: false, moved: false, x: 0 });
-  const suppressClick = useRef(false);
   const n = tabs.length;
   const activeIndex = activeTabIndex(tabs, path);
-  const [dragIndex, setDragIndex] = useState(null);
-  const shown = dragIndex ?? activeIndex;
   const centre = tabs.findIndex(([href]) => href === '/journal');
 
-  function indexAt(clientX) {
-    const rect = trackRef.current.getBoundingClientRect();
-    return tabIndexAt(clientX, rect.left, rect.width, n);
+  const [width, setWidth] = useState(0);
+  const [dragIndex, setDragIndex] = useState(null);
+
+  const barRef = useRef(null);
+  const pathRef = useRef(null);
+  const selectorRef = useRef(null);
+  const widthRef = useRef(0);
+  const prevIndex = useRef(activeIndex);
+  // Animation and pointer state. Kept in a ref so frames never trigger React renders.
+  const anim = useRef({
+    x: null, v: 0, target: 0, raf: 0, last: 0,
+    pointer: null, startX: 0, moved: false, suppress: false,
+  });
+
+  // Puts the selector and the carved edge at horizontal position x.
+  function draw(x) {
+    const w = widthRef.current;
+    if (!w) return;
+    pathRef.current?.setAttribute('d', barPath({ width: w, cx: x }));
+    if (selectorRef.current) {
+      selectorRef.current.style.transform = `translate3d(${x - NAV.r}px, ${NAV.cy - NAV.r}px, 0)`;
+    }
+  }
+
+  function frame(now) {
+    const a = anim.current;
+    const dt = a.last ? (now - a.last) / 1000 : 1 / 60;
+    a.last = now;
+    const s = stepSpring({ x: a.x, v: a.v }, a.target, dt, SPRING);
+    a.x = s.x;
+    a.v = s.v;
+    if (settled(s, a.target)) {
+      a.x = a.target;
+      a.v = 0;
+      a.raf = 0;
+      a.last = 0;
+      draw(a.x);
+      return;
+    }
+    draw(a.x);
+    a.raf = requestAnimationFrame(frame);
+  }
+
+  // Glides the selector to x. Reduced-motion users get an instant move.
+  function glideTo(x) {
+    const a = anim.current;
+    if (a.x === null || reducedMotion()) {
+      if (a.raf) cancelAnimationFrame(a.raf);
+      a.raf = 0;
+      a.x = x;
+      a.v = 0;
+      a.target = x;
+      draw(x);
+      return;
+    }
+    a.target = x;
+    if (!a.raf) {
+      a.last = 0;
+      a.raf = requestAnimationFrame(frame);
+    }
+  }
+
+  // Measure the bar so the notch and selector use real pixels.
+  useLayoutEffect(() => {
+    const el = barRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const w = el.getBoundingClientRect().width;
+      widthRef.current = w;
+      setWidth(w);
+    };
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  // Glide to the active tab. Hidden screens keep the selector where it was.
+  useEffect(() => {
+    const a = anim.current;
+    if (!width || a.pointer !== null) return;
+    if (activeIndex < 0) return;
+    if (prevIndex.current !== activeIndex && prevIndex.current >= 0) tick();
+    prevIndex.current = activeIndex;
+    glideTo(tabCentre(activeIndex, n, width));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, width, n]);
+
+  // Stop any running animation when the bar leaves the page.
+  useEffect(() => () => {
+    const a = anim.current;
+    if (a.raf) cancelAnimationFrame(a.raf);
+  }, []);
+
+  function localX(clientX) {
+    const rect = barRef.current.getBoundingClientRect();
+    return clientX - rect.left;
   }
 
   function onPointerDown(e) {
-    gesture.current = { down: true, moved: false, x: e.clientX };
+    const a = anim.current;
+    a.pointer = e.pointerId;
+    a.startX = e.clientX;
+    a.moved = false;
+    a.suppress = false;
   }
 
   function onPointerMove(e) {
-    const g = gesture.current;
-    if (!g.down) return;
-    if (!g.moved && Math.abs(e.clientX - g.x) > 6) {
-      g.moved = true;
-      trackRef.current?.setPointerCapture?.(e.pointerId);
+    const a = anim.current;
+    if (a.pointer === null || e.pointerId !== a.pointer) return;
+    if (!a.moved) {
+      if (Math.abs(e.clientX - a.startX) < 6) return;
+      a.moved = true;
+      barRef.current.setPointerCapture?.(e.pointerId);
+      if (a.raf) {
+        cancelAnimationFrame(a.raf);
+        a.raf = 0;
+      }
     }
-    if (g.moved) setDragIndex(indexAt(e.clientX));
+    const w = widthRef.current;
+    const x = clamp(localX(e.clientX), NAV.r, w - NAV.r);
+    a.x = x;
+    a.v = 0;
+    draw(x);
+    setDragIndex(tabIndexAt(e.clientX, barRef.current.getBoundingClientRect().left, w, n));
   }
 
-  function onPointerUp(e) {
-    const g = gesture.current;
-    gesture.current = { down: false, moved: false, x: 0 };
-    if (!g.moved) return;
-    const target = indexAt(e.clientX);
-    suppressClick.current = true;
+  function onPointerEnd(e, cancelled) {
+    const a = anim.current;
+    if (a.pointer === null || e.pointerId !== a.pointer) return;
+    a.pointer = null;
+    if (!a.moved) return; // A plain tap: the link itself handles it.
+    a.moved = false;
+    a.suppress = true; // The click that follows a drag must not navigate twice.
     setDragIndex(null);
-    if (target !== activeIndex) router.push(tabs[target][0]);
+    const w = widthRef.current;
+    const target = cancelled
+      ? activeIndex
+      : tabIndexAt(e.clientX, barRef.current.getBoundingClientRect().left, w, n);
+    if (!cancelled && target >= 0 && target !== activeIndex) {
+      router.push(tabs[target][0]);
+    } else if (activeIndex >= 0) {
+      glideTo(tabCentre(activeIndex, n, w));
+    }
   }
 
-  function onPointerCancel() {
-    gesture.current = { down: false, moved: false, x: 0 };
-    setDragIndex(null);
-  }
-
-  // A drag ends with a click on the tab under the finger. Swallow that click.
   function onClickCapture(e) {
-    if (suppressClick.current) {
-      suppressClick.current = false;
+    const a = anim.current;
+    if (a.suppress) {
+      a.suppress = false;
       e.preventDefault();
       e.stopPropagation();
     }
   }
 
+  const shown = dragIndex ?? activeIndex;
+
   return (
-    <nav className="obar" aria-label="Main">
+    <nav
+      className={`obar${visible ? '' : ' is-hidden'}`}
+      aria-label="Main"
+      aria-hidden={visible ? undefined : true}
+    >
       <div
-        className={`obar-track ${dragIndex !== null ? 'is-dragging' : ''}`}
-        ref={trackRef}
+        className="obar-body"
+        ref={barRef}
         style={{ '--n': n }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
+        onPointerUp={e => onPointerEnd(e, false)}
+        onPointerCancel={e => onPointerEnd(e, true)}
         onClickCapture={onClickCapture}
+        onDragStart={e => e.preventDefault()}
       >
-        {tabs.map(([href, label], i) => {
-          const isCentre = i === centre;
-          const on = i === shown;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`obar-item ${on ? 'on' : ''} ${isCentre ? 'is-centre' : ''}`}
-              aria-current={i === activeIndex ? 'page' : undefined}
-              aria-label={label}
-              data-sound="nav"
-            >
-              <span className="obar-ico">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  {ICON[href]}
-                </svg>
-              </span>
-              <span className="obar-sr">{label}</span>
-            </Link>
-          );
-        })}
+        <svg
+          className="obar-svg"
+          viewBox={`0 0 ${width || 1} ${NAV.height}`}
+          aria-hidden="true"
+          focusable="false"
+        >
+          {/* Solid body first, so nothing from the page shows through the carved notch. */}
+          <rect className="obar-bg" x="0" y="0" width={width || 1} height={NAV.height} rx={NAV.radius} />
+          {/* The carved outline, drawn as a stroke along the edge only. */}
+          <path ref={pathRef} className="obar-shape" />
+        </svg>
+
+        <div className="obar-row">
+          {tabs.map(([href, label], i) => {
+            const on = i === shown;
+            const isCentre = i === centre;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`obar-item${on ? ' on' : ''}${isCentre ? ' is-centre' : ''}`}
+                aria-current={i === activeIndex ? 'page' : undefined}
+                aria-label={label}
+                title={label}
+                data-sound="nav"
+                draggable={false}
+                tabIndex={visible ? undefined : -1}
+              >
+                <span className="obar-ico">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {ICON[href]}
+                  </svg>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div ref={selectorRef} className="obar-selector" aria-hidden="true">
+          {shown >= 0 && (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              {ICON[tabs[shown][0]]}
+            </svg>
+          )}
+        </div>
       </div>
     </nav>
   );

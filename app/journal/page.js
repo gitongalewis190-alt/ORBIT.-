@@ -12,23 +12,27 @@ import { enqueue, isNetworkError, loadDraft, saveDraft, clearDraft } from '../..
 import { logDecision } from '../../lib/log';
 import { fieldColor, REFLECT_PROMPTS, EXTRA_PROMPTS } from '../../lib/palette';
 import { readBenefits } from '../../lib/benefits';
+import { renderRich, plainText } from '../../lib/richtext';
 import TopicPicker from '../../components/TopicPicker';
+import RichEditor from '../../components/RichEditor';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
+const FONT_CLASS = { serif: 'f-serif', mono: 'f-mono' };
 
 const parseTags = text =>
   [...new Set(text.split(',').map(t => t.trim().toLowerCase().replace(/\s+/g, '-')).filter(Boolean))].slice(0, 8);
 
+// Learn writes research. Reflect writes a reflection, which belongs to the research on the same topic.
 export default function Journal() {
   const [uid, setUid] = useState(null);
   const [profile, setProfile] = useState(null);
   const [entries, setEntries] = useState([]);
   const [topics, setTopics] = useState([]);
-  const [search, setSearch] = useState('');
   const [memorySearch, setMemorySearch] = useState('');
   const [topic, setTopic] = useState(null);
   const [assignmentId, setAssignmentId] = useState(null);
   const [body, setBody] = useState('');
+  const [font, setFont] = useState('sans');
   const [points, setPoints] = useState('');
   const [tagText, setTagText] = useState('');
   const [conf, setConf] = useState(null);
@@ -43,9 +47,14 @@ export default function Journal() {
   const [wordsToday, setWordsToday] = useState(0);
   const [draftNote, setDraftNote] = useState('');
 
-  const words = useMemo(() => wordCount(body), [body]);
+  const words = useMemo(() => wordCount(plainText(body)), [body]);
   const goal = profile?.word_goal ?? 150;
   const pct = Math.min(100, Math.round((words / goal) * 100));
+  const isReflect = mode === 'reflect';
+
+  // The research written on the chosen topic, which a reflection is grouped under.
+  const researchFor = topicId => entries.find(e => e.topic_id === topicId && e.entry_kind !== 'reflection') ?? null;
+  const linkedResearch = isReflect && topic ? researchFor(topic.id) : null;
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -63,6 +72,7 @@ export default function Journal() {
         setTagText(draft.tagText || '');
         setConf(draft.conf ?? null);
         setMins(draft.mins || '');
+        setFont(draft.font || 'sans');
         setDraftNote('Draft restored from this phone.');
       }
 
@@ -100,12 +110,12 @@ export default function Journal() {
   useEffect(() => {
     if (!uid) return;
     if (!body && !points && !tagText && conf === null && !mins) return;
-    saveDraft(uid, { body, points, tagText, conf, mins });
-  }, [uid, body, points, tagText, conf, mins]);
+    saveDraft(uid, { body, points, tagText, conf, mins, font });
+  }, [uid, body, points, tagText, conf, mins, font]);
 
   async function load(id, p = profile) {
     const { data, error } = await supabase.from('journal_entries')
-      .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,topics(title,subfields(field_id))')
+      .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,entry_kind,research_entry_id,editor_font,topics(title,subfields(field_id))')
       .eq('user_id', id).order('created_at', { ascending: false }).limit(200);
     if (error) return setErr(error.message);
     setErr('');
@@ -142,7 +152,10 @@ export default function Journal() {
       confidence: conf,
       minutes_spent: mins ? Number(mins) : null,
       word_count: words,
-      tags: mode === 'reflect' ? [...new Set([...parseTags(tagText), 'reflection'])] : parseTags(tagText),
+      tags: parseTags(tagText),
+      entry_kind: isReflect ? 'reflection' : 'research',
+      research_entry_id: linkedResearch?.id ?? null,
+      editor_font: font,
       created_at: new Date().toISOString(),
     };
 
@@ -183,7 +196,7 @@ export default function Journal() {
     if (error) { play('error'); return toast(error.message, 'err'); }
     await logDecision(uid, 'relearn', entry.topic_id);
     play('chime');
-    toast('Added to today\u2019s reviews.', 'info');
+    toast('Added to today’s reviews.', 'info');
   }
 
   async function removeEntry(entry) {
@@ -197,7 +210,7 @@ export default function Journal() {
     load(uid, profile);
   }
 
-  const memoryList = entries.filter(e => {
+  const matches = e => {
     const q = memorySearch.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -205,7 +218,51 @@ export default function Journal() {
       (e.body || '').toLowerCase().includes(q) ||
       (e.tags || []).some(t => t.includes(q.replace(/\s+/g, '-')))
     );
-  });
+  };
+
+  // Memory: research entries as cards, each with its reflections nested beneath it.
+  // A reflection with no research to group under is shown on its own.
+  const memory = entries.filter(matches);
+  const researchCards = memory.filter(e => e.entry_kind !== 'reflection');
+  const reflections = memory.filter(e => e.entry_kind === 'reflection');
+  const grouped = id => reflections.filter(r => r.research_entry_id === id);
+  const researchIds = new Set(researchCards.map(e => e.id));
+  const orphans = reflections.filter(r => !r.research_entry_id || !researchIds.has(r.research_entry_id));
+
+  function EntryBody({ e }) {
+    return (
+      <div
+        className={`rich-view ${FONT_CLASS[e.editor_font] ?? ''}`}
+        dangerouslySetInnerHTML={{ __html: renderRich(e.body) }}
+      />
+    );
+  }
+
+  function Expanded({ e }) {
+    return (
+      <div className="fade-in" style={{ marginTop: 10 }} onClick={ev => ev.stopPropagation()}>
+        <EntryBody e={e} />
+        {e.key_points?.length > 0 && (
+          <ul style={{ paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
+            {e.key_points.map((k, i) => <li key={i}>{k}</li>)}
+          </ul>
+        )}
+        {e.entry_kind !== 'reflection' && (
+          <div className="row">
+            <button className="btn sm accent" onClick={() => relearn(e)}>Re-learn now</button>
+            <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete</button>
+          </div>
+        )}
+        {e.entry_kind === 'reflection' && (
+          <div className="row">
+            <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete reflection</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const dayOf = iso => prettyDate(String(iso).slice(0, 10));
 
   return (
     <div className="fade-in">
@@ -222,14 +279,27 @@ export default function Journal() {
             <button className="btn sm" onClick={() => { setTopic(null); setAssignmentId(null); }}>Change</button>
           </div>
         ) : (
-          <TopicPicker topics={topics} onPick={t => { setTopic(t); setSearch(''); }} />
+          <TopicPicker topics={topics} onPick={t => { setTopic(t); }} />
         )}
 
         <div className="seg" style={{ marginBottom: 10 }} role="tablist" aria-label="Journal mode">
-          <button role="tab" aria-selected={mode === 'learn'} className={mode === 'learn' ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
-          <button role="tab" aria-selected={mode === 'reflect'} className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
+          <button role="tab" aria-selected={!isReflect} className={!isReflect ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
+          <button role="tab" aria-selected={isReflect} className={isReflect ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
         </div>
-        {mode === 'reflect' && (
+
+        {isReflect && topic && (
+          linkedResearch ? (
+            <p className="notice" role="status">
+              Grouped with your research on this topic from {dayOf(linkedResearch.created_at)}.
+            </p>
+          ) : (
+            <p className="muted" style={{ marginTop: 0 }}>
+              No research on this topic yet. This reflection will stand on its own.
+            </p>
+          )
+        )}
+
+        {isReflect && (
           <div className="prompt-list">
             {[...REFLECT_PROMPTS, ...(benefitIds.includes('reflection_prompts') ? EXTRA_PROMPTS : [])].map(prompt => (
               <button key={prompt} className="prompt" onClick={() => setBody(b => (b ? `${b}\n\n` : '') + prompt + '\n')}>
@@ -238,11 +308,15 @@ export default function Journal() {
             ))}
           </div>
         )}
-        <h2>{mode === 'reflect' ? 'Reflection' : 'What I learned'}</h2>
-        <textarea
+        <h2>{isReflect ? 'Reflection' : 'What I learned'}</h2>
+        <RichEditor
           value={body}
-          onChange={e => setBody(e.target.value)}
+          onChange={setBody}
+          font={font}
+          onFont={setFont}
+          label="Formatting"
           placeholder="Explain it in your own words."
+          minHeight={260}
         />
         <div className="row" style={{ justifyContent: 'space-between', marginTop: 0 }}>
           <span className="muted">{words} word{words === 1 ? '' : 's'}</span>
@@ -286,7 +360,7 @@ export default function Journal() {
 
         <div className="row">
           <button className="btn accent" onClick={save} disabled={busy}>
-            {busy ? 'Saving' : 'Save entry'}
+            {busy ? 'Saving' : isReflect ? 'Save reflection' : 'Save entry'}
           </button>
         </div>
       </div>
@@ -294,34 +368,46 @@ export default function Journal() {
       <h2>Memory</h2>
       <input placeholder="Search your memory: topic, words or tag" value={memorySearch}
         onChange={e => setMemorySearch(e.target.value)} />
-      {memoryList.length === 0 && (
+      {memory.length === 0 && (
         <p className="muted">{entries.length === 0 ? 'Nothing saved yet.' : 'No entries match that search.'}</p>
       )}
-      {memoryList.map(e => (
+
+      {researchCards.map(e => {
+        const children = grouped(e.id);
+        return (
+          <div key={e.id} className="entry entry-card" style={{ borderLeft: `4px solid ${fieldColor(e.topics?.subfields?.field_id)}` }} onClick={() => setOpen(open?.id === e.id ? null : e)}>
+            <div>{e.topics?.title ?? 'Removed topic'}</div>
+            <div className="muted">
+              Research · {dayOf(e.created_at)} · confidence {e.confidence ?? '-'} · {e.word_count ?? 0} words
+            </div>
+            {e.tags?.length > 0 && (
+              <div style={{ marginTop: 4 }}>
+                {e.tags.map(t => <span key={t} className="tag">{t}</span>)}
+              </div>
+            )}
+            {children.length > 0 && (
+              <div className="reflection-group" aria-label="Reflections on this research">
+                <div className="kicker" style={{ marginTop: 8 }}>Reflections · {children.length}</div>
+                {children.map(r => (
+                  <div key={r.id} className="reflection-item" onClick={ev => { ev.stopPropagation(); setOpen(open?.id === r.id ? null : r); }}>
+                    <span>{dayOf(r.created_at)} · confidence {r.confidence ?? '-'}</span>
+                    {open?.id === r.id && <Expanded e={r} />}
+                  </div>
+                ))}
+              </div>
+            )}
+            {open?.id === e.id && <Expanded e={e} />}
+          </div>
+        );
+      })}
+
+      {orphans.map(e => (
         <div key={e.id} className="entry entry-card" style={{ borderLeft: `4px solid ${fieldColor(e.topics?.subfields?.field_id)}` }} onClick={() => setOpen(open?.id === e.id ? null : e)}>
           <div>{e.topics?.title ?? 'Removed topic'}</div>
           <div className="muted">
-            {prettyDate(e.created_at.slice(0, 10))} · confidence {e.confidence ?? '-'} · {e.word_count ?? 0} words
+            Reflection · {dayOf(e.created_at)} · confidence {e.confidence ?? '-'} · {e.word_count ?? 0} words
           </div>
-          {e.tags?.length > 0 && (
-            <div style={{ marginTop: 4 }}>
-              {e.tags.map(t => <span key={t} className="tag">{t}</span>)}
-            </div>
-          )}
-          {open?.id === e.id && (
-            <div className="fade-in" style={{ marginTop: 10 }} onClick={ev => ev.stopPropagation()}>
-              <p style={{ whiteSpace: 'pre-wrap', fontSize: 15, lineHeight: 1.5 }}>{e.body}</p>
-              {e.key_points?.length > 0 && (
-                <ul style={{ paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
-                  {e.key_points.map((k, i) => <li key={i}>{k}</li>)}
-                </ul>
-              )}
-              <div className="row">
-                <button className="btn sm accent" onClick={() => relearn(e)}>Re-learn now</button>
-                <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete</button>
-              </div>
-            </div>
-          )}
+          {open?.id === e.id && <Expanded e={e} />}
         </div>
       ))}
     </div>

@@ -27,6 +27,8 @@ import Toaster from './Toaster';
 import AwardUnlock from './AwardUnlock';
 import TabBar from './TabBar';
 import Skeleton from './Skeleton';
+import PrintSheet from './PrintSheet';
+import { activeTabIndex } from '../lib/tabs';
 
 const TABS = [
   ['/', 'Today'],
@@ -42,7 +44,7 @@ function soundFor(el) {
   const named = el.closest('[data-sound]');
 
   if (named) return named.dataset.sound;
-  if (el.closest('.tabbar a')) return 'nav';
+  if (el.closest('.obar a')) return 'nav';
   if (el.closest('.btn.danger')) return 'warn';
   if (el.closest('.switch')) return 'toggle';
   if (el.closest('.seg button, .chip')) return 'select';
@@ -59,6 +61,7 @@ export default function Shell({ children }) {
   const [online, setOnline] = useState(true);
 
   const uidRef = useRef(null);
+  const [printOpen, setPrintOpen] = useState(false);
 
   // Sends saved offline entries to Supabase when a connection returns.
   async function flushQueue() {
@@ -323,44 +326,49 @@ export default function Shell({ children }) {
         </Link>
 
         <div className="topbar-actions">
-        <Link href="/guide" className="gear" aria-label="Guide" data-sound="open">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            <path d="M9 7.5h7M9 11h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-        </Link>
-
-        <Link
-          href="/settings"
-          className="gear"
-          aria-label="Settings"
-          data-sound="open"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+          <button
+            type="button"
+            className="gear"
+            aria-label="Download PDF record"
+            title="Download PDF record"
+            data-sound="open"
+            onClick={() => setPrintOpen(true)}
           >
-            <circle
-              cx="12"
-              cy="12"
-              r="3.2"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-            />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
+            </svg>
+          </button>
 
-            <path
-              d="M12 2.8v2.6M12 18.6v2.6M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.8 12h2.6M18.6 12h2.6M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </Link>
+          <Link
+            href="/settings"
+            className="gear"
+            aria-label="Settings"
+            data-sound="open"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="3.2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              />
+
+              <path
+                d="M12 2.8v2.6M12 18.6v2.6M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.8 12h2.6M18.6 12h2.6M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Link>
         </div>
       </header>
 
@@ -375,7 +383,13 @@ export default function Shell({ children }) {
         {children}
       </div>
 
-      <TabBar tabs={TABS} path={path} />
+      <TabBar
+        tabs={TABS}
+        path={path}
+        visible={activeTabIndex(TABS, path) >= 0}
+      />
+
+      <PrintSheet open={printOpen} onClose={() => setPrintOpen(false)} />
 
       <Toaster />
       <AwardUnlock />

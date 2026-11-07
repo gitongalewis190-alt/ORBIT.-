@@ -1,50 +1,40 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
-import { today, addDays } from '../lib/dates';
+import { WINDOWS, rangeFor, createRecord, listRecords, purgeExpired, downloadRecord, openRecord, deleteRecord } from '../lib/printRecord';
+import { prettyDate, addDays } from '../lib/dates';
+import ConfirmDialog from './ConfirmDialog';
 
-// Time windows for the printable record. 'all' means no limit.
-const WINDOWS = [
-  { key: '7', label: 'Last 7 days', days: 7 },
-  { key: '30', label: 'Last 30 days', days: 30 },
-  { key: '90', label: 'Last 90 days', days: 90 },
-  { key: 'all', label: 'All time', days: null },
-];
-
-const logKey = uid => `orbit.print-log.${uid}`;
-
-function readLog(uid) {
-  try {
-    return JSON.parse(localStorage.getItem(logKey(uid)) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-// Keeps the most recent 50 entries so the log stays small.
-function writeLog(uid, list) {
-  try {
-    localStorage.setItem(logKey(uid), JSON.stringify(list.slice(0, 50)));
-  } catch {}
-}
+// Shown in the document log. Dates are read in Nairobi time.
+const when = iso => new Date(iso).toLocaleString('en-GB', {
+  day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi',
+});
 
 export default function ExportPanel({ uid }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [windowKey, setWindowKey] = useState('30');
-  const [log, setLog] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [toDelete, setToDelete] = useState(null);
+  const [rowBusy, setRowBusy] = useState(null);
 
-  useEffect(() => {
-    if (uid) setLog(readLog(uid));
+  const refresh = useCallback(async () => {
+    if (!uid) return;
+    try {
+      setRecords(await listRecords(uid));
+    } catch (e) {
+      toast(`Could not load your document log: ${e.message}`, 'err', 6000);
+    } finally {
+      setLoaded(true);
+    }
   }, [uid]);
 
-  function rangeFor(key) {
-    const w = WINDOWS.find(x => x.key === key) ?? WINDOWS[1];
-    if (!w.days) return { label: w.label, range: null };
-    const now = today();
-    return { label: w.label, range: { from: addDays(now, -(w.days - 1)), to: now } };
-  }
+  useEffect(() => {
+    if (!uid) return;
+    purgeExpired(uid).catch(() => 0).finally(refresh);
+  }, [uid, refresh]);
 
   async function runPdf() {
     if (busy || !uid) return;
@@ -52,20 +42,14 @@ export default function ExportPanel({ uid }) {
     setStatus('Starting');
     const { label, range } = rangeFor(windowKey);
     try {
-      const { buildRecordPdf } = await import('../lib/export');
-      const { pages, entries } = await buildRecordPdf(uid, setStatus, range);
-      const next = [{
-        at: new Date().toISOString(),
-        window: label,
-        from: range?.from ?? null,
-        to: range?.to ?? null,
-        pages,
-        entries,
-      }, ...readLog(uid)];
-      writeLog(uid, next);
-      setLog(next.slice(0, 50));
+      const res = await createRecord(uid, { windowLabel: label, range }, setStatus);
       play('export');
-      toast(`Record saved: ${pages} pages, ${entries} journal entries.`, 'ok', 4500);
+      if (res.stored) {
+        toast(`Record saved: ${res.pages} pages, ${res.entries} journal entries.`, 'ok', 4500);
+        refresh();
+      } else {
+        toast(`Downloaded, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
+      }
     } catch (e) {
       play('error');
       toast(`Could not build the record: ${e.message}`, 'err', 6000);
@@ -92,18 +76,47 @@ export default function ExportPanel({ uid }) {
     }
   }
 
-  const fmt = iso => new Date(iso).toLocaleString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi',
-  });
+  async function rowAction(record, action) {
+    setRowBusy(record.id);
+    try {
+      if (action === 'download') await downloadRecord(record);
+      if (action === 'open') await openRecord(record);
+      play('export');
+    } catch (e) {
+      play('error');
+      toast(`Could not open that record: ${e.message}`, 'err', 6000);
+    } finally {
+      setRowBusy(null);
+    }
+  }
+
+  async function confirmDelete() {
+    const record = toDelete;
+    if (!record) return;
+    setRowBusy(record.id);
+    try {
+      await deleteRecord(record);
+      setRecords(list => list.filter(r => r.id !== record.id));
+      play('delete');
+      toast('That record has been removed.', 'ok');
+    } catch (e) {
+      play('error');
+      toast(`Could not remove that record: ${e.message}`, 'err', 6000);
+    } finally {
+      setRowBusy(null);
+      setToDelete(null);
+    }
+  }
+
+  const expires = iso => prettyDate(addDays(String(iso).slice(0, 10), 365));
 
   return (
-    <>
-      <h2>Export your record</h2>
+    <section className="settings-group" aria-labelledby="records-heading">
+      <h2 id="records-heading">Records and backups</h2>
       <div className="card">
         <p className="muted" style={{ marginTop: 0, lineHeight: 1.5 }}>
-          <strong>Printable record (PDF).</strong> Choose the period it covers. Journal entries, the decision log
-          and focus time are limited to that period, and only awards earned in it are printed, with the three
-          closest to unlocking. Every medal back carries your name.
+          <strong>Printable record (PDF).</strong> Choose the period it covers. Every record you download is kept for
+          365 days in the document log below, so you can download or print it again.
         </p>
 
         <div className="seg" role="radiogroup" aria-label="Time window" style={{ margin: '12px 0' }}>
@@ -145,19 +158,45 @@ export default function ExportPanel({ uid }) {
 
       <h2>Document log</h2>
       <div className="card">
-        {log.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>No records made yet. Each PDF you create is listed here.</p>
+        {!loaded ? (
+          <p className="muted" style={{ margin: 0 }}>Loading your records</p>
+        ) : records.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>No records yet. Each PDF you create is kept here for 365 days.</p>
         ) : (
           <ul className="print-log" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {log.map((l, i) => (
-              <li key={i} className="print-log-row">
-                <span>{fmt(l.at)}</span>
-                <span className="muted">{l.window} · {l.pages} pages · {l.entries} entries</span>
+            {records.map(r => (
+              <li key={r.id} className="print-log-row">
+                <div>
+                  <div>{when(r.created_at)}</div>
+                  <div className="muted">
+                    {r.window_label} · {r.pages} pages · {r.entries} entries · kept until {expires(r.created_at)}
+                  </div>
+                </div>
+                <div className="print-log-actions">
+                  <button type="button" className="chip" onClick={() => rowAction(r, 'download')} disabled={rowBusy === r.id}>Download</button>
+                  <button type="button" className="chip" onClick={() => rowAction(r, 'open')} disabled={rowBusy === r.id}>Open to print</button>
+                  <button type="button" className="chip" onClick={() => setToDelete(r)} disabled={rowBusy === r.id}>Remove</button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
-    </>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Remove this record?"
+        danger
+        confirmLabel="Remove record"
+        busy={!!rowBusy}
+        onConfirm={confirmDelete}
+        onCancel={() => setToDelete(null)}
+      >
+        <p style={{ marginTop: 0 }}>
+          The stored copy of this PDF will be deleted and cannot be recovered. Any copy you already downloaded to your
+          phone is not affected. Your journal and other records stay as they are.
+        </p>
+      </ConfirmDialog>
+    </section>
   );
 }
