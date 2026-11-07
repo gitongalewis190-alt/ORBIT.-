@@ -11,6 +11,7 @@ const LABELS = {
   accepted: 'Topic accepted',
   rejected: 'Topic rejected',
   journal_saved: 'Entry saved',
+  entry_edited: 'Entry edited',
   relearn: 'Re-learn queued',
   entry_deleted: 'Entry deleted',
   auto_show_less: 'Auto: show less',
@@ -28,7 +29,7 @@ const LABELS = {
 const GROUPS = [
   { key: 'all', label: 'All' },
   { key: 'topics', label: 'Topics', colour: '#c4623d', events: ['generated', 'accepted', 'rejected', 'topic_show_more', 'topic_show_less', 'topic_archived', 'topic_removed', 'topic_normal', 'topic_added', 'topic_deleted', 'topics_added'] },
-  { key: 'entries', label: 'Entries', colour: '#3b7a6a', events: ['journal_saved', 'entry_deleted', 'relearn'] },
+  { key: 'entries', label: 'Entries', colour: '#3b7a6a', events: ['journal_saved', 'entry_edited', 'entry_deleted', 'relearn'] },
   { key: 'system', label: 'System', colour: '#5a6bb5', events: ['auto_show_less', 'section_added'] },
 ];
 

@@ -19,13 +19,15 @@ export default function ExportPanel({ uid }) {
   const [loaded, setLoaded] = useState(false);
   const [toDelete, setToDelete] = useState(null);
   const [rowBusy, setRowBusy] = useState(null);
+  const [loadError, setLoadError] = useState('');
 
   const refresh = useCallback(async () => {
     if (!uid) return;
     try {
+      setLoadError('');
       setRecords(await listRecords(uid));
     } catch (e) {
-      toast(`Could not load your document log: ${e.message}`, 'err', 6000);
+      setLoadError(e.message || 'Unknown error');
     } finally {
       setLoaded(true);
     }
@@ -108,7 +110,7 @@ export default function ExportPanel({ uid }) {
     }
   }
 
-  const expires = iso => prettyDate(addDays(String(iso).slice(0, 10), 365));
+  const expires = iso => prettyDate(String(iso).slice(0, 10));
 
   return (
     <section className="settings-group" aria-labelledby="records-heading">
@@ -116,34 +118,12 @@ export default function ExportPanel({ uid }) {
       <div className="card">
         <p className="muted" style={{ marginTop: 0, lineHeight: 1.5 }}>
           <strong>Printable record (PDF).</strong> Choose the period it covers. Every record you download is kept for
-          365 days in the document log below, so you can download or print it again.
+          in the document log below until it expires, so you can download or print it again.
         </p>
 
-        <div className="seg" role="radiogroup" aria-label="Time window" style={{ margin: '12px 0' }}>
-          {WINDOWS.map(w => (
-            <button
-              key={w.key}
-              type="button"
-              role="radio"
-              aria-checked={windowKey === w.key}
-              className={windowKey === w.key ? 'on' : ''}
-              onClick={() => setWindowKey(w.key)}
-              disabled={busy}
-            >
-              {w.label}
-            </button>
-          ))}
-        </div>
-
-        {busy && (
-          <div className="doc-progress" role="progressbar" aria-label="Building document" aria-busy="true">
-            <span />
-          </div>
-        )}
-
-        <div className="row" style={{ marginTop: 0 }}>
-          <button className="btn accent" onClick={runPdf} disabled={busy || !uid}>
-            {busy && status ? status : 'Create PDF record'}
+        <div className="row" style={{ marginTop: 12 }}>
+        <button className="btn accent" onClick={() => window.dispatchEvent(new Event('orbit:open-print'))} disabled={!uid}>
+            Create PDF record
           </button>
         </div>
 
@@ -158,10 +138,16 @@ export default function ExportPanel({ uid }) {
 
       <h2>Document log</h2>
       <div className="card">
+        {loadError && (
+          <div role="alert" style={{ marginBottom: 12 }}>
+            <p className="err" style={{ margin: '0 0 8px' }}>Could not load your document log: {loadError}</p>
+            <button className="btn sm" onClick={refresh}>Try again</button>
+          </div>
+        )}
         {!loaded ? (
           <p className="muted" style={{ margin: 0 }}>Loading your records</p>
         ) : records.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>No records yet. Each PDF you create is kept here for 365 days.</p>
+          <p className="muted" style={{ margin: 0 }}>No records yet. Each PDF you create is kept here for as long as you choose when you make it.</p>
         ) : (
           <ul className="print-log" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {records.map(r => (
@@ -169,7 +155,7 @@ export default function ExportPanel({ uid }) {
                 <div>
                   <div>{when(r.created_at)}</div>
                   <div className="muted">
-                    {r.window_label} · {r.pages} pages · {r.entries} entries · kept until {expires(r.created_at)}
+                    {r.window_label} · {r.pages} pages · {r.entries} entries · kept until {expires(r.expires_at)}
                   </div>
                 </div>
                 <div className="print-log-actions">

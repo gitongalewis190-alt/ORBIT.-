@@ -13,6 +13,7 @@ import SmartNotes from '../components/SmartNotes';
 import BenefitsPanel from '../components/BenefitsPanel';
 import FocusTimer from '../components/FocusTimer';
 import Onboarding from '../components/Onboarding';
+import { canChangeTopic, changesToday } from '../lib/dayRules';
 
 const WHY = {
   auto: 'Drawn from your library, weighted toward topics you marked More and away from those marked Less.',
@@ -31,6 +32,7 @@ export default function Today() {
   const [busy, setBusy] = useState(false);
   const [reveal, setReveal] = useState(null);
   const [err, setErr] = useState('');
+  const [changes, setChanges] = useState(0);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -42,7 +44,7 @@ export default function Today() {
 
   async function load(uid) {
     const t = today();
-    const [a, r, f] = await Promise.all([
+    const [a, r, f, c] = await Promise.all([
       supabase.from('assignments')
         .select('id,topic_id,assigned_on,due_on,est_minutes,mode,status,topics(title,difficulty,subfields(name,fields(name)))')
         .eq('user_id', uid).eq('assigned_on', t).neq('status', 'rejected')
@@ -50,15 +52,18 @@ export default function Today() {
       supabase.from('reviews').select('topic_id,due_on,topics(title)')
         .eq('user_id', uid).lte('due_on', t).order('due_on'),
       supabase.from('fields').select('id,name').order('id'),
+      supabase.from('assignments').select('id', { count: 'exact', head: true })
+        .eq('user_id', uid).eq('assigned_on', t).neq('status', 'rejected'),
     ]);
-    if (a.error || r.error || f.error) {
-      const message = (a.error || r.error || f.error).message;
+    if (a.error || r.error || f.error || c.error) {
+      const message = (a.error || r.error || f.error || c.error).message;
       setErr(message);
       play('error');
     }
     setAssignment(a.data ?? null);
     setReviews(r.data ?? []);
     setFields(f.data ?? []);
+    setChanges(changesToday(c.count));
   }
 
   // Selection runs first. The reveal plays, then the assignment is saved.
@@ -129,6 +134,7 @@ export default function Today() {
   }
 
   const topic = assignment?.topics;
+  const change = canChangeTopic({ assignment, overridesToday: changes });
 
   return (
     <div className="fade-in">
@@ -169,6 +175,14 @@ export default function Today() {
                 <a className="btn accent" href={`/journal?assignment=${assignment.id}`}>
                   Log what I learned
                 </a>
+              )}
+              {assignment.status === 'completed' && (
+                <>
+                  <button className="btn" onClick={() => generate(null)} disabled={busy || !change.ok}>
+                    Choose another topic
+                  </button>
+                  {!change.ok && <p className="muted">{change.reason}</p>}
+                </>
               )}
             </div>
           )}

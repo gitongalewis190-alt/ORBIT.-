@@ -1,4 +1,5 @@
 'use client';
+import FullEditor from '../../components/FullEditor';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { today, prettyDate } from '../../lib/dates';
@@ -40,6 +41,7 @@ export default function Journal() {
   const [open, setOpen] = useState(null);
   const [mode, setMode] = useState('learn');
   const [benefitIds, setBenefitIds] = useState([]);
+  const [editing, setEditing] = useState(null);
   useEffect(() => { setBenefitIds(readBenefits()); }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -199,6 +201,29 @@ export default function Journal() {
     toast('Added to today’s reviews.', 'info');
   }
 
+  // The entry before or after this one in the memory list, for the editor's Previous and Next buttons.
+  function neighbour(step, e) {
+    const i = memory.findIndex(x => x.id === e.id);
+    const target = i < 0 ? null : memory[i + step];
+    if (!target) return null;
+    return () => { setOpen(target); setEditing(target.id); };
+  }
+
+  // Saves an edit to a published entry. The change is recorded in the log.
+  async function saveEdit(entry, text) {
+    const body = text.trim();
+    const words = body.split(/\s+/).filter(Boolean).length;
+    if (words < 1) { play('error'); return toast('An entry cannot be empty.', 'err'); }
+    const { error } = await supabase.from('journal_entries')
+      .update({ body, word_count: words }).eq('id', entry.id).eq('user_id', uid);
+    if (error) { play('error'); return toast(error.message, 'err'); }
+    await logDecision(uid, 'entry_edited', entry.topic_id, { words });
+    play('save');
+    toast('Entry updated.', 'ok');
+    setEditing(null);
+    load(uid, profile);
+  }
+
   async function removeEntry(entry) {
     if (!window.confirm('Delete this entry? This cannot be undone.')) return;
     const { error } = await supabase.from('journal_entries').delete().eq('id', entry.id);
@@ -242,6 +267,16 @@ export default function Journal() {
     return (
       <div className="fade-in" style={{ marginTop: 10 }} onClick={ev => ev.stopPropagation()}>
         <EntryBody e={e} />
+        {editing === e.id && (
+          <FullEditor
+            title={e.topics?.title ?? 'Entry'}
+            value={e.body}
+            onSave={text => saveEdit(e, text)}
+            onClose={() => setEditing(null)}
+            onPrev={neighbour(-1, e)}
+            onNext={neighbour(1, e)}
+          />
+        )}
         {e.key_points?.length > 0 && (
           <ul style={{ paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
             {e.key_points.map((k, i) => <li key={i}>{k}</li>)}
@@ -249,12 +284,14 @@ export default function Journal() {
         )}
         {e.entry_kind !== 'reflection' && (
           <div className="row">
+            <button className="btn sm" onClick={() => setEditing(e.id)}>Edit</button>
             <button className="btn sm accent" onClick={() => relearn(e)}>Re-learn now</button>
             <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete</button>
           </div>
         )}
         {e.entry_kind === 'reflection' && (
           <div className="row">
+            <button className="btn sm" onClick={() => setEditing(e.id)}>Edit</button>
             <button className="btn sm danger" onClick={() => removeEntry(e)}>Delete reflection</button>
           </div>
         )}

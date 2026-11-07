@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { getProfile, saveProfile, DEFAULT_PROFILE } from '../../lib/profile';
 import { play, setSound, setVolume } from '../../lib/sound';
 import { applyTheme } from '../../lib/theme';
+import StorageMeter from '../../components/StorageMeter';
 import { toast } from '../../lib/toast';
 import { autocorrectOn, setAutocorrect } from '../../lib/autocorrect';
 import ProfileDetails from '../../components/ProfileDetails';
@@ -19,6 +20,25 @@ const TIMEZONES = [
 // Personal records cleared by Reset. Stored PDF copies in the document log are kept on purpose.
 const RESET_TABLES = ['decision_log', 'journal_entries', 'reviews', 'topic_controls', 'assignments', 'user_badges', 'streak_freezes', 'focus_sessions'];
 
+// The catalogue. Each entry opens its own page. Danger rows are red-labelled and sit at the end.
+const CATALOGUE = [
+  { key: 'profile', title: 'Profile and personal information', hint: 'Name, age, goals, timezone' },
+  { key: 'appearance', title: 'Appearance', hint: 'Light, dark or follow the device' },
+  { key: 'sound', title: 'Sound', hint: 'Sounds and volume' },
+  { key: 'learning', title: 'Journal and learning', hint: 'Autocorrect and how topics are chosen' },
+  { key: 'export', title: 'Extensions and exports', hint: 'PDF records and JSON backups' },
+  { key: 'storage', title: 'Storage', hint: 'How much space your data uses' },
+  { key: 'help', title: 'Help and version', hint: 'The guide and the app version' },
+  { key: 'reset', title: 'Reset everything', hint: 'Clear your records, keep your account', danger: true },
+  { key: 'delete', title: 'Delete account', hint: 'Remove your sign-in and all your data', danger: true },
+];
+
+const rowStyle = {
+  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%',
+  padding: '14px 4px', background: 'transparent', border: 0, borderBottom: '0.5px solid var(--border)',
+  color: 'inherit', textAlign: 'left', fontSize: 16, cursor: 'pointer',
+};
+
 // Two-step confirmations. Each flow moves from step 1 (the warning) to step 2 (the final check).
 // Nothing is changed until step 2 is confirmed.
 export default function Settings() {
@@ -27,6 +47,7 @@ export default function Settings() {
   const [email, setEmail] = useState('');
   const [p, setP] = useState(null);
   const [autoFix, setAutoFix] = useState(true);
+  const [view, setView] = useState(null);
   const [flow, setFlow] = useState(null); // { action: 'signout' | 'reset' | 'delete', step: 1 | 2 }
   const [confirmText, setConfirmText] = useState('');
   const [deleteText, setDeleteText] = useState('');
@@ -119,6 +140,7 @@ export default function Settings() {
   async function signOut() {
     setBusy(true);
     play('bye');
+    applyTheme('system');
     await supabase.auth.signOut();
     router.replace('/login');
   }
@@ -195,160 +217,174 @@ export default function Settings() {
 
   const themeChoices = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']];
   const step = action => (flow?.action === action ? flow.step : 0);
+  const current = CATALOGUE.find(c => c.key === view);
+
+  // A plain render function, not a component, so inputs keep focus while typing.
+  function renderPage() {
+    switch (view) {
+      case 'profile':
+        return (
+          <div className="card">
+            <div className="kicker">Name</div>
+            <input value={p.display_name ?? ''} placeholder="What should Orbit call you?"
+              onChange={e => setP({ ...p, display_name: e.target.value })} />
+            <div className="kicker">Age</div>
+            <input type="number" inputMode="numeric" value={p.age ?? ''} placeholder="Shown on your PDF export"
+              onChange={e => setP({ ...p, age: e.target.value })} />
+            <div className="kicker">Daily study minutes</div>
+            <input type="number" inputMode="numeric" value={p.daily_minutes}
+              onChange={e => setP({ ...p, daily_minutes: e.target.value })} />
+            <div className="kicker">Words per journal entry (goal)</div>
+            <input type="number" inputMode="numeric" value={p.word_goal}
+              onChange={e => setP({ ...p, word_goal: e.target.value })} />
+            <div className="kicker">Journal entries per week (goal)</div>
+            <input type="number" inputMode="numeric" value={p.weekly_entry_goal}
+              onChange={e => setP({ ...p, weekly_entry_goal: e.target.value })} />
+            <div className="kicker">Timezone</div>
+            <select value={p.timezone} onChange={e => setP({ ...p, timezone: e.target.value })}>
+              {TIMEZONES.map(z => <option key={z} value={z}>{z}</option>)}
+            </select>
+            <div className="row">
+              <button className="btn accent" onClick={saveNumbers}>Save profile</button>
+            </div>
+            <ProfileDetails uid={uid} />
+          </div>
+        );
+      case 'appearance':
+        return (
+          <div className="card">
+            <div className="seg">
+              {themeChoices.map(([v, l]) => (
+                <button key={v} className={p.theme === v ? 'on' : ''} onClick={() => chooseTheme(v)}>{l}</button>
+              ))}
+            </div>
+            <p className="muted" style={{ marginBottom: 0 }}>System follows your iPhone's light or dark setting.</p>
+          </div>
+        );
+      case 'sound':
+        return (
+          <div className="card">
+            <div className="switchrow">
+              <span>Sounds</span>
+              <button className={`switch ${p.sound_on ? 'on' : ''}`} onClick={toggleSound} aria-label="Toggle sounds" />
+            </div>
+            <div className="kicker" style={{ marginTop: 10 }}>Volume · {p.sound_volume}%</div>
+            <input type="range" min="0" max="100" value={p.sound_volume}
+              onChange={e => previewVolume(Number(e.target.value))}
+              onMouseUp={commitVolume} onTouchEnd={commitVolume} />
+            <div className="kicker" style={{ marginTop: 10 }}>Preview</div>
+            <div className="choices" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {['tap', 'select', 'toggle', 'save', 'success', 'badge', 'streak', 'reveal', 'warn'].map(s => (
+                <button key={s} className="chip" data-sound={s}>{s}</button>
+              ))}
+            </div>
+          </div>
+        );
+      case 'learning':
+        return (
+          <>
+            <div className="card">
+              <div className="switchrow">
+                <span>Autocorrect in the journal</span>
+                <button className={`switch ${autoFix ? 'on' : ''}`} onClick={toggleAutocorrect} aria-label="Toggle autocorrect" />
+              </div>
+              <p className="muted" style={{ marginBottom: 0, lineHeight: 1.5 }}>
+                Fixes common typos, capitals at the start of sentences, and spacing around punctuation as you type.
+                The setting applies to this phone only.
+              </p>
+            </div>
+            <div className="card" style={{ marginTop: 12 }}>
+              <div className="kicker">How selection works</div>
+              <p style={{ marginTop: 6, lineHeight: 1.55, fontSize: 14 }}>
+                Each day Orbit picks one topic from your library. Most days it draws at random, weighted toward
+                what you've marked More and away from what you've marked Less. On about 15% of days it chooses from
+                a field linked to what you studied last, to build bridges between subjects. About 10% of days are
+                fully random. About 5% of days it leans toward fields where your recent confidence is low.
+              </p>
+              <p style={{ lineHeight: 1.55, fontSize: 14 }}>
+                Orbit won't repeat a topic within 14 days or the same field two days running. If your recent
+                confidence is high it raises the difficulty; if it's low it lowers it. If a topic has an unfinished
+                prerequisite, the prerequisite comes first. Each topic's time budget and deadline follow its
+                difficulty: 30 minutes for beginner, 45 for intermediate, 75 for advanced.
+              </p>
+            </div>
+          </>
+        );
+      case 'export':
+        return <ExportPanel uid={uid} />;
+      case 'storage':
+        return <div className="card"><StorageMeter /></div>;
+      case 'help':
+        return (
+          <div className="card">
+            <p className="muted" style={{ marginTop: 0 }}>The searchable manual explains every screen, rule and smart note.</p>
+            <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
+              <a className="btn accent" href="/guide">Open the guide</a>
+              <span className="muted">Version {APP_VERSION}</span>
+            </div>
+          </div>
+        );
+      case 'reset':
+        return (
+          <div className="card">
+            <p className="muted" style={{ marginTop: 0 }}>
+              Clears your journal, medals, reviews, assignments, topic controls, custom topics and sections, freezes,
+              focus sessions and log. Your account and sign-in stay, and so do the PDF copies in your document log.
+              The shared library is untouched. This cannot be undone.
+            </p>
+            <div className="row" style={{ marginTop: 0 }}>
+              <button className="btn danger" onClick={() => setFlow({ action: 'reset', step: 1 })} disabled={busy}>Reset everything</button>
+            </div>
+          </div>
+        );
+      case 'delete':
+        return (
+          <div className="card">
+            <p className="muted" style={{ marginTop: 0 }}>
+              Permanently deletes your sign-in and every record tied to it, including the PDF copies in your document
+              log. You will not be able to sign back in to this data. Use Reset if you only want a clean start.
+            </p>
+            <div className="row" style={{ marginTop: 0 }}>
+              <button className="btn danger" onClick={() => setFlow({ action: 'delete', step: 1 })} disabled={busy}>Delete my account</button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
 
   return (
     <div className="fade-in settings">
-      <h1>Settings</h1>
-      <p className="muted">{email}</p>
-
-      <section className="settings-group" aria-labelledby="g-profile">
-        <h2 id="g-profile">Profile</h2>
-        <div className="card">
-          <div className="kicker">Name</div>
-          <input value={p.display_name ?? ''} placeholder="What should Orbit call you?"
-            onChange={e => setP({ ...p, display_name: e.target.value })} />
-
-          <div className="kicker">Age</div>
-          <input type="number" inputMode="numeric" value={p.age ?? ''} placeholder="Shown on your PDF export"
-            onChange={e => setP({ ...p, age: e.target.value })} />
-
-          <div className="kicker">Daily study minutes</div>
-          <input type="number" inputMode="numeric" value={p.daily_minutes}
-            onChange={e => setP({ ...p, daily_minutes: e.target.value })} />
-
-          <div className="kicker">Words per journal entry (goal)</div>
-          <input type="number" inputMode="numeric" value={p.word_goal}
-            onChange={e => setP({ ...p, word_goal: e.target.value })} />
-
-          <div className="kicker">Journal entries per week (goal)</div>
-          <input type="number" inputMode="numeric" value={p.weekly_entry_goal}
-            onChange={e => setP({ ...p, weekly_entry_goal: e.target.value })} />
-
-          <div className="kicker">Timezone</div>
-          <select value={p.timezone} onChange={e => setP({ ...p, timezone: e.target.value })}>
-            {TIMEZONES.map(z => <option key={z} value={z}>{z}</option>)}
-          </select>
-
-          <div className="row">
-            <button className="btn accent" onClick={saveNumbers}>Save profile</button>
-          </div>
-        </div>
-        <ProfileDetails uid={uid} />
-      </section>
-
-      <section className="settings-group" aria-labelledby="g-look">
-        <h2 id="g-look">Appearance</h2>
-        <div className="card">
-          <div className="seg">
-            {themeChoices.map(([v, l]) => (
-              <button key={v} className={p.theme === v ? 'on' : ''} onClick={() => chooseTheme(v)}>{l}</button>
+      {view === null ? (
+        <>
+          <h1>Settings</h1>
+          <p className="muted">{email}</p>
+          <nav aria-label="Settings catalogue">
+            {CATALOGUE.map(c => (
+              <button key={c.key} type="button" style={rowStyle} onClick={() => setView(c.key)}>
+                <span>
+                  <span style={{ display: 'block', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</span>
+                  <span className="muted" style={{ display: 'block', fontSize: 13 }}>{c.hint}</span>
+                </span>
+                <span aria-hidden="true" className="muted">›</span>
+              </button>
             ))}
-          </div>
-          <p className="muted" style={{ marginBottom: 0 }}>System follows your iPhone's light or dark setting.</p>
-        </div>
-
-        <h2>Sound</h2>
-        <div className="card">
-          <div className="switchrow">
-            <span>Sounds</span>
-            <button className={`switch ${p.sound_on ? 'on' : ''}`} onClick={toggleSound} aria-label="Toggle sounds" />
-          </div>
-
-          <div className="kicker" style={{ marginTop: 10 }}>Volume · {p.sound_volume}%</div>
-          <input type="range" min="0" max="100" value={p.sound_volume}
-            onChange={e => previewVolume(Number(e.target.value))}
-            onMouseUp={commitVolume} onTouchEnd={commitVolume} />
-
-          <div className="kicker" style={{ marginTop: 10 }}>Preview</div>
-          <div className="choices" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {['tap', 'select', 'toggle', 'save', 'success', 'badge', 'streak', 'reveal', 'warn'].map(s => (
-              <button key={s} className="chip" data-sound={s}>{s}</button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="settings-group" aria-labelledby="g-learning">
-        <h2 id="g-learning">Journal and learning</h2>
-        <div className="card">
-          <div className="switchrow">
-            <span>Autocorrect in the journal</span>
-            <button className={`switch ${autoFix ? 'on' : ''}`} onClick={toggleAutocorrect} aria-label="Toggle autocorrect" />
-          </div>
-          <p className="muted" style={{ marginBottom: 0, lineHeight: 1.5 }}>
-            Fixes common typos, capitals at the start of sentences, and spacing around punctuation as you type.
-            The setting applies to this phone only.
-          </p>
-        </div>
-
-        <h2>How selection works</h2>
-        <div className="card">
-          <p style={{ marginTop: 0, lineHeight: 1.55, fontSize: 14 }}>
-            Each day Orbit picks one topic from your library. Most days it draws at random, weighted toward
-            what you've marked More and away from what you've marked Less. On about 15% of days it chooses from
-            a field linked to what you studied last, to build bridges between subjects. About 10% of days are
-            fully random. About 5% of days it leans toward fields where your recent confidence is low.
-          </p>
-          <p style={{ lineHeight: 1.55, fontSize: 14 }}>
-            Orbit won't repeat a topic within 14 days or the same field two days running. If your recent
-            confidence is high it raises the difficulty; if it's low it lowers it. If a topic has an unfinished
-            prerequisite, the prerequisite comes first. Each topic's time budget and deadline follow its
-            difficulty: 30 minutes for beginner, 45 for intermediate, 75 for advanced.
-          </p>
-        </div>
-      </section>
-
-      <ExportPanel uid={uid} />
-
-      <section className="settings-group" aria-labelledby="g-help">
-        <h2 id="g-help">Help and version</h2>
-        <div className="card">
-          <p className="muted" style={{ marginTop: 0 }}>The searchable manual explains every screen, rule and smart note.</p>
-          <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
-            <a className="btn accent" href="/guide">Open the guide</a>
-            <span className="muted">Version {APP_VERSION}</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="settings-group" aria-labelledby="g-account">
-        <h2 id="g-account">Account</h2>
-        <div className="card">
-          <p className="muted" style={{ marginTop: 0 }}>
-            You will need your email and password to sign in again.
-          </p>
-          <div className="row" style={{ marginTop: 0 }}>
+          </nav>
+          <div style={{ marginTop: 24 }}>
             <button className="btn" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>Sign out</button>
           </div>
-        </div>
-      </section>
-
-      <section className="settings-group" aria-labelledby="g-reset">
-        <h2 id="g-reset">Reset everything</h2>
-        <div className="card">
-          <p className="muted" style={{ marginTop: 0 }}>
-            Clears your journal, medals, reviews, assignments, topic controls, custom topics and sections, freezes,
-            focus sessions and log. Your account and sign-in stay, and so do the PDF copies in your document log.
-            The shared library is untouched. This cannot be undone.
-          </p>
-          <div className="row" style={{ marginTop: 0 }}>
-            <button className="btn danger" onClick={() => setFlow({ action: 'reset', step: 1 })} disabled={busy}>Reset everything</button>
+        </>
+      ) : (
+        <>
+          <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
+            <button className="btn sm" onClick={() => setView(null)} aria-label="Back to settings">‹ Settings</button>
           </div>
-        </div>
-      </section>
-
-      <section className="settings-group" aria-labelledby="g-delete">
-        <h2 id="g-delete">Delete account</h2>
-        <div className="card">
-          <p className="muted" style={{ marginTop: 0 }}>
-            Permanently deletes your sign-in and every record tied to it, including the PDF copies in your document
-            log. You will not be able to sign back in to this data. Use Reset if you only want a clean start.
-          </p>
-          <div className="row" style={{ marginTop: 0 }}>
-            <button className="btn danger" onClick={() => setFlow({ action: 'delete', step: 1 })} disabled={busy}>Delete my account</button>
-          </div>
-        </div>
-      </section>
+          <h1 style={{ marginTop: 12 }}>{current?.title}</h1>
+          {view === 'profile' && <p className="muted">{email}</p>}
+          {renderPage()}
+        </>
+      )}
 
       {/* Sign out */}
       <ConfirmDialog

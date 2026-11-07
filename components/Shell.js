@@ -62,6 +62,12 @@ export default function Shell({ children }) {
 
   const uidRef = useRef(null);
   const [printOpen, setPrintOpen] = useState(false);
+  // Any screen can open the print settings sheet with one event.
+  useEffect(() => {
+    const open = () => setPrintOpen(true);
+    window.addEventListener('orbit:open-print', open);
+    return () => window.removeEventListener('orbit:open-print', open);
+  }, []);
 
   // Sends saved offline entries to Supabase when a connection returns.
   async function flushQueue() {
