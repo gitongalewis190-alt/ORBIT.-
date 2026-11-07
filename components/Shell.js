@@ -23,6 +23,7 @@ import {
 } from '../lib/offline';
 
 import { commitEntry } from '../lib/journal';
+import { scheduleAtlas } from '../lib/atlas/repository';
 import { queueAutoBackup } from '../lib/backupSync';
 import Toaster from './Toaster';
 import AwardUnlock from './AwardUnlock';
@@ -88,6 +89,7 @@ export default function Shell({ children }) {
     for (const item of items) {
       try {
         await commitEntry(uid, item.payload);
+        scheduleAtlas(uid, item.payload.id);
         synced++;
       } catch (e) {
         keep.push(item);

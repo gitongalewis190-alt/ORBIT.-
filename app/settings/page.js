@@ -30,6 +30,7 @@ const CATALOGUE = [
   { key: 'learning', title: 'Journal' },
   { key: 'assist', title: 'Assist' },
   { key: 'attention', title: 'Attention', href: '/attention' },
+  { key: 'atlas', title: 'Atlas', href: '/atlas' },
   { key: 'export', title: 'Backups' },
   { key: 'storage', title: 'Storage' },
   { key: 'help', title: 'Help' },

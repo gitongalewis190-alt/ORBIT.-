@@ -75,7 +75,13 @@ export default function Today() {
       const ctx = await buildContext(user.id);
       const level = adaptLevel(ctx.recentConfidences);
       const mode = manualFieldId ? 'manual' : pickMode();
-      const pick = selectTopic({ ...ctx, level, mode, manualFieldId: manualFieldId || null });
+      let atlasTopicIds = null;
+      const atlas = await supabase.from('atlas_concepts').select('metadata').eq('user_id', user.id).limit(100);
+      if (!atlas.error) {
+        const ids = (atlas.data || []).filter(row => row.metadata?.reinforce && row.metadata?.topic_id).map(row => row.metadata.topic_id);
+        if (ids.length) atlasTopicIds = new Set(ids);
+      }
+      const pick = selectTopic({ ...ctx, level, mode, manualFieldId: manualFieldId || null, ...(atlasTopicIds ? { atlasTopicIds } : {}) });
       const pool = shuffle(ctx.topics).slice(0, 40);
 
       setReveal({
@@ -141,6 +147,7 @@ export default function Today() {
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
       <a className="attention-link" href="/attention">Attention</a>
+      <a className="attention-link" href="/atlas" style={{ marginLeft: 8 }}>Atlas</a>
       {err && <p className="err">{err}</p>}
       <DayRings />
 

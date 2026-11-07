@@ -20,6 +20,7 @@ import AssistAsk from '../../components/AssistAsk';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { averageWords, assistPrefs, nextAdvice } from '../../lib/assist';
 import { queueAutoBackup } from '../../lib/backupSync';
+import { scheduleAtlas } from '../../lib/atlas/repository';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 const FONT_CLASS = { serif: 'f-serif', mono: 'f-mono' };
@@ -171,6 +172,7 @@ export default function Journal() {
       const { next, fresh } = await commitEntry(uid, payload);
       play(fresh.length ? 'badge' : 'save');
       toast(`Saved. Next review ${prettyDate(next.due_on)}.`, 'ok');
+      scheduleAtlas(uid, payload.id);
       finishSave();
       queueAutoBackup(uid);
       await load(uid, profile);
