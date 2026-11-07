@@ -1,16 +1,18 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { currentUser } from '../../lib/session';
-import { loadResonance, resonancePhrase } from '../../lib/resonance';
+import { loadResonance, loadWeaves, resonancePhrase, saveWeave } from '../../lib/resonance';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 
 export default function ResonancePage() {
   const [field, setField] = useState(null);
+  const [weaves, setWeaves] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const uidRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -20,8 +22,15 @@ export default function ResonancePage() {
         return;
       }
       try {
-        const data = await loadResonance(user.id);
-        if (alive) setField(data);
+        uidRef.current = user.id;
+        const [data, woven] = await Promise.all([
+          loadResonance(user.id),
+          loadWeaves(user.id),
+        ]);
+        if (alive) {
+          setField(data);
+          setWeaves(woven);
+        }
       } catch (e) {
         if (alive) setError(e.message || 'Could not read the resonance field.');
       } finally {
@@ -57,8 +66,22 @@ export default function ResonancePage() {
     })).filter(e => e.ax != null && e.bx != null);
   }, [field, nodes]);
 
-  function weave(bridge) {
+  async function weave(bridge) {
     play('success');
+    if (uidRef.current) {
+      try {
+        await saveWeave(uidRef.current, bridge);
+        setWeaves(list => [{
+          id: `local-${Date.now()}`,
+          prompt: bridge.prompt,
+          topics: bridge.topics,
+          shared: bridge.shared,
+          created_at: new Date().toISOString(),
+        }, ...list]);
+      } catch (e) {
+        toast(e.message || 'The bridge was not saved to your account.', 'warn');
+      }
+    }
     const params = new URLSearchParams({
       synthesis: '1',
       prompt: bridge.prompt,
@@ -175,6 +198,20 @@ export default function ResonancePage() {
               <button className="btn accent sm" onClick={() => weave(b)}>
                 Weave into journal
               </button>
+            </div>
+          ))}
+        </>
+      )}
+
+      {weaves.length > 0 && (
+        <>
+          <h2>Woven</h2>
+          {weaves.map(w => (
+            <div key={w.id} className="card">
+              <p style={{ margin: 0, lineHeight: 1.45 }}>{w.prompt}</p>
+              <p className="muted" style={{ margin: '6px 0 0', fontSize: 12 }}>
+                Saved to your account
+              </p>
             </div>
           ))}
         </>
