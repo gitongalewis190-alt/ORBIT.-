@@ -11,6 +11,7 @@ import { wordCount, loadStats } from '../../lib/stats';
 import { commitEntry } from '../../lib/journal';
 import { enqueue, isNetworkError, loadDraft, saveDraft, clearDraft } from '../../lib/offline';
 import { logDecision } from '../../lib/log';
+import BackLink from '../../components/BackLink';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 
@@ -200,6 +201,7 @@ export default function Journal() {
 
   return (
     <div className="fade-in">
+      <BackLink />
       <h1>Journal</h1>
       <p className="muted">
         {streak > 0 ? `${streak}-day streak` : 'Start a streak today'} · {wordsToday} words today

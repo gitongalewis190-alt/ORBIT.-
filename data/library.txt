@@ -11,6 +11,11 @@
     - Learning and cognition
     - Language processing
     - Critical thinking
+    - Working memory
+    - Executive function
+    - Mental imagery
+    - Metacognition
+    - Dual-process theories of thought
 
 1.2 Social Psychology
     - Social influence
@@ -23,6 +28,11 @@
     - Interpersonal relationships
     - Bystander effect
     - Group dynamics
+    - Attribution theory
+    - Social cognition
+    - Attitudes and attitude change
+    - Obedience to authority
+    - Intergroup conflict and cooperation
 
 1.3 Human Behaviour
     - Behavioural patterns
@@ -35,6 +45,11 @@
     - Emotional responses
     - Behavioural adaptation
     - Environmental influence
+    - Self-regulation
+    - Prosocial behaviour
+    - Aggression
+    - Goal-directed behaviour
+    - Behaviour change interventions
 
 1.4 Developmental Psychology
     - Childhood development
@@ -45,6 +60,10 @@
     - Moral development
     - Attachment theory
     - Developmental milestones
+    - Prenatal development
+    - Language development
+    - Cognitive ageing
+    - Parenting and developmental outcomes
 
 1.5 Personality Psychology
     - Personality theories
@@ -54,6 +73,10 @@
     - Personality assessment
     - Self-concept
     - Identity formation
+    - The five-factor model
+    - Psychodynamic theories of personality
+    - Trait stability across the lifespan
+    - Personality and culture
 
 1.6 Behavioural Psychology
     - Classical conditioning
@@ -63,6 +86,10 @@
     - Behaviour modification
     - Stimulus and response
     - Observational learning
+    - Schedules of reinforcement
+    - Extinction
+    - Shaping
+    - Applied behaviour analysis
 
 1.7 Biological Psychology
     - Brain and behaviour
@@ -70,6 +97,9 @@
     - Genetics and behaviour
     - Nervous system and behaviour
     - Biological influences on emotion
+    - Sleep and biological rhythms
+    - Neurotransmitters and behaviour
+    - The biology of stress
 
 1.8 Educational Psychology
     - Learning theories
@@ -78,6 +108,9 @@
     - Memory and education
     - Learning difficulties
     - Teaching psychology
+    - Cognitive load and instruction
+    - Assessment and feedback
+    - Motivation in the classroom
 
 1.9 Evolutionary Psychology
     - Evolution of behaviour
@@ -86,6 +119,9 @@
     - Mate selection theories
     - Survival behaviour
     - Evolutionary explanations of social behaviour
+    - Parental investment
+    - Kin selection and altruism
+    - Evolutionary mismatch
 
 1.10 Industrial and Organizational Psychology
     - Workplace behaviour
@@ -94,6 +130,9 @@
     - Organizational culture
     - Team performance
     - Workplace decision-making
+    - Job satisfaction
+    - Personnel selection
+    - Occupational stress and burnout
 
 02. PHILOSOPHY
 
@@ -106,6 +145,10 @@
     - Moral responsibility
     - Justice and fairness
     - Ethical dilemmas
+    - Utilitarianism
+    - Rights-based ethics
+    - Ethics of care
+    - Professional ethics
 
 2.2 Logic
     - Deductive reasoning
@@ -115,6 +158,10 @@
     - Predicate logic
     - Argument analysis
     - Validity and soundness
+    - Categorical syllogisms
+    - Informal logic
+    - Modal logic
+    - Proof and formal deduction
 
 2.3 Metaphysics
     - Nature of reality
@@ -125,6 +172,10 @@
     - Time and space
     - Mind and matter
     - Causality
+    - Universals and particulars
+    - Possibility and necessity
+    - Substance and properties
+    - Persistence through time
 
 2.4 Epistemology
     - Nature of knowledge
@@ -135,6 +186,10 @@
     - Empiricism
     - Sources of knowledge
     - Limits of human knowledge
+    - A priori and a posteriori knowledge
+    - The Gettier problem
+    - Testimony as a source of knowledge
+    - Virtue epistemology
 
 2.5 Political Philosophy
     - Authority
@@ -145,6 +200,10 @@
     - Rights
     - Social contracts
     - Political obligation
+    - Liberalism
+    - Equality
+    - Sovereignty
+    - Civil disobedience
 
 2.6 Philosophy of Mind
     - Consciousness
@@ -153,6 +212,9 @@
     - Personal identity
     - Artificial intelligence and mind
     - Intentionality
+    - Qualia
+    - Functionalism
+    - Mental causation
 
 2.7 Aesthetics
     - Nature of beauty
@@ -161,6 +223,9 @@
     - Taste and judgment
     - Creativity
     - Meaning in art
+    - Representation in art
+    - The sublime
+    - Aesthetic experience
 
 2.8 Existentialism
     - Meaning of life
@@ -169,6 +234,9 @@
     - Authenticity
     - Absurdism
     - Human existence
+    - Bad faith
+    - Anxiety and choice
+    - Existential ethics
 
 2.9 Philosophy of Science
     - Scientific knowledge
@@ -177,6 +245,9 @@
     - Scientific revolutions
     - Theory and evidence
     - Nature of scientific explanation
+    - Confirmation and induction
+    - Scientific realism
+    - Underdetermination of theory
 
 2.10 Philosophy of Technology
     - Technology and society
@@ -184,6 +255,9 @@
     - Technological ethics
     - Digital existence
     - Technology and human identity
+    - Technological determinism
+    - Automation and human agency
+    - Surveillance and technological power
 
 03. BUSINESS
 
@@ -195,6 +269,10 @@
     - Business planning
     - Entrepreneurial thinking
     - Risk assessment
+    - Venture financing
+    - Lean startup methods
+    - Product-market fit
+    - Scaling a new venture
 
 3.2 Marketing
     - Consumer behaviour
@@ -204,6 +282,10 @@
     - Advertising psychology
     - Marketing strategy
     - Customer acquisition
+    - Market segmentation
+    - Pricing strategy
+    - Brand equity
+    - Customer lifetime value
 
 3.3 Finance
     - Financial literacy
@@ -213,6 +295,10 @@
     - Capital management
     - Business valuation
     - Financial planning
+    - Time value of money
+    - Risk and return
+    - Capital budgeting
+    - Working capital management
 
 3.4 Economics
     - Microeconomics
@@ -223,6 +309,10 @@
     - Market structures
     - Economic growth
     - International trade
+    - Elasticity
+    - Market failure
+    - Fiscal policy
+    - Monetary policy
 
 3.5 Management
     - Strategic management
@@ -231,6 +321,9 @@
     - Resource management
     - Performance management
     - Business decision-making
+    - Change management
+    - Project management
+    - Stakeholder management
 
 3.6 Leadership
     - Leadership styles
@@ -240,6 +333,10 @@
     - Conflict resolution
     - Delegation
     - Leadership communication
+    - Transformational leadership
+    - Ethical leadership
+    - Coaching and mentoring
+    - Leadership in crisis
 
 3.7 Sales and Negotiation
     - Sales psychology
@@ -248,6 +345,9 @@
     - Value propositions
     - Persuasive communication
     - Objection handling
+    - Consultative selling
+    - Closing a sale
+    - BATNA and the bargaining range
 
 3.8 Accounting
     - Financial accounting
@@ -256,6 +356,9 @@
     - Cost accounting
     - Auditing
     - Tax fundamentals
+    - Accrual accounting
+    - Financial ratio analysis
+    - Internal controls
 
 3.9 Business Strategy
     - Competitive advantage
@@ -264,6 +367,9 @@
     - Strategic planning
     - Business expansion
     - Competitive analysis
+    - Corporate strategy
+    - Strategic alliances
+    - Blue ocean strategy
 
 3.10 Operations and Supply Chain
     - Logistics
@@ -272,6 +378,9 @@
     - Quality control
     - Process optimization
     - Supply chain management
+    - Capacity planning
+    - Lean operations
+    - Demand forecasting
 
 04. ART
 
@@ -285,6 +394,11 @@
     - Portrait drawing
     - Light and shadow
     - Proportions
+    - Contour drawing
+    - Value studies
+    - Cross-hatching
+    - Foreshortening
+    - Constructive drawing of complex forms
 
 4.2 Painting
     - Oil painting
@@ -296,6 +410,11 @@
     - Texture
     - Layering
     - Tonal painting
+    - Colour mixing
+    - Gouache
+    - Glazing
+    - Underpainting
+    - Plein air painting
 
 4.3 Art History
     - Renaissance art
@@ -307,6 +426,11 @@
     - Modernism
     - Contemporary art
     - African art history
+    - Ancient art
+    - Romanticism
+    - Abstract expressionism
+    - Pop art
+    - Postmodern art
 
 4.4 Art Theory and Criticism
     - Visual analysis
@@ -316,6 +440,10 @@
     - Art interpretation
     - Visual communication
     - Art criticism
+    - Formalism
+    - Iconography
+    - Semiotics of the image
+    - The institutional theory of art
 
 4.5 Digital Art
     - Digital illustration
@@ -324,6 +452,9 @@
     - Character design
     - Digital composition
     - Visual storytelling
+    - Digital lighting
+    - Material and texture rendering
+    - Environment design
 
 4.6 Graphic Design
     - Typography
@@ -333,6 +464,10 @@
     - Colour systems
     - Logo design
     - Editorial design
+    - Grid systems
+    - Information design
+    - Packaging design
+    - Motion graphics fundamentals
 
 4.7 Sculpture and Three-Dimensional Art
     - Modelling
@@ -341,6 +476,9 @@
     - Installation art
     - Materials and structure
     - Three-dimensional composition
+    - Casting
+    - Assemblage
+    - Site-specific sculpture
 
 4.8 Photography
     - Portrait photography
@@ -349,6 +487,9 @@
     - Documentary photography
     - Visual storytelling
     - Colour grading
+    - Exposure
+    - Street photography
+    - The photographic essay
 
 4.9 Creative Psychology
     - Creative thinking
@@ -357,6 +498,9 @@
     - Creative problem-solving
     - Artistic identity
     - Creative discipline
+    - Divergent thinking
+    - Flow and creative work
+    - Creative blocks and incubation
 
 4.10 Art Business
     - Art pricing
@@ -366,6 +510,10 @@
     - Art marketing
     - Artist branding
     - Art entrepreneurship
+    - Exhibition planning
+    - Copyright for visual artists
+    - Art contracts
+    - The contemporary art market
 
 05. COMPUTER SCIENCE
 
@@ -377,6 +525,10 @@
     - Functions
     - Object-oriented programming
     - Programming paradigms
+    - Recursion
+    - Error handling
+    - Abstraction
+    - Algorithmic complexity
 
 5.2 Software Engineering
     - Software architecture
@@ -386,6 +538,10 @@
     - Debugging
     - Version control
     - Requirements engineering
+    - Agile methods
+    - Code review
+    - Continuous integration
+    - Software maintenance and evolution
 
 5.3 Web Development
     - HTML
@@ -396,6 +552,10 @@
     - APIs
     - Database integration
     - Web security
+    - Responsive layout
+    - Client-side state
+    - Authentication on the web
+    - Web performance
 
 5.4 Computer Architecture
     - CPU architecture
@@ -405,6 +565,10 @@
     - Operating systems
     - Input and output systems
     - Computer hardware
+    - Pipelining
+    - Cache memory
+    - Virtual memory
+    - Instruction-level parallelism
 
 5.5 Databases
     - Relational databases
@@ -414,6 +578,10 @@
     - Data modelling
     - NoSQL databases
     - Database security
+    - Indexing
+    - Transactions and isolation
+    - Query optimization
+    - Replication and consistency
 
 5.6 Networking
     - Network protocols
@@ -423,6 +591,10 @@
     - Routing
     - Wireless networking
     - Network security
+    - The OSI model
+    - HTTP
+    - Network latency and throughput
+    - Firewalls and packet filtering
 
 5.7 Cybersecurity
     - Information security
@@ -432,6 +604,10 @@
     - Security architecture
     - Privacy protection
     - Threat modelling
+    - Malware
+    - Secure software development
+    - Incident response
+    - Cryptographic protocols
 
 5.8 Human-Computer Interaction
     - User interface design
@@ -440,6 +616,9 @@
     - Interaction design
     - Usability
     - Interface psychology
+    - User research methods
+    - Prototyping
+    - Information architecture
 
 5.9 Cloud Computing
     - Cloud architecture
@@ -448,6 +627,9 @@
     - Server infrastructure
     - Deployment
     - Containerization
+    - Virtualization
+    - Elasticity and scaling
+    - Cloud security models
 
 5.10 Computer Graphics
     - Rendering
@@ -456,6 +638,9 @@
     - Animation principles
     - Image processing
     - Visual computing
+    - Rasterization
+    - Shading
+    - Texture mapping
 
 06. ARTIFICIAL INTELLIGENCE
 
@@ -466,6 +651,9 @@
     - Model training
     - Model evaluation
     - Feature engineering
+    - Classification and regression
+    - Overfitting and regularization
+    - Clustering methods
 
 6.2 Deep Learning
     - Neural networks
@@ -474,6 +662,9 @@
     - Transformers
     - Representation learning
     - Deep learning optimization
+    - Backpropagation
+    - Attention mechanisms
+    - Generative adversarial networks
 
 6.3 Natural Language Processing
     - Language models
@@ -482,6 +673,9 @@
     - Language generation
     - Machine translation
     - Information retrieval
+    - Tokenization
+    - Word embeddings
+    - Named entity recognition
 
 6.4 Generative AI
     - Large language models
@@ -490,6 +684,9 @@
     - Video generation
     - Multimodal models
     - Prompt engineering
+    - Diffusion models
+    - Fine-tuning generative models
+    - Retrieval-augmented generation
 
 6.5 Computer Vision
     - Image recognition
@@ -498,6 +695,9 @@
     - Facial recognition concepts
     - Visual classification
     - Scene understanding
+    - Visual feature extraction
+    - Pose estimation
+    - Optical flow
 
 6.6 AI Agents
     - Autonomous agents
@@ -506,6 +706,9 @@
     - Multi-agent systems
     - Memory systems
     - Planning and reasoning
+    - Goal specification for agents
+    - Evaluating agent behaviour
+    - Human oversight of autonomous agents
 
 6.7 AI Ethics and Governance
     - Algorithmic bias
@@ -514,6 +717,9 @@
     - Responsible AI
     - AI regulation
     - Human oversight
+    - Fairness in machine learning
+    - Transparency and explainability duties
+    - Dual-use risks of AI systems
 
 6.8 Robotics and Intelligent Systems
     - Robot perception
@@ -521,6 +727,9 @@
     - Robot learning
     - Human-robot interaction
     - Autonomous systems
+    - Localization and mapping
+    - Motion planning
+    - Sensor fusion
 
 6.9 AI Research
     - Model architectures
@@ -529,6 +738,9 @@
     - Artificial general intelligence
     - Model efficiency
     - AI safety research
+    - Benchmark design
+    - Scaling laws
+    - AI alignment research
 
 07. PARTICLE PHYSICS
 
@@ -539,6 +751,9 @@
     - Neutrinos
     - Fundamental interactions
     - Antiparticles
+    - Photons
+    - Gluons
+    - Particle spin and statistics
 
 7.2 The Standard Model
     - Standard Model structure
@@ -547,6 +762,9 @@
     - Higgs boson
     - Particle generations
     - Fundamental forces
+    - Gauge symmetry
+    - Electroweak unification
+    - Colour confinement
 
 7.3 Quantum Field Theory
     - Quantum fields
@@ -555,6 +773,9 @@
     - Particle interactions
     - Quantum electrodynamics
     - Quantum chromodynamics
+    - Gauge fields
+    - Renormalization
+    - Vacuum structure
 
 7.4 Particle Accelerators
     - Particle acceleration
@@ -563,6 +784,9 @@
     - Particle beams
     - Detector systems
     - Experimental facilities
+    - Synchrotron radiation and storage rings
+    - Luminosity
+    - Beam optics
 
 7.5 Particle Detection
     - Particle detectors
@@ -571,6 +795,9 @@
     - Detector signals
     - Experimental measurements
     - Particle identification
+    - Scintillators
+    - Silicon tracking detectors
+    - Trigger and data acquisition
 
 7.6 Neutrino Physics
     - Neutrino oscillations
@@ -578,6 +805,9 @@
     - Neutrino detection
     - Neutrino interactions
     - Neutrino astronomy
+    - Solar neutrinos
+    - Neutrino mixing
+    - Sterile neutrino searches
 
 7.7 Antimatter Physics
     - Matter-antimatter symmetry
@@ -585,6 +815,9 @@
     - Antimatter detection
     - CP violation
     - Matter-antimatter asymmetry
+    - Positrons
+    - Antihydrogen
+    - Baryon asymmetry
 
 7.8 Beyond the Standard Model
     - Dark matter candidates
@@ -592,12 +825,17 @@
     - Extra dimensions
     - Grand unified theories
     - New particle searches
+    - Axions
+    - Mechanisms of neutrino mass
+    - Proton decay
 
 7.9 Particle Cosmology
     - Early universe particles
     - Primordial conditions
     - Particle physics and cosmology
     - Dark matter and the universe
+    - Baryogenesis
+    - Relic particles and freeze-out
 
 08. HUMAN BIOLOGY
 
@@ -609,6 +847,10 @@
     - Digestive anatomy
     - Nervous system anatomy
     - Organ structure
+    - Lymphatic anatomy
+    - Urinary system anatomy
+    - Endocrine anatomy
+    - Surface anatomy
 
 8.2 Human Physiology
     - Homeostasis
@@ -618,6 +860,10 @@
     - Kidney function
     - Muscle contraction
     - Body temperature regulation
+    - Neural signalling
+    - Fluid and electrolyte balance
+    - Endocrine physiology
+    - Exercise physiology
 
 8.3 Human Genetics
     - DNA structure
@@ -627,6 +873,10 @@
     - Mutations
     - Genetic variation
     - Human genome
+    - Mendelian inheritance
+    - Chromosomal abnormalities
+    - Epigenetic regulation
+    - Population genetics of human traits
 
 8.4 Cell Biology
     - Cell structure
@@ -636,6 +886,10 @@
     - Cellular respiration
     - Cell signalling
     - Protein synthesis
+    - The cytoskeleton
+    - Membrane transport
+    - The cell cycle
+    - Programmed cell death
 
 8.5 Human Immunology
     - Immune system
@@ -645,6 +899,10 @@
     - Adaptive immunity
     - Immune responses
     - Vaccination principles
+    - Antigens and antigen presentation
+    - Inflammation
+    - Immunological memory
+    - Hypersensitivity reactions
 
 8.6 Endocrinology
     - Hormones
@@ -654,6 +912,10 @@
     - Thyroid hormones
     - Stress hormones
     - Hormonal feedback
+    - Growth hormone
+    - Calcium and phosphate regulation
+    - Reproductive endocrinology
+    - Endocrine disorders
 
 8.7 Human Reproduction
     - Reproductive anatomy
@@ -662,6 +924,9 @@
     - Human development
     - Hormonal regulation
     - Inheritance
+    - Gametogenesis
+    - Pregnancy and gestation
+    - Embryonic development
 
 8.8 Microbiology and Human Health
     - Human-associated microorganisms
@@ -671,6 +936,10 @@
     - Microbiome
     - Pathogens
     - Host-microbe interactions
+    - Bacterial pathogenesis
+    - Viral replication in human cells
+    - Antimicrobial resistance
+    - Immune evasion by pathogens
 
 8.9 Human Biochemistry
     - Proteins
@@ -680,6 +949,10 @@
     - Metabolism
     - Cellular energy
     - Biochemical reactions
+    - Amino acids and protein structure
+    - Glycolysis
+    - Enzyme kinetics
+    - Nucleic acid biochemistry
 
 8.10 Evolutionary Human Biology
     - Human evolution
@@ -688,6 +961,9 @@
     - Evolutionary anatomy
     - Genetic ancestry concepts
     - Human evolutionary history
+    - Bipedalism
+    - The evolution of the human diet
+    - Out-of-Africa dispersals
 
 09. NEUROSCIENCE
 
@@ -698,6 +974,9 @@
     - Language and the brain
     - Learning and neural activity
     - Cognitive control
+    - Working memory networks
+    - Neural correlates of consciousness
+    - Executive control networks
 
 9.2 Behavioural Neuroscience
     - Neural basis of behaviour
@@ -706,6 +985,9 @@
     - Emotional behaviour
     - Habit formation
     - Brain-behaviour relationships
+    - Neural circuits of learning
+    - Sleep and behaviour
+    - The neuroscience of aggression
 
 9.3 Neuroanatomy
     - Cerebral cortex
@@ -715,6 +997,10 @@
     - Brainstem
     - Basal ganglia
     - Neural pathways
+    - The thalamus
+    - The hypothalamus
+    - Spinal cord organization
+    - Major white-matter tracts
 
 9.4 Neurophysiology
     - Neurons
@@ -723,6 +1009,9 @@
     - Neurotransmitters
     - Neural circuits
     - Electrical activity of the brain
+    - Resting membrane potential
+    - Neuromodulation
+    - Synaptic integration
 
 9.5 Neuroplasticity
     - Synaptic plasticity
@@ -730,6 +1019,9 @@
     - Long-term potentiation
     - Neural development
     - Experience-dependent learning
+    - Critical periods
+    - Structural plasticity
+    - Recovery of function after injury
 
 9.6 Affective Neuroscience
     - Emotional processing
@@ -737,6 +1029,9 @@
     - Pleasure and reward
     - Stress responses
     - Emotional regulation
+    - Mood circuits
+    - Empathy and social emotion
+    - Emotion and value-based choice
 
 9.7 Computational Neuroscience
     - Neural modelling
@@ -744,6 +1039,9 @@
     - Neural networks
     - Information processing
     - Mathematical models of neurons
+    - Rate coding
+    - Population codes
+    - Synaptic learning rules
 
 9.8 Clinical Neuroscience
     - Neurological disorders
@@ -751,6 +1049,9 @@
     - Brain injury research
     - Neurodevelopmental conditions
     - Neurological assessment
+    - Stroke
+    - Epilepsy
+    - Clinical neuroimaging
 
 9.9 Sensory Neuroscience
     - Vision
@@ -759,6 +1060,9 @@
     - Taste
     - Smell
     - Sensory integration
+    - Visual pathways
+    - Auditory pathways
+    - Pain pathways
 
 10. FUTURE / ADDITIONAL FIELDS
 
@@ -771,6 +1075,10 @@
     - Number theory
     - Discrete mathematics
     - Mathematical modelling
+    - Trigonometry
+    - Linear equations
+    - Combinatorics
+    - Mathematical proof
 
 10.2 Chemistry
     - Organic chemistry
@@ -779,6 +1087,9 @@
     - Analytical chemistry
     - Biochemistry
     - Electrochemistry
+    - Chemical bonding
+    - Acid-base chemistry
+    - Chemical thermodynamics
 
 10.3 Astronomy and Astrophysics
     - Stars
@@ -788,6 +1099,10 @@
     - Stellar evolution
     - Cosmology
     - Gravitational waves
+    - The Solar System
+    - Observational astronomy
+    - Stellar nucleosynthesis
+    - Dark energy
 
 10.4 Engineering
     - Mechanical engineering
@@ -797,6 +1112,10 @@
     - Civil engineering
     - Control systems
     - Automation
+    - Engineering design process
+    - Materials science for engineers
+    - Engineering thermodynamics
+    - Signal processing
 
 10.5 History
     - Ancient civilizations
@@ -805,6 +1124,9 @@
     - Military history
     - Economic history
     - Intellectual history
+    - Colonial empires
+    - Revolutions
+    - Historical method
 
 10.6 Sociology
     - Social structures
@@ -813,6 +1135,9 @@
     - Social inequality
     - Urban sociology
     - Social change
+    - Socialization
+    - Deviance and social control
+    - Social movements
 
 10.7 Linguistics
     - Phonetics
@@ -821,6 +1146,9 @@
     - Semantics
     - Pragmatics
     - Language acquisition
+    - Morphology
+    - Sociolinguistics
+    - Historical linguistics
 
 10.8 Geography
     - Physical geography
@@ -829,6 +1157,9 @@
     - Cartography
     - Climatology
     - Environmental geography
+    - Population geography
+    - Urban geography
+    - Geographic information systems
 
 10.9 Law
     - Constitutional law
@@ -837,6 +1168,9 @@
     - Human rights
     - Legal philosophy
     - Business law
+    - Contract law
+    - Tort law
+    - Legal reasoning and precedent
 
 10.10 Environmental Science
     - Climate systems
@@ -845,3 +1179,496 @@
     - Environmental chemistry
     - Sustainability
     - Environmental policy
+    - Biodiversity
+    - Pollution and environmental toxicology
+    - The carbon cycle
+
+11. HISTORY
+
+11.1 Ancient History
+    - Ancient Egypt
+    - Classical Greece
+    - The Roman Republic
+    - Mesopotamian civilizations
+    - Ancient Persia
+    - The Han dynasty
+    - The Mauryan Empire
+    - Pre-Columbian civilizations
+    - Hellenistic kingdoms
+    - Comparative ancient empires
+
+11.2 Medieval History
+    - Feudal society
+    - The medieval church
+    - The Crusades
+    - The Byzantine Empire
+    - The Islamic Golden Age
+    - Medieval trade routes
+    - Monastic life
+    - The Black Death
+    - Medieval state formation
+    - Cross-cultural exchange in the medieval world
+
+11.3 Early Modern History
+    - The Renaissance
+    - The Protestant Reformation
+    - The age of exploration
+    - Early modern monarchies
+    - The Scientific Revolution
+    - The Atlantic world
+    - Gunpowder empires
+    - Origins of the Enlightenment
+    - Early modern state building
+    - Global connections before industrialization
+
+11.4 Modern History
+    - The Industrial Revolution
+    - The French Revolution
+    - Nineteenth-century nationalism
+    - Imperialism
+    - The First World War
+    - The Second World War
+    - Decolonization
+    - The Cold War
+    - Twentieth-century revolutions
+    - Globalization and contemporary history
+
+11.5 African History
+    - West African empires
+    - The Swahili coast
+    - Southern African states
+    - Trans-Saharan trade
+    - The Atlantic slave trade
+    - Colonial conquest in Africa
+    - African resistance to colonial rule
+    - Independence movements
+    - Postcolonial state formation
+    - Contemporary political history of Africa
+
+11.6 Historiography
+    - Primary sources
+    - Secondary sources
+    - Chronology and dating
+    - Oral tradition as evidence
+    - Archives and the historical record
+    - Causation in history
+    - Periodization
+    - Schools of historical thought
+    - Bias in historical narrative
+    - Memory and public history
+
+11.7 Military History
+    - Ancient warfare
+    - Medieval warfare
+    - Gunpowder warfare
+    - Napoleonic warfare
+    - Strategy and tactics
+    - Naval history
+    - Industrialized war
+    - Military logistics
+    - Intelligence and espionage
+    - War and society
+
+11.8 Social and Cultural History
+    - Everyday life in the past
+    - Family and kinship
+    - Religious life in history
+    - Urban history
+    - Labour history
+    - The history of education
+    - Gender history
+    - Histories of migration
+    - Material culture
+    - Popular culture and historical change
+
+12. MATHEMATICS
+
+12.1 Algebra
+    - Linear equations
+    - Polynomials
+    - Factoring
+    - Quadratic equations
+    - Functions
+    - Exponents and radicals
+    - Systems of equations
+    - Inequalities
+    - Sequences and series
+    - Introduction to groups and rings
+
+12.2 Geometry
+    - Points, lines, and planes
+    - Triangles
+    - Circles
+    - Congruence
+    - Similarity
+    - Coordinate geometry
+    - Area and volume
+    - Geometric constructions
+    - Geometric proof
+    - Non-Euclidean geometry
+
+12.3 Calculus
+    - Limits
+    - Derivatives
+    - Rules of differentiation
+    - Applications of the derivative
+    - Integrals
+    - The fundamental theorem of calculus
+    - Techniques of integration
+    - Infinite series
+    - Multivariable calculus
+    - Introduction to differential equations
+
+12.4 Probability and Statistics
+    - Descriptive statistics
+    - Probability rules
+    - Conditional probability
+    - Discrete random variables
+    - Common distributions
+    - Sampling
+    - Confidence intervals
+    - Hypothesis testing
+    - Linear regression
+    - Bayesian inference
+
+12.5 Number Theory
+    - Divisibility
+    - Prime numbers
+    - Greatest common divisors
+    - The Euclidean algorithm
+    - Modular arithmetic
+    - Linear congruences
+    - Fermat's little theorem
+    - Diophantine equations
+    - Quadratic residues
+    - Number theory in cryptography
+
+12.6 Discrete Mathematics
+    - Sets
+    - Propositional reasoning
+    - Relations and functions
+    - Counting principles
+    - Permutations and combinations
+    - Graphs
+    - Trees
+    - Recurrence relations
+    - Combinatorial proof
+    - Boolean algebra
+
+12.7 Linear Algebra
+    - Vectors
+    - Matrices
+    - Matrix operations
+    - Linear systems
+    - Gaussian elimination
+    - Determinants
+    - Vector spaces
+    - Linear transformations
+    - Eigenvalues and eigenvectors
+    - Inner product spaces
+
+12.8 Mathematical Analysis
+    - The real numbers
+    - Sequences
+    - Series of numbers
+    - Limits of functions
+    - Continuity
+    - The derivative in analysis
+    - The Riemann integral
+    - Uniform convergence
+    - Metric spaces
+    - Foundations of real analysis
+
+13. ECONOMICS
+
+13.1 Microeconomics
+    - Supply and demand
+    - Elasticity of demand and supply
+    - Consumer theory
+    - Production and cost
+    - Perfect competition
+    - Monopoly
+    - Oligopoly
+    - Markets for labour and capital
+    - General equilibrium
+    - Game theory
+
+13.2 Macroeconomics
+    - National income accounts
+    - Unemployment
+    - Inflation
+    - Aggregate demand and aggregate supply
+    - Economic growth
+    - Fiscal policy
+    - Monetary policy
+    - Business cycles
+    - Open-economy macroeconomics
+    - Financial crises
+
+13.3 Econometrics
+    - Economic data
+    - Correlation and scatter plots
+    - Simple linear regression
+    - Ordinary least squares
+    - Multiple regression
+    - Inference in regression models
+    - Indicator variables
+    - Introduction to time series
+    - Endogeneity and instrumental variables
+    - Causal inference in economics
+
+13.4 Development Economics
+    - Measuring poverty
+    - Theories of economic development
+    - Human capital
+    - Health and development
+    - Agriculture and rural economies
+    - Institutions and growth
+    - Inequality and development
+    - Cities and development
+    - The effectiveness of foreign aid
+    - The political economy of development
+
+13.5 International Economics
+    - Comparative advantage
+    - Gains from trade
+    - Tariffs and quotas
+    - Exchange rates
+    - The balance of payments
+    - Trade policy
+    - International capital flows
+    - Regional trade agreements
+    - Currency crises
+    - Global value chains
+
+13.6 Labor Economics
+    - Labour supply
+    - Labour demand
+    - Wage determination
+    - Human capital and earnings
+    - Types of unemployment
+    - Minimum wages
+    - Trade unions
+    - Discrimination in labour markets
+    - Migration and labour markets
+    - Returns to education
+
+13.7 Public Economics
+    - Public goods
+    - Externalities
+    - Principles of taxation
+    - Government expenditure
+    - Tax incidence
+    - Social insurance
+    - Cost-benefit analysis
+    - Redistribution
+    - Public choice
+    - Optimal taxation
+
+13.8 Behavioral Economics
+    - Bounded rationality
+    - Heuristics in choice
+    - Loss aversion
+    - Prospect theory
+    - Present bias
+    - Social preferences
+    - Nudges
+    - Laboratory experiments in economics
+    - Behavioural finance
+    - Behavioural public policy
+
+14. LITERATURE
+
+14.1 Poetry
+    - Imagery in poetry
+    - Metaphor and simile
+    - Rhyme and sound
+    - Meter
+    - The lyric
+    - Narrative poetry
+    - Fixed poetic forms
+    - Voice and tone
+    - Modernist poetry
+    - Prosody
+
+14.2 The Novel
+    - Plot
+    - Character
+    - Point of view
+    - Setting
+    - The rise of the novel
+    - Realism
+    - Narrative structure
+    - Theme and motif
+    - Modernist fiction
+    - Narrative theory
+
+14.3 Drama
+    - Dramatic dialogue
+    - Plot in drama
+    - Tragedy
+    - Comedy
+    - Classical drama
+    - Shakespearean drama
+    - Modern drama
+    - Text and performance
+    - Political theatre
+    - Theories of drama
+
+14.4 Literary Theory
+    - Close reading
+    - Formalism
+    - Structuralism
+    - Reader-response criticism
+    - Feminist literary criticism
+    - Marxist literary criticism
+    - Psychoanalytic criticism
+    - Postcolonial literary criticism
+    - Poststructuralism
+    - New historicism
+
+14.5 World Literature
+    - The epic
+    - Classical literature
+    - Medieval literature
+    - Early modern literature
+    - Romantic literature
+    - Realism beyond Europe
+    - Modernist literature
+    - Postcolonial literature
+    - Literary translation
+    - Theories of world literature
+
+14.6 African Literature
+    - Oral literature
+    - Proverbs and folktales
+    - Early written African literatures
+    - Writing under colonialism
+    - Negritude
+    - The postcolonial novel
+    - African poetry
+    - African drama
+    - Language choice in African literature
+    - Contemporary African writing
+
+14.7 Comparative Literature
+    - Comparing themes across traditions
+    - Genre in comparative perspective
+    - Literary influence
+    - Adaptation
+    - National literatures
+    - Period style
+    - Translation studies
+    - Intertextuality
+    - The comparative method
+    - Circulation of literary forms
+
+14.8 Rhetoric and Composition
+    - Audience
+    - Purpose and occasion
+    - Argument
+    - Style
+    - Arrangement
+    - The essay
+    - Revision
+    - Research writing
+    - Classical rhetoric
+    - Rhetoric and public discourse
+
+15. MEDICINE
+
+15.1 Clinical Medicine
+    - The medical history
+    - The physical examination
+    - Vital signs
+    - Clinical reasoning
+    - Differential diagnosis
+    - Common clinical presentations
+    - Chronic disease management
+    - Acute care
+    - Evidence-based medicine
+    - Clinical ethics
+
+15.2 Anatomy and Physiology for Medicine
+    - Organ systems in clinical context
+    - Cardiovascular structure and function
+    - Respiratory structure and function
+    - Renal structure and function
+    - Gastrointestinal structure and function
+    - The nervous system in medicine
+    - Musculoskeletal anatomy
+    - Endocrine control of body systems
+    - Fluid, electrolyte, and acid-base balance
+    - Clinical correlation of anatomy
+
+15.3 Pathology
+    - Cell injury
+    - Inflammation and repair
+    - Neoplasia
+    - Circulatory disorders
+    - Infectious disease processes
+    - Immunopathology
+    - Genetic disease
+    - Environmental and nutritional disease
+    - Cardiovascular pathology
+    - Mechanisms of carcinogenesis
+
+15.4 Pharmacology
+    - Drug nomenclature
+    - Pharmacokinetics
+    - Pharmacodynamics
+    - Dose-response relationships
+    - Autonomic pharmacology
+    - Antimicrobial drugs
+    - Cardiovascular pharmacology
+    - Adverse drug reactions
+    - Drug interactions
+    - Principles of rational prescribing
+
+15.5 Epidemiology
+    - Incidence and prevalence
+    - Epidemiological study designs
+    - Outbreak investigation
+    - Measures of association
+    - Screening
+    - Bias in epidemiological studies
+    - Confounding
+    - Disease surveillance
+    - Causal inference in epidemiology
+    - Critical appraisal of health evidence
+
+15.6 Public Health
+    - Determinants of health
+    - Disease prevention
+    - Health promotion
+    - Immunization programs
+    - Environmental health
+    - Health systems
+    - Global health
+    - Health policy
+    - Health equity
+    - Comparative health systems
+
+15.7 Diagnostics
+    - The diagnostic process
+    - Sensitivity and specificity
+    - Clinical laboratory testing
+    - Hematology
+    - Clinical chemistry
+    - Diagnostic imaging
+    - Diagnostic microbiology
+    - The electrocardiogram
+    - Predictive value and testing strategy
+    - Diagnostic error
+
+15.8 Surgery
+    - Asepsis
+    - Wound healing
+    - Preoperative assessment
+    - Principles of anesthesia
+    - Postoperative care
+    - General surgical conditions
+    - Principles of trauma care
+    - Surgical anatomy
+    - Perioperative risk
+    - Operative decision-making

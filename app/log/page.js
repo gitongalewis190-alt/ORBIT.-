@@ -5,6 +5,7 @@ import { currentUser } from '../../lib/session';
 import { prettyDate } from '../../lib/dates';
 import Skeleton from '../../components/Skeleton';
 import LogStats from '../../components/LogStats';
+import BackLink from '../../components/BackLink';
 import { highlightSegments, normalise, queryTokens } from '../../lib/search';
 
 const LABELS = {
@@ -97,6 +98,7 @@ export default function Logs() {
 
   return (
     <div className="fade-in">
+      <BackLink />
       <h1>Logs</h1>
       <p className="muted">Statistics first, then every decision Orbit made and every change you made.</p>
 

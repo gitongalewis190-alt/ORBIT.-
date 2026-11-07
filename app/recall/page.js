@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
 import { pickRecall, BANDS, bandFor } from '../../lib/recall';
@@ -158,91 +159,83 @@ export default function RecallPage() {
     toast('Added to today’s reviews. Reread the concept first.', 'info', 4500);
   }
 
-  const tip = { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 };
-
   return (
-    <main style={{ maxWidth: 680, margin: '0 auto', padding: '24px 18px 120px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 6px' }}>Recall</h1>
-      <p style={{ opacity: 0.7, margin: '0 0 20px', fontSize: 14 }}>
-        Questions built from what you logged. Older entries ask harder questions.
-      </p>
+    <div className="fade-in">
+      <Link href="/study" className="muted" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, fontSize: 15, textDecoration: 'none' }}>Study</Link>
+      <h1 style={{ fontSize: '1.4rem' }}>Recall</h1>
+      <p className="muted">Questions built from what you logged. Older entries ask harder questions.</p>
 
-      {error && <p role="alert" style={{ color: '#b4532a', fontSize: 14 }}>{error}</p>}
+      {error && <p className="err" role="alert">{error}</p>}
 
       {!current && (
         <>
-          <button onClick={askMe} disabled={!user || entries.length === 0} style={btn}>Ask me something</button>
-          <div style={{ marginTop: 16 }}>
-            <select value={chosen} onChange={e => setChosen(e.target.value)} style={{ width: '100%' }}>
-              <option value="">Choose an entry</option>
-              {entries.map(e => (
-                <option key={e.id} value={e.id}>{e.topics?.title ?? 'Entry'} · {String(e.created_at).slice(0, 10)}</option>
-              ))}
-            </select>
-            <button onClick={() => askChosen(chosen)} disabled={!chosen} style={btn}>Ask about this entry</button>
+          <button type="button" className="btn accent" onClick={askMe} disabled={!user || entries.length === 0 || busy} style={{ minHeight: 44 }}>Ask me something</button>
+          <select value={chosen} onChange={e => setChosen(e.target.value)} aria-label="Choose an entry">
+            <option value="">Choose an entry</option>
+            {entries.map(e => (
+              <option key={e.id} value={e.id}>{e.topics?.title ?? 'Entry'} · {String(e.created_at).slice(0, 10)}</option>
+            ))}
+          </select>
+          <div className="seg" role="group" aria-label="Ask about a chosen entry">
+            <button type="button" onClick={() => askChosen(chosen)} disabled={!chosen || busy} style={{ minHeight: 44, fontSize: 15 }}>Ask about this entry</button>
           </div>
         </>
       )}
 
       {current && (
-        <section style={{ marginTop: 8 }}>
-          <p style={{ fontSize: 13, opacity: 0.7, margin: 0 }}>
+        <section className="card">
+          <p className="muted">
             {current.band.label} · Topic: <strong>{current.entry.topic_title}</strong> · Logged {prettyDate(current.logged)}
           </p>
-          <p style={{ fontSize: 17, lineHeight: 1.5, margin: '12px 0' }}>{current.question.prompt}</p>
+          <p style={{ fontSize: 16, lineHeight: 1.5 }}>{current.question.prompt}</p>
           <textarea
             value={answer}
             onChange={e => setAnswer(e.target.value)}
             rows={6}
             placeholder="Write what you remember"
-            style={{ width: '100%', boxSizing: 'border-box', padding: 12, fontSize: 15 }}
             disabled={busy || !!result}
           />
           {!result && <Dictate onText={text => setAnswer(a => (a ? `${a.trimEnd()} ${text}` : text))} />}
           {!result && (
-            <button onClick={submit} disabled={busy || !answer.trim()} style={btn}>
-              {busy ? 'Checking…' : 'Check my answer'}
+            <button type="button" className="btn accent" onClick={submit} disabled={busy || !answer.trim()} style={{ minHeight: 44 }}>
+              {busy ? 'Checking' : 'Check my answer'}
             </button>
           )}
           {result && (
-            <div style={{ marginTop: 14, padding: 14, border: '1px solid #d8cfc0', borderRadius: 10 }}>
-              <p style={{ margin: 0, fontSize: 15 }}>Score <strong>{result.score}/100</strong></p>
-              <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5 }}>{result.comment}</p>
+            <div className="card">
+              <p className="kicker">Score</p>
+              <p style={{ fontSize: '2.2rem', lineHeight: 1, margin: '0 0 8px', fontWeight: 650 }}>{result.score}<span className="muted">/100</span></p>
+              <p style={{ fontSize: 16, lineHeight: 1.5 }}>{result.comment}</p>
               {result.weak && (
                 <>
-                  <p style={{ margin: '12px 0 6px', fontSize: 14 }}>Go back to the concept first. Reread what you logged:</p>
-                  <div className="rich-view" style={{ fontSize: 15, lineHeight: 1.6, padding: 12, border: '0.5px solid #d8cfc0', borderRadius: 8 }}
-                    dangerouslySetInnerHTML={{ __html: renderRich(current.entry.body) }} />
-                  <div style={tip}>
-                    <button onClick={relearn} style={btn}>Put this topic in today’s reviews</button>
+                  <p>Go back to the concept first. Reread what you logged:</p>
+                  <div className="rich-view card" dangerouslySetInnerHTML={{ __html: renderRich(current.entry.body) }} />
+                  <div className="row">
+                    <button type="button" className="btn" onClick={relearn} disabled={busy} style={{ minHeight: 44 }}>Put this topic in today’s reviews</button>
                   </div>
                 </>
               )}
-              <div style={tip}>
-                <button onClick={askMe} style={btn}>Next question</button>
+              <div className="row">
+                <button type="button" className="btn accent" onClick={askMe} disabled={busy} style={{ minHeight: 44 }}>Next question</button>
               </div>
             </div>
           )}
         </section>
       )}
 
-      <h2 style={{ fontSize: 16, fontWeight: 500, margin: '32px 0 10px' }}>Catalogue</h2>
-      {history.length === 0 && <p style={{ fontSize: 14, opacity: 0.6 }}>No questions answered yet.</p>}
+      <h2>Catalogue</h2>
+      {history.length === 0 && <p className="muted">No questions answered yet.</p>}
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {history.map(h => (
-          <li key={h.id} style={{ borderTop: '1px solid #e6dfd2', padding: '10px 0', fontSize: 14 }}>
-            <div><strong>{h.topic_title}</strong> · logged {prettyDate(h.entry_logged_on)} · asked {prettyDate(h.asked_at.slice(0, 10))}</div>
-            <div style={{ opacity: 0.75 }}>Score {h.score}/100 · {BANDS.find(b => b.key === h.band)?.label}</div>
-            <div style={{ opacity: 0.6, fontSize: 13 }}>{h.question}</div>
-            <div style={{ opacity: 0.6, fontSize: 13 }}>{h.comment}</div>
+          <li key={h.id} className="entry" style={{ cursor: 'default' }}>
+            <div><strong>{h.topic_title}</strong></div>
+            <div>Score {h.score}/100 · {BANDS.find(b => b.key === h.band)?.label}</div>
+            <div className="muted">logged {prettyDate(h.entry_logged_on)} · asked {prettyDate(h.asked_at.slice(0, 10))}</div>
+            <div className="muted">{h.question}</div>
+            <div className="muted">{h.comment}</div>
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }
-
-const btn = {
-  padding: '10px 18px', borderRadius: 999, border: '1px solid #b4532a',
-  background: 'transparent', color: '#b4532a', fontSize: 15, cursor: 'pointer',
-};

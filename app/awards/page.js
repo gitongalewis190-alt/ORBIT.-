@@ -12,6 +12,7 @@ import { AWARDS } from '../../lib/awards';
 import AwardsGallery from '../../components/AwardsGallery';
 import BenefitsPanel from '../../components/BenefitsPanel';
 import Skeleton from '../../components/Skeleton';
+import BackLink from '../../components/BackLink';
 
 function resolveDisplayName(profile, user) {
   const candidates = [
@@ -66,6 +67,7 @@ export default function AwardsPage() {
   if (error) {
     return (
       <div className="fade-in">
+        <BackLink />
         <h1>Awards</h1>
         <p className="err">{error}</p>
       </div>
@@ -75,6 +77,7 @@ export default function AwardsPage() {
   if (!data) {
     return (
       <div className="fade-in">
+        <BackLink />
         <h1>Awards</h1>
         <Skeleton lines={4} label="Loading your collection" />
       </div>
@@ -85,6 +88,7 @@ export default function AwardsPage() {
 
   return (
     <div className="fade-in">
+      <BackLink />
       <h1>Your awards</h1>
       <p className="muted">
         A collection of milestones earned through your learning.

@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
@@ -10,11 +11,57 @@ import StorageMeter from '../../components/StorageMeter';
 import { toast } from '../../lib/toast';
 import { autocorrectOn, setAutocorrect } from '../../lib/autocorrect';
 import ProfileDetails from '../../components/ProfileDetails';
-import ExportPanel from '../../components/ExportPanel';
-import BackupPanel from '../../components/BackupPanel';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import Skeleton from '../../components/Skeleton';
+import BackLink from '../../components/BackLink';
 import { APP_VERSION } from '../../lib/version';
 import { readAssist, writeAssist, ASSIST_DEFAULTS } from '../../lib/assist';
+import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
+
+const PROFILE_DRAFT = 'settings-profile';
+const PROFILE_KEYS = ['display_name', 'age', 'daily_minutes', 'word_goal', 'weekly_entry_goal', 'timezone'];
+
+function PanelFallback() {
+  return <Skeleton lines={4} label="Loading backups" />;
+}
+
+const ExportPanel = dynamic(() => import('../../components/ExportPanel'), {
+  ssr: false,
+  loading: PanelFallback,
+});
+const BackupPanel = dynamic(() => import('../../components/BackupPanel'), {
+  ssr: false,
+  loading: PanelFallback,
+});
+
+function fieldText(value) {
+  return value === null || value === undefined ? '' : String(value);
+}
+
+function profilePatch(base, next) {
+  const patch = {};
+  if (!base || !next) return patch;
+  for (const key of PROFILE_KEYS) {
+    if (fieldText(base[key]) !== fieldText(next[key])) patch[key] = next[key];
+  }
+  return patch;
+}
+
+function readProfileDraft(userId) {
+  const draft = readDraft(PROFILE_DRAFT);
+  if (!draft || typeof draft !== 'object' || Array.isArray(draft)) return null;
+  if (userId && draft.user_id && draft.user_id !== userId) return null;
+  const patch = {};
+  for (const key of PROFILE_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(draft, key)) patch[key] = draft[key];
+  }
+  return Object.keys(patch).length ? patch : null;
+}
+
+function storeProfileDraft(userId, patch) {
+  if (!userId) return;
+  writeDraft(PROFILE_DRAFT, { user_id: userId, ...patch });
+}
 
 const TIMEZONES = [
   'Africa/Nairobi', 'Africa/Lagos', 'Africa/Johannesburg', 'Europe/London',
@@ -30,13 +77,10 @@ const CATALOGUE = [
   { key: 'sound', title: 'Sound' },
   { key: 'learning', title: 'Journal' },
   { key: 'assist', title: 'Assist' },
-  { key: 'attention', title: 'Attention', href: '/attention' },
-  { key: 'atlas', title: 'Atlas', href: '/atlas' },
+  { key: 'study', title: 'Study', href: '/study' },
   { key: 'export', title: 'Backups' },
   { key: 'storage', title: 'Storage' },
   { key: 'help', title: 'Help' },
-  { key: 'recall', title: 'Recall', href: '/recall' },
-  { key: 'recall-model', title: 'Recall model', href: '/log#recall-model' },
   { key: 'reset', title: 'Reset', danger: true },
   { key: 'delete', title: 'Delete account', danger: true },
 ];
@@ -72,6 +116,8 @@ function AssistSettings() {
 // Nothing is changed until step 2 is confirmed.
 export default function Settings() {
   const router = useRouter();
+  const savedRef = useRef(null);
+  const busyRef = useRef(false);
   const [uid, setUid] = useState(null);
   const [email, setEmail] = useState('');
   const [p, setP] = useState(null);
@@ -81,55 +127,95 @@ export default function Settings() {
   const [confirmText, setConfirmText] = useState('');
   const [deleteText, setDeleteText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState('');
   const [err, setErr] = useState('');
+  const busy = busyAction !== '';
+
+  function lock(action) {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusyAction(action);
+    return true;
+  }
+
+  function unlock() {
+    busyRef.current = false;
+    setBusyAction('');
+  }
 
   useEffect(() => {
     setAutoFix(autocorrectOn());
+    let alive = true;
     currentUser().then(async (user) => {
-      if (!user) return;
+      if (!alive || !user) return;
       setUid(user.id);
       setEmail(user.email ?? '');
       try {
-        setP(await getProfile(user.id));
+        const loaded = await getProfile(user.id);
+        if (!alive) return;
+        savedRef.current = loaded;
+        const draft = readProfileDraft(user.id);
+        setP(draft ? { ...loaded, ...draft } : loaded);
       } catch (e) {
-        setErr(e.message);
+        if (alive) setErr(e.message);
       }
     });
+    return () => { alive = false; };
   }, []);
 
-  async function update(patch, sound = 'save') {
-    if (!uid) return;
+  function editProfile(key, value) {
+    if (busyRef.current) return;
+    setP(prev => {
+      if (!prev) return prev;
+      const next = { ...prev, [key]: value };
+      const patch = profilePatch(savedRef.current, next);
+      if (Object.keys(patch).length) storeProfileDraft(uid, patch);
+      else clearDraft(PROFILE_DRAFT);
+      return next;
+    });
+  }
+
+  async function update(patch, sound = 'save', action = 'save') {
+    if (!uid || !lock(action)) return;
     try {
       const saved = await saveProfile(uid, patch);
-      setP(saved);
+      const draft = action === 'profile' ? null : readProfileDraft(uid);
+      if (action === 'profile') clearDraft(PROFILE_DRAFT);
+      savedRef.current = saved;
+      setP(draft ? { ...saved, ...draft } : saved);
       play(sound);
       toast('Saved.', 'ok');
       return saved;
     } catch (e) {
       play('error');
       toast(e.message, 'err');
+    } finally {
+      unlock();
     }
   }
 
   async function chooseTheme(theme) {
+    if (busyRef.current || !p) return;
     applyTheme(theme);
-    await update({ theme }, 'select');
+    await update({ theme }, 'select', `theme:${theme}`);
   }
 
   async function toggleSound() {
+    if (busyRef.current || !p) return;
     const next = !p.sound_on;
     setSound(next);
-    await update({ sound_on: next }, 'toggle');
+    await update({ sound_on: next }, 'toggle', 'sound');
   }
 
   function previewVolume(v) {
+    if (busyRef.current || !p) return;
     setP({ ...p, sound_volume: v });
     setVolume(v);
   }
 
   async function commitVolume() {
-    await update({ sound_volume: p.sound_volume }, 'slide');
+    if (busyRef.current || !p) return;
+    await update({ sound_volume: p.sound_volume }, 'slide', 'volume');
   }
 
   function toggleAutocorrect() {
@@ -141,6 +227,7 @@ export default function Settings() {
   }
 
   async function saveNumbers() {
+    if (busyRef.current || !p) return;
     const minutes = Number(p.daily_minutes);
     const words = Number(p.word_goal);
     const weekly = Number(p.weekly_entry_goal);
@@ -156,7 +243,7 @@ export default function Settings() {
       word_goal: words,
       weekly_entry_goal: weekly,
       timezone: p.timezone,
-    });
+    }, 'save', 'profile');
   }
 
   function closeFlow() {
@@ -167,11 +254,18 @@ export default function Settings() {
   }
 
   async function signOut() {
-    setBusy(true);
-    play('bye');
-    applyTheme('system');
-    await supabase.auth.signOut();
-    router.replace('/login');
+    if (!lock('signout')) return;
+    try {
+      play('bye');
+      applyTheme('system');
+      await supabase.auth.signOut();
+      router.replace('/login');
+    } catch (e) {
+      play('error');
+      toast(e.message, 'err');
+    } finally {
+      unlock();
+    }
   }
 
   // Removes every personal record. The shared library, the account and printed copies stay.
@@ -180,7 +274,7 @@ export default function Settings() {
       play('error');
       return toast('Type RESET in capitals to confirm.', 'err');
     }
-    setBusy(true);
+    if (!uid || !lock('reset')) return;
     try {
       for (const table of RESET_TABLES) {
         const { error } = await supabase.from(table).delete().eq('user_id', uid);
@@ -192,6 +286,8 @@ export default function Settings() {
       if (sErr) throw new Error(`sections: ${sErr.message}`);
 
       const saved = await saveProfile(uid, { ...DEFAULT_PROFILE });
+      clearDraft(PROFILE_DRAFT);
+      savedRef.current = saved;
       setP(saved);
       applyTheme(saved.theme);
       setSound(saved.sound_on);
@@ -203,7 +299,7 @@ export default function Settings() {
       play('error');
       toast(e.message, 'err', 6000);
     } finally {
-      setBusy(false);
+      unlock();
     }
   }
 
@@ -218,7 +314,7 @@ export default function Settings() {
       play('error');
       return toast('Enter your account password to continue.', 'warn');
     }
-    setBusy(true);
+    if (!lock('delete')) return;
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -227,54 +323,60 @@ export default function Settings() {
       if (authError) {
         play('error');
         toast('That password is not right. Nothing was deleted.', 'err', 5000);
-        setBusy(false);
         return;
       }
       const { error } = await supabase.rpc('delete_my_account');
       if (error) throw error;
+      clearDraft(PROFILE_DRAFT);
       await supabase.auth.signOut();
       play('bye');
       router.replace('/login');
     } catch (e) {
       play('error');
       toast(e.message, 'err', 6000);
-      setBusy(false);
+    } finally {
+      unlock();
     }
   }
-
-  if (!p) return <div className="fade-in"><h1>Settings</h1>{err ? <p className="err">{err}</p> : <p className="muted">Loading</p>}</div>;
 
   const themeChoices = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']];
   const step = action => (flow?.action === action ? flow.step : 0);
   const current = CATALOGUE.find(c => c.key === view);
+  const profileView = view === 'profile' || view === 'appearance' || view === 'sound';
 
   // A plain render function, not a component, so inputs keep focus while typing.
   function renderPage() {
+    if (profileView && !p) {
+      return err ? <p className="err">{err}</p> : <Skeleton lines={4} label="Loading profile" />;
+    }
+    if (view === 'export' && !uid) return <Skeleton lines={3} label="Loading backups" />;
     switch (view) {
       case 'profile':
         return (
           <div className="card">
             <div className="kicker">Name</div>
-            <input value={p.display_name ?? ''} placeholder="What should Orbit call you?"
-              onChange={e => setP({ ...p, display_name: e.target.value })} />
+            <input value={p.display_name ?? ''} placeholder="What should Orbit call you?" disabled={busy}
+              onChange={e => editProfile('display_name', e.target.value)} />
             <div className="kicker">Age</div>
-            <input type="number" inputMode="numeric" value={p.age ?? ''} placeholder="Shown on your PDF export"
-              onChange={e => setP({ ...p, age: e.target.value })} />
+            <input type="number" inputMode="numeric" value={p.age ?? ''} placeholder="Shown on your PDF export" disabled={busy}
+              onChange={e => editProfile('age', e.target.value)} />
             <div className="kicker">Daily study minutes</div>
-            <input type="number" inputMode="numeric" value={p.daily_minutes}
-              onChange={e => setP({ ...p, daily_minutes: e.target.value })} />
+            <input type="number" inputMode="numeric" value={p.daily_minutes} disabled={busy}
+              onChange={e => editProfile('daily_minutes', e.target.value)} />
             <div className="kicker">Words per journal entry (goal)</div>
-            <input type="number" inputMode="numeric" value={p.word_goal}
-              onChange={e => setP({ ...p, word_goal: e.target.value })} />
+            <input type="number" inputMode="numeric" value={p.word_goal} disabled={busy}
+              onChange={e => editProfile('word_goal', e.target.value)} />
             <div className="kicker">Journal entries per week (goal)</div>
-            <input type="number" inputMode="numeric" value={p.weekly_entry_goal}
-              onChange={e => setP({ ...p, weekly_entry_goal: e.target.value })} />
+            <input type="number" inputMode="numeric" value={p.weekly_entry_goal} disabled={busy}
+              onChange={e => editProfile('weekly_entry_goal', e.target.value)} />
             <div className="kicker">Timezone</div>
-            <select value={p.timezone} onChange={e => setP({ ...p, timezone: e.target.value })}>
+            <select value={p.timezone} disabled={busy} onChange={e => editProfile('timezone', e.target.value)}>
               {TIMEZONES.map(z => <option key={z} value={z}>{z}</option>)}
             </select>
             <div className="row">
-              <button className="btn accent" onClick={saveNumbers}>Save profile</button>
+              <button className="btn accent" onClick={saveNumbers} disabled={busy}>
+                {busyAction === 'profile' ? 'Saving' : 'Save profile'}
+              </button>
             </div>
             <ProfileDetails uid={uid} />
           </div>
@@ -284,7 +386,9 @@ export default function Settings() {
           <div className="card">
             <div className="seg">
               {themeChoices.map(([v, l]) => (
-                <button key={v} className={p.theme === v ? 'on' : ''} onClick={() => chooseTheme(v)}>{l}</button>
+                <button key={v} className={p.theme === v ? 'on' : ''} disabled={busy} onClick={() => chooseTheme(v)}>
+                  {busyAction === `theme:${v}` ? 'Working' : l}
+                </button>
               ))}
             </div>
             <p className="muted" style={{ marginBottom: 0 }}>System follows your iPhone's light or dark setting.</p>
@@ -294,11 +398,13 @@ export default function Settings() {
         return (
           <div className="card">
             <div className="switchrow">
-              <span>Sounds</span>
-              <button className={`switch ${p.sound_on ? 'on' : ''}`} onClick={toggleSound} aria-label="Toggle sounds" />
+              <span>{busyAction === 'sound' ? 'Working' : 'Sounds'}</span>
+              <button className={`switch ${p.sound_on ? 'on' : ''}`} onClick={toggleSound} aria-label="Toggle sounds" disabled={busy} />
             </div>
-            <div className="kicker" style={{ marginTop: 10 }}>Volume · {p.sound_volume}%</div>
-            <input type="range" min="0" max="100" value={p.sound_volume}
+            <div className="kicker" style={{ marginTop: 10 }}>
+              {busyAction === 'volume' ? 'Working' : `Volume · ${p.sound_volume}%`}
+            </div>
+            <input type="range" min="0" max="100" value={p.sound_volume} disabled={busy}
               onChange={e => previewVolume(Number(e.target.value))}
               onMouseUp={commitVolume} onTouchEnd={commitVolume} />
             <div className="kicker" style={{ marginTop: 10 }}>Preview</div>
@@ -369,7 +475,9 @@ export default function Settings() {
               The shared library is untouched. This cannot be undone.
             </p>
             <div className="row" style={{ marginTop: 0 }}>
-              <button className="btn danger" onClick={() => setFlow({ action: 'reset', step: 1 })} disabled={busy}>Reset everything</button>
+              <button className="btn danger" onClick={() => setFlow({ action: 'reset', step: 1 })} disabled={busy}>
+                {busyAction === 'reset' ? 'Working' : 'Reset everything'}
+              </button>
             </div>
           </div>
         );
@@ -381,7 +489,9 @@ export default function Settings() {
               log. You will not be able to sign back in to this data. Use Reset if you only want a clean start.
             </p>
             <div className="row" style={{ marginTop: 0 }}>
-              <button className="btn danger" onClick={() => setFlow({ action: 'delete', step: 1 })} disabled={busy}>Delete my account</button>
+              <button className="btn danger" onClick={() => setFlow({ action: 'delete', step: 1 })} disabled={busy}>
+                {busyAction === 'delete' ? 'Working' : 'Delete my account'}
+              </button>
             </div>
           </div>
         );
@@ -391,18 +501,19 @@ export default function Settings() {
   }
 
   return (
-    <div className="fade-in settings">
+    <div className="fade-in settings settings-page">
+      <BackLink />
       {view === null ? (
         <>
           <h1>Settings</h1>
-          <p className="muted">{email}</p>
+          {p ? <p className="muted">{email}</p> : err ? <p className="err">{err}</p> : <Skeleton lines={1} label="Loading profile" />}
           <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map((c, i) => (
               <div key={c.key} className={`setting-life${c.danger ? ' is-danger' : ''}`} style={{ animationDelay: `${i * 0.45}s` }}>
                 {c.href ? (
                   <a href={c.href} style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</a>
                 ) : (
-                  <button type="button" style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)}>
+                  <button type="button" style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)} disabled={busy}>
                     {c.title}
                   </button>
                 )}
@@ -410,13 +521,15 @@ export default function Settings() {
             ))}
           </nav>
           <div className="setting-life" style={{ animationDelay: '4.6s' }}>
-            <button type="button" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>Sign out</button>
+            <button type="button" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>
+              {busyAction === 'signout' ? 'Working' : 'Sign out'}
+            </button>
           </div>
         </>
       ) : (
         <>
           <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
-            <button className="btn sm" onClick={() => setView(null)} aria-label="Back to settings">‹ Settings</button>
+            <button className="btn sm" onClick={() => setView(null)} aria-label="Back to settings" disabled={busy}>‹ Settings</button>
           </div>
           <h1 style={{ marginTop: 12 }}>{current?.title}</h1>
           {view === 'profile' && <p className="muted">{email}</p>}

@@ -1074,3 +1074,49 @@ textarea, .rich-area { font-family: var(--font-serif); }
 .recall-constellation p { margin: 8px 0; line-height: 1.45; font-size: 14px; }
 .constellation { width: 100%; height: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; }
 
+/* Phone: tab clearance, touch targets, settings type ------------------- */
+.wrap {
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+.btn {
+  min-height: 44px;
+  box-sizing: border-box;
+}
+input, textarea, select {
+  width: 100%;
+  max-width: 100%;
+  font-size: 16px;
+}
+.settings-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.settings-page h1 {
+  font-size: 1.5rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.settings-page h2 {
+  font-size: 1.05rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.settings-page .switchrow span,
+.settings-page .setting-life a,
+.settings-page .setting-life button,
+.settings-page label {
+  font-size: 16px;
+}
+.more-today,
+.more-today-toggle {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.more-today {
+  overflow-x: hidden;
+}
+.more-today-toggle {
+  width: 100%;
+  margin-top: 12px;
+}
+

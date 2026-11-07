@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { currentUser } from '../lib/session';
 import { buildContext } from '../lib/context';
@@ -30,10 +30,25 @@ export default function Today() {
   const [reviews, setReviews] = useState([]);
   const [fields, setFields] = useState([]);
   const [manualField, setManualField] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState('');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [reveal, setReveal] = useState(null);
   const [err, setErr] = useState('');
   const [changes, setChanges] = useState(0);
+  const busyRef = useRef(false);
+  const busy = busyAction !== '';
+
+  function beginBusy(action) {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusyAction(action);
+    return true;
+  }
+
+  function endBusy() {
+    busyRef.current = false;
+    setBusyAction('');
+  }
 
   useEffect(() => {
     currentUser().then((user) => {
@@ -68,27 +83,24 @@ export default function Today() {
   }
 
   // Selection runs first. The reveal plays, then the assignment is saved.
-  async function generate(manualFieldId) {
-    if (!user || busy) return;
-    setBusy(true);
-    setErr('');
-    try {
-      const ctx = await buildContext(user.id);
-      const level = adaptLevel(ctx.recentConfidences);
-      const mode = manualFieldId ? 'manual' : pickMode();
-      let atlasTopicIds = null;
-      const atlas = await supabase.from('atlas_concepts').select('metadata').eq('user_id', user.id).limit(100);
-      if (!atlas.error) {
-        const ids = (atlas.data || []).filter(row => row.metadata?.reinforce && row.metadata?.topic_id).map(row => row.metadata.topic_id);
-        if (ids.length) atlasTopicIds = new Set(ids);
-      }
-      const pick = selectTopic({ ...ctx, level, mode, manualFieldId: manualFieldId || null, ...(atlasTopicIds ? { atlasTopicIds } : {}) });
-      const pool = shuffle(ctx.topics).slice(0, 40);
+  async function runGenerate(manualFieldId) {
+    const ctx = await buildContext(user.id);
+    const level = adaptLevel(ctx.recentConfidences);
+    const mode = manualFieldId ? 'manual' : pickMode();
+    let atlasTopicIds = null;
+    const atlas = await supabase.from('atlas_concepts').select('metadata').eq('user_id', user.id).limit(100);
+    if (!atlas.error) {
+      const ids = (atlas.data || []).filter(row => row.metadata?.reinforce && row.metadata?.topic_id).map(row => row.metadata.topic_id);
+      if (ids.length) atlasTopicIds = new Set(ids);
+    }
+    const pick = selectTopic({ ...ctx, level, mode, manualFieldId: manualFieldId || null, ...(atlasTopicIds ? { atlasTopicIds } : {}) });
+    const pool = shuffle(ctx.topics).slice(0, 40);
 
-      setReveal({
-        pool,
-        target: pick.topic.title,
-        onDone: async () => {
+    setReveal({
+      pool,
+      target: pick.topic.title,
+      onDone: async () => {
+        try {
           const { error } = await supabase.from('assignments').insert({
             user_id: user.id,
             topic_id: pick.topic.id,
@@ -107,37 +119,84 @@ export default function Today() {
             });
             toast(`Today's topic: ${pick.topic.title}`, 'info');
           }
-          setReveal(null);
-          setBusy(false);
           await load(user.id);
-        },
-      });
+        } catch (e) {
+          play('error');
+          setErr(e.message);
+          toast(e.message, 'err');
+        } finally {
+          setReveal(null);
+          endBusy();
+        }
+      },
+    });
+  }
+
+  async function generate(manualFieldId, action) {
+    if (!user || busyRef.current || reveal) return;
+    if (!beginBusy(action)) return;
+    setErr('');
+    let revealed = false;
+    try {
+      await runGenerate(manualFieldId);
+      revealed = true;
     } catch (e) {
       play('error');
       setErr(e.message);
       toast(e.message, 'err');
-      setBusy(false);
+    } finally {
+      if (!revealed) endBusy();
     }
   }
 
   async function accept() {
-    const { error } = await supabase.from('assignments')
-      .update({ status: 'accepted' }).eq('id', assignment.id);
-    if (error) { play('error'); return setErr(error.message); }
-    await logDecision(user.id, 'accepted', assignment.topic_id);
-    play('success');
-    toast('Topic accepted. Good luck.', 'ok');
-    load(user.id);
+    if (!user || !assignment || busyRef.current || reveal) return;
+    if (!beginBusy('accept')) return;
+    try {
+      const { error } = await supabase.from('assignments')
+        .update({ status: 'accepted' }).eq('id', assignment.id);
+      if (error) {
+        play('error');
+        setErr(error.message);
+        return;
+      }
+      await logDecision(user.id, 'accepted', assignment.topic_id);
+      play('success');
+      toast('Topic accepted. Good luck.', 'ok');
+      await load(user.id);
+    } catch (e) {
+      play('error');
+      setErr(e.message);
+      toast(e.message, 'err');
+    } finally {
+      endBusy();
+    }
   }
 
   async function reject() {
-    const { error } = await supabase.from('assignments')
-      .update({ status: 'rejected' }).eq('id', assignment.id);
-    if (error) { play('error'); return setErr(error.message); }
-    await logDecision(user.id, 'rejected', assignment.topic_id);
-    setAssignment(null);
-    toast('Topic rejected. Choosing another.', 'warn');
-    generate(null);
+    if (!user || !assignment || busyRef.current || reveal) return;
+    if (!beginBusy('reject')) return;
+    let revealed = false;
+    try {
+      const { error } = await supabase.from('assignments')
+        .update({ status: 'rejected' }).eq('id', assignment.id);
+      if (error) {
+        play('error');
+        setErr(error.message);
+        return;
+      }
+      await logDecision(user.id, 'rejected', assignment.topic_id);
+      setAssignment(null);
+      toast('Topic rejected. Choosing another.', 'warn');
+      await runGenerate(null);
+      revealed = true;
+    } catch (e) {
+      play('error');
+      setErr(e.message);
+      toast(e.message, 'err');
+    } finally {
+      if (!revealed) endBusy();
+    }
   }
 
   const topic = assignment?.topics;
@@ -147,8 +206,9 @@ export default function Today() {
     <div className="fade-in">
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
-      <a className="attention-link" href="/attention">Attention</a>
-      <a className="attention-link" href="/atlas" style={{ marginLeft: 8 }}>Atlas</a>
+      <div className="row" style={{ marginTop: 8 }}>
+        <a className="btn" href="/study">Study</a>
+      </div>
       {err && <p className="err">{err}</p>}
       <DayRings />
 
@@ -170,8 +230,12 @@ export default function Today() {
 
           {assignment.status === 'generated' ? (
             <div className="row">
-              <button className="btn accent" onClick={accept} disabled={busy}>Accept</button>
-              <button className="btn" onClick={reject} disabled={busy}>Reject</button>
+              <button className="btn accent" onClick={accept} disabled={busy}>
+                {busyAction === 'accept' ? 'Working' : 'Accept'}
+              </button>
+              <button className="btn" onClick={reject} disabled={busy}>
+                {busyAction === 'reject' ? 'Working' : 'Reject'}
+              </button>
             </div>
           ) : (
             <div className="row">
@@ -183,8 +247,8 @@ export default function Today() {
               )}
               {assignment.status === 'completed' && (
                 <>
-                  <button className="btn" onClick={() => generate(null)} disabled={busy || !change.ok}>
-                    Choose another topic
+                  <button className="btn" onClick={() => generate(null, 'another')} disabled={busy || !change.ok}>
+                    {busyAction === 'another' ? 'Working' : 'Choose another topic'}
                   </button>
                   {!change.ok && <p className="muted">{change.reason}</p>}
                 </>
@@ -196,8 +260,8 @@ export default function Today() {
         <div className="card fade-in">
           <p className="muted" style={{ marginTop: 0 }}>No topic yet for today.</p>
           <div className="row" style={{ marginTop: 0 }}>
-            <button className="btn accent" onClick={() => generate(null)} disabled={busy || !user}>
-              Generate today's topic
+            <button className="btn accent" onClick={() => generate(null, 'generate')} disabled={busy || !user || !!reveal}>
+              {busyAction === 'generate' ? 'Working' : "Generate today's topic"}
             </button>
           </div>
 
@@ -207,17 +271,12 @@ export default function Today() {
             {fields.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <div className="row" style={{ marginTop: 0 }}>
-            <button className="btn" onClick={() => generate(manualField)} disabled={busy || !manualField}>
-              Generate in this field
+            <button className="btn" onClick={() => generate(manualField, 'field')} disabled={busy || !manualField || !!reveal}>
+              {busyAction === 'field' ? 'Working' : 'Generate in this field'}
             </button>
           </div>
         </div>
       )}
-
-      <SmartNotes />
-      <BenefitsPanel />
-      <FocusTimer />
-      <Onboarding />
 
       <h2>Reviews due</h2>
       <div className="row" style={{ marginTop: 0 }}>
@@ -233,6 +292,24 @@ export default function Today() {
           </div>
         </div>
       )) : <p className="muted">Nothing due.</p>}
+
+      <button
+        type="button"
+        className="btn more-today-toggle"
+        aria-expanded={moreOpen}
+        aria-controls="more-today"
+        onClick={() => setMoreOpen(open => !open)}
+      >
+        More for today
+      </button>
+      {moreOpen && (
+        <div id="more-today" className="more-today">
+          <SmartNotes />
+          <BenefitsPanel />
+          <FocusTimer />
+        </div>
+      )}
+      <Onboarding />
     </div>
   );
 }

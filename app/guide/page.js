@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { MANUAL } from '../../lib/manual';
 import { APP_VERSION, CHANGELOG } from '../../lib/version';
+import BackLink from '../../components/BackLink';
 
 // The searchable manual and the version history, both in one place.
 export default function Guide() {
@@ -18,6 +19,7 @@ export default function Guide() {
 
   return (
     <div className="fade-in">
+      <BackLink />
       <h1>Guide</h1>
       <p className="muted">Search the manual, or open any topic below. Version {APP_VERSION}.</p>
 

@@ -10,6 +10,7 @@ import { fieldColor } from '../../lib/palette';
 import { searchTopics, highlightSegments } from '../../lib/search';
 import Skeleton from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import BackLink from '../../components/BackLink';
 
 const MARKS = [
   ['all', 'All'],
@@ -212,11 +213,12 @@ export default function Topics() {
 
   const ownSections = subs.filter(s => s.user_id === uid);
 
-  if (err) return <div className="fade-in"><h1>Topics</h1><p className="err">{err}</p></div>;
-  if (!topics) return <div className="fade-in"><h1>Topics</h1><Skeleton lines={5} label="Loading your topics" /></div>;
+  if (err) return <div className="fade-in"><BackLink /><h1>Topics</h1><p className="err">{err}</p></div>;
+  if (!topics) return <div className="fade-in"><BackLink /><h1>Topics</h1><Skeleton lines={5} label="Loading your topics" /></div>;
 
   return (
     <div className="fade-in">
+      <BackLink />
       <h1>Topics</h1>
       <p className="muted">{filtered.length} of {topics.length} topics shown</p>
 

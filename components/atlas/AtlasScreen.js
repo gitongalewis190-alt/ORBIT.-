@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { currentUser } from '../../lib/session';
 import { toast } from '../../lib/toast';
 import { play } from '../../lib/sound';
@@ -34,6 +35,7 @@ export default function AtlasScreen({ focusId = null }) {
   const [query, setQuery] = useState('');
   const [pathFrom, setPathFrom] = useState('');
   const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState('');
   const [name, setName] = useState('');
   const [discipline, setDiscipline] = useState('');
   const [link, setLink] = useState({ sourceId: '', targetId: '', relationship: 'related_to' });
@@ -68,9 +70,11 @@ export default function AtlasScreen({ focusId = null }) {
   const verifiedEdges = (data?.edges || []).filter(edge => edge.verification === 'verified');
   const groups = data ? clusters(visible, data.edges) : [];
   const path = selected && pathFrom ? findPath(data.edges, pathFrom, selected.id) : [];
+  const opportunities = data?.opportunities || [];
 
-  async function run(fn) {
+  async function run(fn, id = 'save') {
     setBusy(true);
+    setBusyId(id);
     try {
       await fn();
       await refresh(uid);
@@ -80,14 +84,21 @@ export default function AtlasScreen({ focusId = null }) {
       toast(e.message, 'err', 6000);
     } finally {
       setBusy(false);
+      setBusyId('');
     }
+  }
+
+  function mark(id, idle, mode = 'save') {
+    if (busy && busyId === id) return mode === 'open' ? 'Opening' : 'Saving';
+    return idle;
   }
 
   const claimsFor = id => (data?.claims || []).filter(claim => claim.concept_id === id);
   const evidenceFor = id => (data?.evidence || []).filter(item => item.concept_id === id);
 
   return (
-    <div className="fade-in">
+    <div className="fade-in atlas-screen">
+      <Link href="/study" className="atlas-study">Study</Link>
       <h1>Cognitive Atlas</h1>
       <p className="muted">Explore the structure of what you know.</p>
       {error && <p className="err">{error}</p>}
@@ -99,11 +110,11 @@ export default function AtlasScreen({ focusId = null }) {
             <Stat label="Verified links" value={verifiedEdges.length} />
             <Stat label="Clusters" value={groups.length} />
             <Stat label="Open comparisons" value={(data.discoveries || []).filter(item => item.verification === 'candidate').length} />
-            <Stat label="Opportunities" value={data.opportunities.length} />
+            <Stat label="Opportunities" value={opportunities.length} />
           </div>
           <div className="seg" role="tablist" aria-label="Atlas sections">
             {VIEWS.map(([key, label]) => (
-              <button key={key} type="button" className={view === key ? 'on' : ''} onClick={() => setView(key)}>{label}</button>
+              <button key={key} type="button" role="tab" aria-selected={view === key} className={view === key ? 'on' : ''} onClick={() => setView(key)}>{label}</button>
             ))}
           </div>
 
@@ -127,8 +138,8 @@ export default function AtlasScreen({ focusId = null }) {
                 </div>
               )}
               <h2>Opportunities</h2>
-              {data.opportunities.length === 0 && <p className="muted">No recommendation until a concept is stored.</p>}
-              {data.opportunities.map(item => (
+              {opportunities.length === 0 && <p className="muted">No recommendation until a concept is stored.</p>}
+              {opportunities.map(item => (
                 <div key={item.conceptId} className="card">
                   <div className="kicker">{item.category}</div>
                   <strong>{item.name}</strong>
@@ -146,7 +157,7 @@ export default function AtlasScreen({ focusId = null }) {
                   setName('');
                   setDiscipline('');
                   toast('Concept saved.', 'ok');
-                })}>Add concept</button>
+                }, 'concept')}>{mark('concept', 'Add concept')}</button>
               </div>
             </section>
           )}
@@ -169,7 +180,7 @@ export default function AtlasScreen({ focusId = null }) {
               </label>
               <div>
                 {filtered.map(concept => (
-                  <button key={concept.id} type="button" className="entry" style={{ display: 'block', width: '100%', textAlign: 'left' }} onClick={() => setSelectedId(concept.id)}>
+                  <button key={concept.id} type="button" className="entry atlas-concept" onClick={() => setSelectedId(concept.id)}>
                     <div>{concept.name}</div>
                     <div className="muted">{concept.discipline || 'No discipline'} · {concept.status} · {masteryLabel(masteryById.get(concept.id))}</div>
                   </button>
@@ -191,7 +202,7 @@ export default function AtlasScreen({ focusId = null }) {
                 <button type="button" className="btn" disabled={busy} onClick={() => run(async () => {
                   await createEdge(uid, link);
                   toast('Link saved as a candidate.', 'ok');
-                })}>Add link</button>
+                }, 'link')}>{mark('link', 'Add link')}</button>
               </div>
             </section>
           )}
@@ -207,8 +218,8 @@ export default function AtlasScreen({ focusId = null }) {
                   <p className="muted">Accepting this keeps it as a comparison. It does not make the mechanisms the same.</p>
                   {item.verification === 'candidate' && (
                     <div className="row">
-                      <button type="button" className="btn sm accent" disabled={busy} onClick={() => run(() => setDiscoveryVerification(uid, item.id, 'verified'))}>Accept comparison</button>
-                      <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setDiscoveryVerification(uid, item.id, 'rejected'))}>Reject</button>
+                      <button type="button" className="btn sm accent" disabled={busy} onClick={() => run(() => setDiscoveryVerification(uid, item.id, 'verified'), `accept-${item.id}`)}>{mark(`accept-${item.id}`, 'Accept comparison')}</button>
+                      <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setDiscoveryVerification(uid, item.id, 'rejected'), `reject-${item.id}`)}>{mark(`reject-${item.id}`, 'Reject')}</button>
                     </div>
                   )}
                 </article>
@@ -265,14 +276,14 @@ export default function AtlasScreen({ focusId = null }) {
                     setAnswer('');
                     setActiveChallenge(null);
                     toast(result.note, 'ok', 5000);
-                  })}>Submit answer</button>
+                  }, 'submit')}>{mark('submit', 'Submit answer')}</button>
                 </div>
               )}
               {lastResult?.assessmentId && (
-                <button type="button" className="btn sm" onClick={() => run(async () => {
+                <button type="button" className="btn sm" disabled={busy} onClick={() => run(async () => {
                   await disputeAssessment(uid, lastResult.assessmentId, 'The score missed the point.');
                   toast('Dispute saved. The estimate is marked, not silently rewritten.', 'info');
-                })}>This score missed the point</button>
+                }, 'dispute')}>{mark('dispute', 'This score missed the point')}</button>
               )}
             </section>
           )}
@@ -295,7 +306,7 @@ export default function AtlasScreen({ focusId = null }) {
                 <div key={edge.id} className="row">
                   <span>{edge.relationship.replaceAll('_', ' ')} · {other?.name || 'Concept'} · {edge.verification}</span>
                   {edge.verification === 'candidate' && (
-                    <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setEdgeVerification(uid, edge.id, 'verified'))}>Verify</button>
+                    <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setEdgeVerification(uid, edge.id, 'verified'), `edge-${edge.id}`)}>{mark(`edge-${edge.id}`, 'Verify')}</button>
                   )}
                 </div>
               );
@@ -312,12 +323,12 @@ export default function AtlasScreen({ focusId = null }) {
                 setActiveChallenge(challenge);
                 setView('challenges');
                 setSelectedId(null);
-              })}>Start challenge</button>
-              <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setConceptStatus(uid, selected.id, 'verified'))}>Mark verified</button>
+              }, 'challenge')}>{mark('challenge', 'Start challenge', 'open')}</button>
+              <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => setConceptStatus(uid, selected.id, 'verified'), 'verified')}>{mark('verified', 'Mark verified')}</button>
               <button type="button" className="btn sm" disabled={busy} onClick={() => run(async () => {
                 await setConceptStatus(uid, selected.id, 'archived');
                 setSelectedId(null);
-              })}>Archive</button>
+              }, 'archive')}>{mark('archive', 'Archive')}</button>
             </div>
           </aside>
         </>
