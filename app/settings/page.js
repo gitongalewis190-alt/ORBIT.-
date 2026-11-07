@@ -37,12 +37,6 @@ const CATALOGUE = [
   { key: 'delete', title: 'Delete account', danger: true },
 ];
 
-const rowStyle = {
-  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, width: '100%',
-  padding: '14px 2px', background: 'transparent', border: 0, borderBottom: '0.5px solid var(--border)',
-  color: 'inherit', textAlign: 'left', fontSize: 16, lineHeight: 1.35, cursor: 'pointer', whiteSpace: 'normal',
-};
-
 const ASSIST_ROWS = [
   ['pace', 'Learn my usual length'],
   ['suggestions', 'Suggestions'],
@@ -399,16 +393,20 @@ export default function Settings() {
           <h1>Settings</h1>
           <p className="muted">{email}</p>
           <nav className="settings-catalogue" aria-label="Settings catalogue">
-            {CATALOGUE.map(c => c.href ? (
-              <a key={c.key} href={c.href} style={{ ...rowStyle, textDecoration: 'none', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</a>
-            ) : (
-              <button key={c.key} type="button" style={{ ...rowStyle, color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)}>
-                {c.title}
-              </button>
+            {CATALOGUE.map((c, i) => (
+              <div key={c.key} className={`setting-life${c.danger ? ' is-danger' : ''}`} style={{ animationDelay: `${i * 0.45}s` }}>
+                {c.href ? (
+                  <a href={c.href} style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</a>
+                ) : (
+                  <button type="button" style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)}>
+                    {c.title}
+                  </button>
+                )}
+              </div>
             ))}
           </nav>
-          <div style={{ marginTop: 24 }}>
-            <button className="btn" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>Sign out</button>
+          <div className="setting-life" style={{ animationDelay: '4.6s' }}>
+            <button type="button" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>Sign out</button>
           </div>
         </>
       ) : (
@@ -418,7 +416,9 @@ export default function Settings() {
           </div>
           <h1 style={{ marginTop: 12 }}>{current?.title}</h1>
           {view === 'profile' && <p className="muted">{email}</p>}
-          {renderPage()}
+          <div className="setting-stage">
+            {renderPage()}
+          </div>
         </>
       )}
 

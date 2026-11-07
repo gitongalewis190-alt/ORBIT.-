@@ -109,7 +109,7 @@ nav.settings-catalogue {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 0;
+  gap: 14px;
   width: 100%;
   background: transparent;
   backdrop-filter: none;
@@ -119,6 +119,75 @@ nav.settings-catalogue {
   left: auto;
   right: auto;
   bottom: auto;
+}
+
+/* Each setting is its own long card. They rise and settle on different beats. */
+.setting-life {
+  position: relative;
+  min-height: 92px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--accent, #c4623d) 42%, var(--line, #e6dfd2));
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--accent, #c4623d) 16%, var(--surface, #fff)) 0%, var(--surface, #fff) 58%);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink, #1c1b19) 8%, transparent);
+  overflow: hidden;
+  animation: setting-breathe 6.4s ease-in-out infinite;
+}
+.setting-life::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--accent, #c4623d);
+  animation: setting-glow 6.4s ease-in-out infinite;
+}
+.setting-life.is-danger {
+  border-color: color-mix(in srgb, #b34a3c 55%, var(--line, #e6dfd2));
+  background: linear-gradient(165deg, color-mix(in srgb, #b34a3c 14%, var(--surface, #fff)) 0%, var(--surface, #fff) 58%);
+}
+.setting-life.is-danger::before { background: #b34a3c; }
+.setting-life a,
+.setting-life button {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 92px;
+  margin: 0;
+  padding: 18px 18px 16px 22px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 20px;
+  line-height: 1.2;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.setting-life button:disabled { opacity: 0.45; cursor: default; }
+.settings > .setting-life { margin-top: 18px; }
+
+.setting-stage {
+  border-radius: 22px;
+  padding: 4px 2px 8px;
+  animation: setting-breathe 7s ease-in-out infinite;
+}
+
+@keyframes setting-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes setting-glow {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setting-life, .setting-life::before, .setting-stage { animation: none; }
 }
 
 /* Saved-entry actions sit above the text, one under the other, so they are reachable without scrolling. */
