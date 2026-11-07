@@ -10,8 +10,10 @@ import { toast } from '../../lib/toast';
 import { autocorrectOn, setAutocorrect } from '../../lib/autocorrect';
 import ProfileDetails from '../../components/ProfileDetails';
 import ExportPanel from '../../components/ExportPanel';
+import BackupPanel from '../../components/BackupPanel';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { APP_VERSION } from '../../lib/version';
+import { readAssist, writeAssist, ASSIST_DEFAULTS } from '../../lib/assist';
 
 const TIMEZONES = [
   'Africa/Nairobi', 'Africa/Lagos', 'Africa/Johannesburg', 'Europe/London',
@@ -22,15 +24,17 @@ const RESET_TABLES = ['decision_log', 'journal_entries', 'reviews', 'topic_contr
 
 // The catalogue. Each entry opens its own page. Danger rows are red-labelled and sit at the end.
 const CATALOGUE = [
-  { key: 'profile', title: 'Profile and personal information', hint: 'Name, age, goals, timezone' },
-  { key: 'appearance', title: 'Appearance', hint: 'Light, dark or follow the device' },
-  { key: 'sound', title: 'Sound', hint: 'Sounds and volume' },
-  { key: 'learning', title: 'Journal and learning', hint: 'Autocorrect and how topics are chosen' },
-  { key: 'export', title: 'Extensions and exports', hint: 'PDF records and JSON backups' },
-  { key: 'storage', title: 'Storage', hint: 'How much space your data uses' },
-  { key: 'help', title: 'Help and version', hint: 'The guide and the app version' },
-  { key: 'reset', title: 'Reset everything', hint: 'Clear your records, keep your account', danger: true },
-  { key: 'delete', title: 'Delete account', hint: 'Remove your sign-in and all your data', danger: true },
+  { key: 'profile', title: 'Profile' },
+  { key: 'appearance', title: 'Appearance' },
+  { key: 'sound', title: 'Sound' },
+  { key: 'learning', title: 'Journal' },
+  { key: 'assist', title: 'Assist' },
+  { key: 'export', title: 'Backups' },
+  { key: 'storage', title: 'Storage' },
+  { key: 'help', title: 'Help' },
+  { key: 'recall', title: 'Recall', href: '/recall' },
+  { key: 'reset', title: 'Reset', danger: true },
+  { key: 'delete', title: 'Delete account', danger: true },
 ];
 
 const rowStyle = {
@@ -38,6 +42,33 @@ const rowStyle = {
   padding: '14px 2px', background: 'transparent', border: 0, borderBottom: '0.5px solid var(--border)',
   color: 'inherit', textAlign: 'left', fontSize: 16, lineHeight: 1.35, cursor: 'pointer', whiteSpace: 'normal',
 };
+
+const ASSIST_ROWS = [
+  ['pace', 'Learn my usual length'],
+  ['suggestions', 'Suggestions'],
+  ['ask', 'Ask my journal'],
+  ['dictate', 'Speak to write'],
+];
+
+function AssistSettings() {
+  const [prefs, setPrefs] = useState(ASSIST_DEFAULTS);
+  useEffect(() => { setPrefs(readAssist(localStorage)); }, []);
+  function toggle(key) {
+    const next = writeAssist(localStorage, { [key]: !prefs[key] });
+    setPrefs(next);
+    play('toggle');
+  }
+  return (
+    <div className="card">
+      {ASSIST_ROWS.map(([key, label]) => (
+        <div className="switchrow" key={key}>
+          <span>{label}</span>
+          <button className={`switch ${prefs[key] ? 'on' : ''}`} aria-label={label} onClick={() => toggle(key)} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Two-step confirmations. Each flow moves from step 1 (the warning) to step 2 (the final check).
 // Nothing is changed until step 2 is confirmed.
@@ -311,7 +342,14 @@ export default function Settings() {
           </>
         );
       case 'export':
-        return <ExportPanel uid={uid} />;
+        return (
+          <>
+            <BackupPanel uid={uid} />
+            <ExportPanel uid={uid} />
+          </>
+        );
+      case 'assist':
+        return <AssistSettings />;
       case 'storage':
         return <div className="card"><StorageMeter /></div>;
       case 'help':
@@ -361,10 +399,11 @@ export default function Settings() {
           <h1>Settings</h1>
           <p className="muted">{email}</p>
           <nav className="settings-catalogue" aria-label="Settings catalogue">
-            {CATALOGUE.map(c => (
-              <button key={c.key} type="button" style={rowStyle} onClick={() => setView(c.key)}>
-                <span style={{ display: 'block', whiteSpace: 'normal', overflowWrap: 'break-word', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</span>
-                <span className="muted" style={{ display: 'block', whiteSpace: 'normal', overflowWrap: 'break-word', fontSize: 13 }}>{c.hint}</span>
+            {CATALOGUE.map(c => c.href ? (
+              <a key={c.key} href={c.href} style={{ ...rowStyle, textDecoration: 'none', color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</a>
+            ) : (
+              <button key={c.key} type="button" style={{ ...rowStyle, color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)}>
+                {c.title}
               </button>
             ))}
           </nav>

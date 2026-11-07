@@ -261,6 +261,7 @@ export default function TabBar({ tabs, path, visible = true }) {
                     {ICON[href]}
                   </svg>
                 </span>
+                <span className="obar-name">{label}</span>
               </Link>
             );
           })}

@@ -23,6 +23,7 @@ import {
 } from '../lib/offline';
 
 import { commitEntry } from '../lib/journal';
+import { queueAutoBackup } from '../lib/backupSync';
 import Toaster from './Toaster';
 import AwardUnlock from './AwardUnlock';
 import TabBar from './TabBar';
@@ -241,6 +242,7 @@ export default function Shell({ children }) {
 
         if (alive) {
           flushQueue();
+          queueAutoBackup(session.user.id);
         }
       }
     }).catch(() => {

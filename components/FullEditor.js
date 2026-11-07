@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { HIGHLIGHTS } from '../lib/richtext';
+import Dictate from './Dictate';
 
 // Full-screen editor for a published entry. Exit and Save stay visible.
 // Formatting, highlight colours, and previous/next live in one dropdown so they
@@ -70,6 +71,7 @@ export default function FullEditor({ title, value, onSave, onClose, onPrev, onNe
         <button type="button" style={btn} aria-expanded={menu} aria-controls="edit-tools" onClick={() => setMenu(open => !open)}>
           {menu ? 'Close tools' : 'Tools'}
         </button>
+        <Dictate onText={text => setDraft(d => (d ? `${d.trimEnd()} ${text}` : text))} />
         <button type="button" style={{ ...btn, background: 'var(--text-accent)', color: 'var(--surface-2)', border: 'none' }} onClick={save} disabled={busy || words < 1}>
           {busy ? 'Saving' : 'Save'}
         </button>

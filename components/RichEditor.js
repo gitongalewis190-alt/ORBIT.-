@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { applyFormat } from '../lib/richtext';
 import { autocorrectInput, autocorrectOn } from '../lib/autocorrect';
+import Dictate from './Dictate';
 
 // Toolbar tools. Each one wraps or converts the selected text in place.
 const TOOLS = [
@@ -89,6 +90,7 @@ export default function RichEditor({ value, onChange, placeholder, minHeight = 2
         >
           {menu ? 'Close tools' : 'Tools'}
         </button>
+        <Dictate onText={text => onChange(value ? `${value.trimEnd()} ${text}` : text)} />
       </div>
       {menu && (
         <div id="write-tools" className="tool-menu" role="menu" aria-label={label ?? 'Formatting'}>

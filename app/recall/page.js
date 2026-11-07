@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { pickRecall, BANDS } from '../../lib/recall';
+import { pickRecall, BANDS, bandFor } from '../../lib/recall';
 import { buildQuestions, pickQuestion, gradeQuestion } from '../../lib/recallQuestions';
 import { prettyDate, today } from '../../lib/dates';
 import { logDecision } from '../../lib/log';
@@ -10,6 +10,7 @@ import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 import { renderRich } from '../../lib/richtext';
 import { verifyAnswer } from '../../lib/recallClient';
+import Dictate from '../../components/Dictate';
 
 // Recall: questions built from what you logged, harder for older entries. A weak answer sends you back to
 // the concept: the entry is shown again, and the topic goes into today's reviews.
@@ -22,6 +23,8 @@ export default function RecallPage() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  const [chosen, setChosen] = useState('');
 
   useEffect(() => { load(); }, []);
 
@@ -47,10 +50,7 @@ export default function RecallPage() {
     }
   }
 
-  function askMe() {
-    setError('');
-    setResult(null);
-    setAnswer('');
+  function pool() {
     const recentAsks = {};
     for (const h of history) {
       const t = new Date(h.asked_at).getTime();
@@ -58,7 +58,6 @@ export default function RecallPage() {
     }
     const lastScore = {};
     for (const h of [...history].reverse()) lastScore[h.entry_id] = h.score;
-
     const candidates = entries.map(e => ({
       id: e.id,
       topic_id: e.topic_id,
@@ -68,15 +67,11 @@ export default function RecallPage() {
       body: e.body,
       key_points: e.key_points ?? [],
     }));
+    return { candidates, recentAsks };
+  }
 
-    const pick = pickRecall(candidates, { recentAsks });
-    if (!pick) {
-      setCurrent(null);
-      setError('Nothing old enough yet. Recall starts the day after you log an entry.');
-      return;
-    }
-    const entry = pick.entry;
-    const days = Math.floor((Date.now() - new Date(entry.created_at).getTime()) / 86400000);
+  function pose(entry, days) {
+    const { candidates } = pool();
     const others = candidates.filter(c => c.id !== entry.id).slice(0, 30);
     const question = pickQuestion(buildQuestions(entry, days, others));
     if (!question) {
@@ -84,8 +79,39 @@ export default function RecallPage() {
       setCurrent(null);
       return;
     }
-    setCurrent({ entry, days, band: pick.band, question, logged: entry.created_at.slice(0, 10) });
+    setError('');
+    setResult(null);
+    setAnswer('');
+    setCurrent({ entry, days, band: bandFor(Math.max(1, days)) ?? BANDS[0], question, logged: entry.created_at.slice(0, 10) });
   }
+
+  function askMe() {
+    const { candidates, recentAsks } = pool();
+    const pick = pickRecall(candidates, { recentAsks });
+    if (!pick) {
+      setCurrent(null);
+      setError('Nothing old enough yet. Recall starts the day after you log an entry.');
+      return;
+    }
+    const days = Math.floor((Date.now() - new Date(pick.entry.created_at).getTime()) / 86400000);
+    pose(pick.entry, days);
+  }
+
+  function askChosen(id) {
+    const { candidates } = pool();
+    const entry = candidates.find(c => c.id === id);
+    if (!entry) return;
+    const days = Math.max(1, Math.floor((Date.now() - new Date(entry.created_at).getTime()) / 86400000));
+    pose(entry, days);
+  }
+
+  useEffect(() => {
+    if (!entries.length) return;
+    const id = new URLSearchParams(window.location.search).get('entry');
+    if (id) askChosen(id);
+    // The address is read once, when the entries arrive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
 
   async function submit() {
     if (!current || !answer.trim() || busy) return;
@@ -143,7 +169,18 @@ export default function RecallPage() {
       {error && <p role="alert" style={{ color: '#b4532a', fontSize: 14 }}>{error}</p>}
 
       {!current && (
-        <button onClick={askMe} disabled={!user || entries.length === 0} style={btn}>Ask me something</button>
+        <>
+          <button onClick={askMe} disabled={!user || entries.length === 0} style={btn}>Ask me something</button>
+          <div style={{ marginTop: 16 }}>
+            <select value={chosen} onChange={e => setChosen(e.target.value)} style={{ width: '100%' }}>
+              <option value="">Choose an entry</option>
+              {entries.map(e => (
+                <option key={e.id} value={e.id}>{e.topics?.title ?? 'Entry'} · {String(e.created_at).slice(0, 10)}</option>
+              ))}
+            </select>
+            <button onClick={() => askChosen(chosen)} disabled={!chosen} style={btn}>Ask about this entry</button>
+          </div>
+        </>
       )}
 
       {current && (
@@ -160,6 +197,7 @@ export default function RecallPage() {
             style={{ width: '100%', boxSizing: 'border-box', padding: 12, fontSize: 15 }}
             disabled={busy || !!result}
           />
+          {!result && <Dictate onText={text => setAnswer(a => (a ? `${a.trimEnd()} ${text}` : text))} />}
           {!result && (
             <button onClick={submit} disabled={busy || !answer.trim()} style={btn}>
               {busy ? 'Checking…' : 'Check my answer'}

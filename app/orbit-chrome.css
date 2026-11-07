@@ -55,10 +55,11 @@
 .obar-item {
   position: relative;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   height: 60px;
-  padding-top: 4px;
+  padding-top: 2px;
   color: var(--muted, #6f6b64);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
@@ -66,11 +67,20 @@
 .obar-ico {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   transition: transform 0.2s ease;
 }
+.obar-name {
+  margin-top: 1px;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--muted, #6f6b64);
+  pointer-events: none;
+}
+.obar-item.on .obar-name { color: var(--ink, #1c1b19); }
 .obar-item:active .obar-ico { transform: scale(0.92); }
 .obar-item:focus-visible { outline: none; }
 .obar-item:focus-visible .obar-ico { box-shadow: 0 0 0 2px var(--accent, #c4623d); }

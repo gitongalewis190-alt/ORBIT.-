@@ -65,10 +65,10 @@ export default function ExportPanel({ uid }) {
     if (busy || !uid) return;
     setBusy(true);
     try {
-      const { buildBackupJson } = await import('../lib/export');
-      const { entries } = await buildBackupJson(uid, setStatus);
+      const { downloadSnapshot } = await import('../lib/backupSync');
+      const snap = await downloadSnapshot(uid);
       play('export');
-      toast(`Backup saved with ${entries} journal entries.`, 'ok', 4000);
+      toast(`Backup saved with ${snap.journal.length} journal entries.`, 'ok', 4000);
     } catch (e) {
       play('error');
       toast(`Could not build the backup: ${e.message}`, 'err', 6000);

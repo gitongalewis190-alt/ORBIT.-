@@ -16,6 +16,9 @@ import { readBenefits } from '../../lib/benefits';
 import { renderRich, plainText } from '../../lib/richtext';
 import TopicPicker from '../../components/TopicPicker';
 import RichEditor from '../../components/RichEditor';
+import AssistAsk from '../../components/AssistAsk';
+import { averageWords, assistPrefs } from '../../lib/assist';
+import { queueAutoBackup } from '../../lib/backupSync';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 const FONT_CLASS = { serif: 'f-serif', mono: 'f-mono' };
@@ -167,6 +170,7 @@ export default function Journal() {
       play(fresh.length ? 'badge' : 'save');
       toast(`Saved. Next review ${prettyDate(next.due_on)}.`, 'ok');
       finishSave();
+      queueAutoBackup(uid);
       await load(uid, profile);
     } catch (e) {
       if (isNetworkError(e)) {
@@ -357,9 +361,12 @@ export default function Journal() {
         />
         <div className="row" style={{ justifyContent: 'space-between', marginTop: 0 }}>
           <span className="muted">{words} word{words === 1 ? '' : 's'}</span>
-          <span className="muted">goal {goal}</span>
+          <span className="muted">goal {goal}{assistPrefs().pace && averageWords(entries) ? ` · usual ${averageWords(entries)}` : ''}</span>
         </div>
         <div className="bar"><span style={{ width: `${pct}%` }} /></div>
+        {assistPrefs().suggestions && assistPrefs().pace && words > 0 && averageWords(entries) && words < averageWords(entries) * 0.6 && (
+          <p className="muted" style={{ marginTop: 6 }}>Shorter than your usual length.</p>
+        )}
         {draftNote && <p className="muted" style={{ marginTop: 6 }}>{draftNote}</p>}
 
         <h2>Key points</h2>
@@ -403,6 +410,19 @@ export default function Journal() {
       </div>
 
       <h2>Memory</h2>
+      {assistPrefs().ask && (
+        <AssistAsk
+          entries={entries}
+          onOpen={hit => {
+            const found = entries.find(e => e.id === hit.id);
+            if (found) setOpen(found);
+          }}
+          onReview={topicId => {
+            const found = entries.find(e => e.topic_id === topicId);
+            if (found) relearn(found);
+          }}
+        />
+      )}
       <input placeholder="Search your memory: topic, words or tag" value={memorySearch}
         onChange={e => setMemorySearch(e.target.value)} />
       {memory.length === 0 && (

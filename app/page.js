@@ -210,6 +210,9 @@ export default function Today() {
       )}
 
       <h2>Reviews due</h2>
+      <div className="row" style={{ marginTop: 0 }}>
+        <a className="btn" href="/recall">Recall</a>
+      </div>
       {reviews.length ? reviews.map(r => (
         <div key={r.topic_id} className="card">
           <div>{r.topics.title}</div>
