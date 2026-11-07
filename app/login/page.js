@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { play } from '../../lib/sound';
+import { PebbleInk } from '../../components/orbit/EnterScreen';
 
 export default function Login() {
   const router = useRouter();
@@ -56,7 +57,9 @@ export default function Login() {
   }
 
   return (
-    <div className="wrap fade-in">
+    <div className="orbit-intro login-stage">
+      <PebbleInk />
+      <div className="wrap fade-in login-card">
       <h1>Orbit</h1>
 
       <p className="muted">
@@ -171,6 +174,7 @@ export default function Login() {
           {err}
         </p>
       )}
+      </div>
     </div>
   );
 }

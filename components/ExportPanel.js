@@ -43,8 +43,9 @@ export default function ExportPanel({ uid }) {
     setBusy(true);
     setStatus('Starting');
     const { label, range } = rangeFor(windowKey);
+    const preview = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
-      const res = await createRecord(uid, { windowLabel: label, range }, setStatus);
+      const res = await createRecord(uid, { windowLabel: label, range, preview }, setStatus);
       play('export');
       if (res.stored) {
         toast(`Record saved: ${res.pages} pages, ${res.entries} journal entries.`, 'ok', 4500);
@@ -53,6 +54,7 @@ export default function ExportPanel({ uid }) {
         toast(`Downloaded, but it could not be kept in your log: ${res.reason}`, 'warn', 7000);
       }
     } catch (e) {
+      preview?.close();
       play('error');
       toast(`Could not build the record: ${e.message}`, 'err', 6000);
     } finally {

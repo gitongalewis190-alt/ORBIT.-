@@ -46,6 +46,10 @@ const entries = [
 const answer = askJournal(entries, 'When did I do a shift on technology?');
 assert.equal(answer.hits[0].id, 'a');
 assert.equal(answer.hits[0].created_at, '2026-04-01');
+assert.match(answer.answer, /2026-04-01/);
+assert.match(answer.answer, /technology/i);
+const paraphrased = askJournal(entries, 'Why did the moral side of tech matter?');
+assert.equal(paraphrased.hits[0].id, 'a');
 assert.ok(answer.recommendations.some(r => r.kind === 'relearn' || r.kind === 'recall'));
 assert.equal(averageWords(entries), 24);
 console.log('backup and assist ok');

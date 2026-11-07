@@ -263,15 +263,17 @@ export default function Shell({ children }) {
     };
   }, []);
 
-  // Redirect signed-out visitors to login.
+  // The welcome drawing and the sign-in form are outside the signed-in shell.
+  const door = path === '/login' || path === '/welcome';
   useEffect(() => {
-    if (authed === false && path !== '/login') {
-      router.replace('/login');
-    }
-  }, [authed, path, router]);
+    if (authed === false && !door) router.replace('/welcome');
+    if (authed === true && path === '/welcome') router.replace('/');
+  }, [authed, path, router, door]);
 
-  // Login page does not use the authenticated application shell.
-  if (path === '/login') {
+  if (door) {
+    if (authed === true && path === '/welcome') {
+      return <div className="wrap"><Skeleton lines={3} label="Loading Orbit" /></div>;
+    }
     return (
       <>
         {children}

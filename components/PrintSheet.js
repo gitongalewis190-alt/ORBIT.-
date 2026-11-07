@@ -55,11 +55,12 @@ export default function PrintSheet({ open, onClose }) {
     }
     setBusy(true);
     setStatus('Starting');
+    const preview = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
       if (!uid) throw new Error('Sign in again to make a record.');
-      const res = await createRecord(uid, { windowLabel: choice.label, range: choice.range, options: opt }, setStatus);
+      const res = await createRecord(uid, { windowLabel: choice.label, range: choice.range, options: opt, preview }, setStatus);
       play('export');
       if (res.stored) {
         toast(`Record ready: ${res.pages} pages. Kept for ${retentionLabel(opt.retentionDays).toLowerCase()}.`, 'ok', 5000);
@@ -68,6 +69,7 @@ export default function PrintSheet({ open, onClose }) {
       }
       onClose();
     } catch (e) {
+      preview?.close();
       play('error');
       toast(`Could not build the record: ${e.message}`, 'err', 6000);
     } finally {

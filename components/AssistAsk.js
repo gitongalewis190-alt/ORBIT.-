@@ -28,6 +28,7 @@ export default function AssistAsk({ entries, onOpen, onReview }) {
       <div className="row" style={{ marginTop: 8 }}>
         <button className="btn sm" type="button" onClick={() => go()}>Ask</button>
       </div>
+      {result?.answer && <p style={{ marginTop: 10, lineHeight: 1.5 }}>{result.answer}</p>}
       {result && result.hits.length === 0 && <p className="muted">Nothing in your journal matches that.</p>}
       {result?.hits.map(hit => (
         <button key={hit.id} type="button" className="entry" style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0 }}

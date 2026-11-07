@@ -1,0 +1,246 @@
+/* Introductory drawing. Scoped so it does not restyle the rest of Orbit. */
+.orbit-intro {
+  --color-cream: #f4f1e9;
+  --color-cream-deep: #e6e0d4;
+  --color-ink: #494241;
+  --color-ink-soft: #6f6662;
+  --color-ink-faint: #8a817c;
+  --color-gold: #8a7352;
+  --font-display: "Cormorant Garamond", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+}
+
+.orbit-intro.login-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  overflow: auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+}
+
+.orbit-intro .login-card {
+  position: relative;
+  z-index: 4;
+  max-width: 420px;
+  margin: 14vh auto 0;
+  padding: 8px 4px 28px;
+  background: rgba(244, 241, 233, 0.94);
+  color: #494241;
+}
+
+.orbit-intro .login-card h1,
+.orbit-intro .login-card p,
+.orbit-intro .login-card button.btn {
+  color: #494241;
+}
+
+.orbit-intro .login-card input {
+  background: #fff;
+  color: #1c1b19;
+  border-color: #cfc6ba;
+}
+
+.orbit-intro .stage {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  touch-action: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.orbit-intro .stage-art {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbit-intro .stage-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.orbit-intro .ink {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 4.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24000;
+  stroke-dashoffset: 24000;
+}
+
+.orbit-intro .ink-cream { stroke: var(--color-cream); stroke-width: 10; }
+.orbit-intro .ink-road { stroke: var(--color-cream); stroke-width: 98; }
+.orbit-intro .portal { fill: var(--color-cream); opacity: 0; }
+
+.orbit-intro .pebble,
+.orbit-intro .pen {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 4.25;
+  stroke-linecap: round;
+}
+
+.orbit-intro .pen { opacity: 0; }
+.orbit-intro .brain-fill { fill: var(--color-ink); opacity: 0; }
+.orbit-intro .figure { opacity: 0; color: var(--color-ink); }
+
+.orbit-intro .finale {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.25rem 1.5rem max(1.35rem, env(safe-area-inset-bottom));
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+.orbit-intro .finale[data-show="true"] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.orbit-intro .wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.8rem, 8vw, 2.35rem);
+  letter-spacing: 0.46em;
+  text-indent: 0.46em;
+  line-height: 1;
+  text-align: center;
+}
+
+.orbit-intro .tagline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.2rem, 5vw, 1.55rem);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.orbit-intro .rule {
+  width: 2.25rem;
+  height: 1px;
+  background: var(--color-gold);
+  border: 0;
+}
+
+.orbit-intro .support {
+  margin: 0;
+  max-width: 22rem;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+.orbit-intro .journey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 22rem);
+  min-height: 3.1rem;
+  margin-top: 0.35rem;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+}
+
+.orbit-intro .journey:hover { background: var(--color-ink); color: var(--color-cream); }
+.orbit-intro .journey:active { transform: scale(0.96); }
+
+.orbit-intro .ghost {
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  text-decoration: underline;
+  text-underline-offset: 0.35rem;
+}
+
+.orbit-intro .skip,
+.orbit-intro .hold-hint {
+  position: fixed;
+  z-index: 30;
+  top: max(0.65rem, env(safe-area-inset-top));
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.orbit-intro .skip {
+  right: max(0.85rem, env(safe-area-inset-right));
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0 0.35rem;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+
+.orbit-intro .hold-hint {
+  left: max(1rem, env(safe-area-inset-left));
+  max-width: calc(100% - 7.5rem);
+  line-height: 2.75rem;
+  pointer-events: none;
+}
+
+.orbit-intro .ink-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orbit-intro .ink-live {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-intro .finale, .orbit-intro .journey { transition: none; }
+}
+
+@media (min-width: 800px) {
+  .orbit-intro .wordmark { font-size: 3rem; }
+  .orbit-intro .tagline { font-size: 1.85rem; }
+}

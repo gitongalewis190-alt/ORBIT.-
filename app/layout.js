@@ -1,6 +1,7 @@
 import './globals.css';
 import './features.css';
 import './orbit-chrome.css';
+import './orbit-ink.css';
 import Shell from '../components/Shell';
 import { THEME_BOOT_SCRIPT } from '../lib/theme';
 
@@ -26,6 +27,9 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Outfit:wght@300;500&display=swap" rel="stylesheet" />
       </head>
       <body>
         <Shell>{children}</Shell>

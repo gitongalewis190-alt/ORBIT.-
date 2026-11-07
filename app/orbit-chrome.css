@@ -109,7 +109,7 @@ nav.settings-catalogue {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 14px;
+  gap: 8px;
   width: 100%;
   background: transparent;
   backdrop-filter: none;
@@ -124,12 +124,11 @@ nav.settings-catalogue {
 /* Each setting is its own long card. They rise and settle on different beats. */
 .setting-life {
   position: relative;
-  min-height: 92px;
-  border-radius: 22px;
+  min-height: 0;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--accent, #c4623d) 42%, var(--line, #e6dfd2));
   background:
-    linear-gradient(165deg, color-mix(in srgb, var(--accent, #c4623d) 16%, var(--surface, #fff)) 0%, var(--surface, #fff) 58%);
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink, #1c1b19) 8%, transparent);
+    linear-gradient(165deg, color-mix(in srgb, var(--accent, #c4623d) 12%, var(--surface, #fff)) 0%, var(--surface, #fff) 62%);
   overflow: hidden;
   animation: setting-breathe 6.4s ease-in-out infinite;
 }
@@ -137,9 +136,9 @@ nav.settings-catalogue {
   content: '';
   position: absolute;
   left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
   border-radius: 4px;
   background: var(--accent, #c4623d);
   animation: setting-glow 6.4s ease-in-out infinite;
@@ -153,17 +152,17 @@ nav.settings-catalogue {
 .setting-life button {
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   width: 100%;
-  min-height: 92px;
+  min-height: 52px;
   margin: 0;
-  padding: 18px 18px 16px 22px;
+  padding: 12px 14px 12px 16px;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 20px;
-  line-height: 1.2;
+  font-size: 17px;
+  line-height: 1.25;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
@@ -226,6 +225,64 @@ nav.settings-catalogue {
   white-space: normal;
 }
 .tool-menu button[aria-pressed="true"] { color: var(--accent); }
+
+/* Published-entry editor. Opaque and above the page, so chips and action buttons cannot show through. */
+.orbit-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
+}
+body:has(.orbit-editor) { overflow: hidden; }
+body:has(.orbit-editor) .wrap,
+body:has(.orbit-editor) .topbar,
+body:has(.orbit-editor) .offline-banner { visibility: hidden; }
+.orbit-editor-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.orbit-editor-title,
+.orbit-editor-count {
+  padding: 8px 14px 0;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bg);
+}
+.orbit-editor-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orbit-editor-text {
+  flex: 1;
+  width: auto;
+  min-height: 0;
+  margin: 8px 12px 0;
+  padding: 12px;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.65;
+  border: 0;
+  outline: none;
+  background: var(--bg);
+  color: var(--ink);
+  resize: none;
+}
+.orbit-editor-count { padding-bottom: 8px; border-top: 1px solid var(--line); }
+
+@media (max-width: 720px) {
+  .wrap { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  input, select, textarea { font-size: 16px; }
+  .topbar { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+}
 
 /* The bar hides while a full-screen layer (award unlock or a dialog) is open. */
 body:has(.unlock) .obar,

@@ -17,7 +17,7 @@ import { renderRich, plainText } from '../../lib/richtext';
 import TopicPicker from '../../components/TopicPicker';
 import RichEditor from '../../components/RichEditor';
 import AssistAsk from '../../components/AssistAsk';
-import { averageWords, assistPrefs } from '../../lib/assist';
+import { averageWords, assistPrefs, nextAdvice } from '../../lib/assist';
 import { queueAutoBackup } from '../../lib/backupSync';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
@@ -366,6 +366,9 @@ export default function Journal() {
         <div className="bar"><span style={{ width: `${pct}%` }} /></div>
         {assistPrefs().suggestions && assistPrefs().pace && words > 0 && averageWords(entries) && words < averageWords(entries) * 0.6 && (
           <p className="muted" style={{ marginTop: 6 }}>Shorter than your usual length.</p>
+        )}
+        {assistPrefs().suggestions && nextAdvice(entries) && (
+          <p className="muted" style={{ marginTop: 6 }}>{nextAdvice(entries)}</p>
         )}
         {draftNote && <p className="muted" style={{ marginTop: 6 }}>{draftNote}</p>}
 

@@ -36,6 +36,7 @@ check('connection questions use other topics only when old enough', () => {
 check('grading counts target terms, and a weak score is flagged', () => {
   const q = { targets: ['chlorophyll', 'sunlight'] };
   assert.equal(gradeQuestion(q, 'Leaves use chlorophyll and sunlight to make food.').score, 100);
+  assert.equal(gradeQuestion(q, 'Leaves use chlorophylls and the sunlight to make food.').score, 100);
   const weak = gradeQuestion(q, 'Plants are green and grow in soil.');
   assert.equal(weak.score, 0);
   assert.equal(weak.weak, true);
