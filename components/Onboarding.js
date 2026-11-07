@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { getProfile, saveProfile } from '../lib/profile';
 import { play, setSound, setVolume } from '../lib/sound';
 import { applyTheme } from '../lib/theme';
@@ -21,11 +21,11 @@ export default function Onboarding() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+    currentUser().then(async (user) => {
+      if (!user) return;
       try {
-        const p = await getProfile(data.user.id);
-        setUid(data.user.id);
+        const p = await getProfile(user.id);
+        setUid(user.id);
         if (!p.onboarded) {
           setForm(f => ({
             ...f,

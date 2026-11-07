@@ -2,6 +2,7 @@
 import FullEditor from '../../components/FullEditor';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { today, prettyDate } from '../../lib/dates';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
@@ -50,6 +51,8 @@ export default function Journal() {
   const [pendingDelete, setPendingDelete] = useState(null);
   useEffect(() => { setBenefitIds(readBenefits()); }, []);
   const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState('idle');
+  const [savedKind, setSavedKind] = useState('');
   const [err, setErr] = useState('');
   const [streak, setStreak] = useState(0);
   const [wordsToday, setWordsToday] = useState(0);
@@ -65,9 +68,9 @@ export default function Journal() {
   const linkedResearch = isReflect && topic ? researchFor(topic.id) : null;
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const id = data.user.id;
+    currentUser().then(async (user) => {
+      if (!user) return;
+      const id = user.id;
       setUid(id);
       const p = await getProfile(id);
       setProfile(p);
@@ -168,12 +171,16 @@ export default function Journal() {
     };
 
     setBusy(true);
+    setPhase('saving');
+    const kind = isReflect ? 'reflection' : 'entry';
     try {
       const { next, fresh } = await commitEntry(uid, payload);
       play(fresh.length ? 'badge' : 'save');
       toast(`Saved. Next review ${prettyDate(next.due_on)}.`, 'ok');
       scheduleAtlas(uid, payload.id);
       finishSave();
+      setSavedKind(kind);
+      setPhase('saved');
       queueAutoBackup(uid);
       await load(uid, profile);
     } catch (e) {
@@ -183,8 +190,11 @@ export default function Journal() {
         play('save');
         toast('Saved on this phone. It will sync when you are back online.', 'warn', 4500);
         finishSave();
+        setSavedKind(kind);
+        setPhase('saved');
       } else {
         play('error');
+        setPhase('idle');
         toast(`Could not save: ${e.message}`, 'err', 6000);
       }
     } finally {
@@ -330,7 +340,7 @@ export default function Journal() {
             <button className="btn sm" onClick={() => { setTopic(null); setAssignmentId(null); }}>Change</button>
           </div>
         ) : (
-          <TopicPicker topics={topics} onPick={t => { setTopic(t); }} />
+          <TopicPicker topics={topics} onPick={t => { setTopic(t); setPhase('idle'); }} />
         )}
 
         <div className="seg" style={{ marginBottom: 10 }} role="tablist" aria-label="Journal mode">
@@ -362,7 +372,7 @@ export default function Journal() {
         <h2>{isReflect ? 'Reflection' : 'What I learned'}</h2>
         <RichEditor
           value={body}
-          onChange={setBody}
+          onChange={next => { setBody(next); if (phase === 'saved') setPhase('idle'); }}
           font={font}
           onFont={setFont}
           label="Formatting"
@@ -416,10 +426,18 @@ export default function Journal() {
         />
 
         <div className="row">
-          <button className="btn accent" onClick={save} disabled={busy}>
-            {busy ? 'Saving' : isReflect ? 'Save reflection' : 'Save entry'}
+          <button className="btn accent" onClick={save} disabled={busy} aria-busy={phase === 'saving'}>
+            {phase === 'saving' ? 'Saving' : phase === 'saved' && !body.trim() && !topic ? 'Saved' : isReflect ? 'Save reflection' : 'Save entry'}
           </button>
         </div>
+        {phase === 'saved' && (
+          <p className="notice" role="status">
+            {savedKind === 'reflection' ? 'Reflection saved.' : 'Entry saved.'} It is in Logs.
+          </p>
+        )}
+        {phase === 'saving' && (
+          <p className="muted" role="status">Saving. Stay on this screen until it says Saved.</p>
+        )}
       </div>
 
       <h2>Memory</h2>

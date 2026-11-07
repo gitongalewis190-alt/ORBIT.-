@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { supabase } from '../lib/supabase';
+import { nextAuth, readPersistedUserId } from '../lib/authGate';
 import {
   play,
   setSound,
@@ -63,6 +64,7 @@ export default function Shell({ children }) {
   const [online, setOnline] = useState(true);
 
   const uidRef = useRef(null);
+  const returnTo = useRef('/');
   const [printOpen, setPrintOpen] = useState(false);
   // Any screen can open the print settings sheet with one event.
   useEffect(() => {
@@ -213,63 +215,130 @@ export default function Shell({ children }) {
   }, []);
 
   // Load authentication state and saved preferences.
+  // A missing session is not a sign-out until we have confirmed the phone
+  // no longer has one. iOS briefly reports a null session while a save is
+  // refreshing the token; sending the learner to the landing animation then
+  // is the save-and-logs loop.
   useEffect(() => {
     let alive = true;
+    let settleTimer = 0;
+
+    const persistId = () => readPersistedUserId(window.localStorage);
+
+    const adopt = (userId) => {
+      if (!alive || !userId) return;
+      window.clearTimeout(settleTimer);
+      setAuthed(true);
+      uidRef.current = userId;
+    };
+
+    const confirmSignOut = () => {
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        if (!alive) return;
+        supabase.auth.getSession().then(({ data }) => {
+          if (!alive) return;
+          const recovered = data.session?.user?.id || persistId();
+          if (recovered) {
+            adopt(recovered);
+            return;
+          }
+          setAuthed(false);
+          uidRef.current = null;
+        }).catch(() => {
+          if (!alive) return;
+          const recovered = persistId();
+          if (recovered) adopt(recovered);
+          else {
+            setAuthed(false);
+            uidRef.current = null;
+          }
+        });
+      }, 600);
+    };
+
+    const apply = (decision) => {
+      if (!alive) return;
+      if (decision.settle && decision.authed === false) {
+        confirmSignOut();
+        return;
+      }
+      if (decision.authed === true) adopt(decision.userId);
+    };
 
     supabase.auth.getSession().then(async ({ data }) => {
       if (!alive) return;
 
       const session = data.session;
+      const userId = session?.user?.id || persistId();
 
-      setAuthed(!!session);
+      if (!userId) {
+        setAuthed(false);
+        return;
+      }
 
-      if (session) {
-        uidRef.current = session.user.id;
+      adopt(userId);
 
-        try {
-          const p = await getProfile(session.user.id);
+      if (!session) return;
 
-          if (!alive) return;
+      try {
+        const p = await getProfile(session.user.id);
 
-          applyTheme(p.theme ?? getStoredTheme());
+        if (!alive) return;
 
-          // Protect against missing settings in older profiles.
-          setSound(p.sound_on ?? true);
-          setVolume(p.sound_volume ?? 70);
-        } catch {
-          if (alive) {
-            applyTheme(getStoredTheme());
-          }
-        }
+        applyTheme(p.theme ?? getStoredTheme());
 
+        // Protect against missing settings in older profiles.
+        setSound(p.sound_on ?? true);
+        setVolume(p.sound_volume ?? 70);
+      } catch {
         if (alive) {
-          flushQueue();
-          queueAutoBackup(session.user.id);
+          applyTheme(getStoredTheme());
         }
+      }
+
+      if (alive) {
+        flushQueue();
+        queueAutoBackup(session.user.id);
       }
     }).catch(() => {
-      if (alive) {
-        setAuthed(false);
-      }
+      if (!alive) return;
+      const userId = persistId();
+      if (userId) adopt(userId);
+      else setAuthed(false);
     });
 
     const { data: listener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setAuthed(!!session);
-        uidRef.current = session?.user?.id ?? null;
+      supabase.auth.onAuthStateChange((event, session) => {
+        apply(nextAuth({
+          event,
+          session,
+          persistedUserId: persistId(),
+          knownUserId: uidRef.current,
+        }));
       });
 
     return () => {
       alive = false;
+      window.clearTimeout(settleTimer);
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // Remember the screen they were on, so a recovered session returns there
+  // instead of always dumping them on Today after the landing animation.
+  useEffect(() => {
+    if (path && path !== '/welcome' && path !== '/login') returnTo.current = path;
+  }, [path]);
 
   // The welcome drawing and the sign-in form are outside the signed-in shell.
   const door = path === '/login' || path === '/welcome';
   useEffect(() => {
     if (authed === false && !door) router.replace('/welcome');
-    if (authed === true && path === '/welcome') router.replace('/');
+    if (authed === true && path === '/welcome') {
+      const back = returnTo.current && returnTo.current !== '/welcome' ? returnTo.current : '/';
+      router.replace(back);
+    }
   }, [authed, path, router, door]);
 
   if (door) {

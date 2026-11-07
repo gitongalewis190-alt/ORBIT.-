@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { buildContext } from '../lib/context';
 import { selectTopic, pickMode, adaptLevel, shuffle } from '../lib/selector';
 import { today, prettyDate } from '../lib/dates';
@@ -35,10 +36,10 @@ export default function Today() {
   const [changes, setChanges] = useState(0);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      setUser(data.user);
-      load(data.user.id);
+    currentUser().then((user) => {
+      if (!user) return;
+      setUser(user);
+      load(user.id);
     });
   }, []);
 

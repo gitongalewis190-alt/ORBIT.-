@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { prettyDate } from '../../lib/dates';
 import Skeleton from '../../components/Skeleton';
 import LogStats from '../../components/LogStats';
@@ -58,15 +59,18 @@ export default function Logs() {
 
   useEffect(() => {
     let alive = true;
-    supabase.from('decision_log')
-      .select('id,event,topic_id,payload,created_at,topics(title)')
-      .order('created_at', { ascending: false })
-      .limit(500)
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error) setErr(error.message);
-        else setRows(data ?? []);
-      });
+    currentUser().then((user) => {
+      if (!alive || !user) return;
+      supabase.from('decision_log')
+        .select('id,event,topic_id,payload,created_at,topics(title)')
+        .order('created_at', { ascending: false })
+        .limit(500)
+        .then(({ data, error }) => {
+          if (!alive) return;
+          if (error) setErr(error.message);
+          else setRows(data ?? []);
+        });
+    });
     return () => { alive = false; };
   }, []);
 

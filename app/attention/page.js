@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { attend, ATTENTION } from '../../lib/attention';
 import Dictate from '../../components/Dictate';
 import { toast } from '../../lib/toast';
@@ -16,8 +17,7 @@ export default function AttentionPage() {
   const end = useRef(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const user = data.user;
+    currentUser().then(async (user) => {
       if (!user) return;
       setUid(user.id);
       const [journal, thread] = await Promise.all([

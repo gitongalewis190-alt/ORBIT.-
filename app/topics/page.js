@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { logDecision } from '../../lib/log';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
@@ -55,10 +56,10 @@ export default function Topics() {
   const [newSecField, setNewSecField] = useState('');
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      setUid(data.user.id);
-      loadAll(data.user.id);
+    currentUser().then((user) => {
+      if (!user) return;
+      setUid(user.id);
+      loadAll(user.id);
     });
   }, []);
 

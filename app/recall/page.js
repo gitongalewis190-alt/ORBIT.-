@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { pickRecall, BANDS, bandFor } from '../../lib/recall';
 import { buildQuestions, pickQuestion, gradeQuestion } from '../../lib/recallQuestions';
 import { prettyDate, today } from '../../lib/dates';
@@ -30,16 +31,16 @@ export default function RecallPage() {
 
   async function load() {
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth?.user) { setError('Sign in to use recall.'); return; }
-      setUser(auth.user);
+      const user = await currentUser();
+      if (!user) { setError('Sign in to use recall.'); return; }
+      setUser(user);
       const [{ data: rows, error: e1 }, { data: asks, error: e2 }] = await Promise.all([
         supabase.from('journal_entries')
           .select('id, topic_id, body, key_points, created_at, topics(title)')
-          .eq('user_id', auth.user.id).order('created_at', { ascending: false }).limit(500),
+          .eq('user_id', user.id).order('created_at', { ascending: false }).limit(500),
         supabase.from('recall_questions')
           .select('id, entry_id, topic_title, entry_logged_on, band, question, answer, score, comment, verifier, asked_at')
-          .eq('user_id', auth.user.id).order('asked_at', { ascending: false }).limit(200),
+          .eq('user_id', user.id).order('asked_at', { ascending: false }).limit(200),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;

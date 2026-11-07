@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { getProfile } from '../../lib/profile';
 import {
   loadStats,
@@ -34,13 +34,10 @@ export default function AwardsPage() {
 
     async function load() {
       try {
-        const { data: auth, error: authError } =
-          await supabase.auth.getUser();
+        const user = await currentUser();
+        if (!user) throw new Error('Please sign in to view your awards.');
 
-        if (authError) throw authError;
-        if (!auth.user) throw new Error('Please sign in to view your awards.');
-
-        const uid = auth.user.id;
+        const uid = user.id;
         const profile = await getProfile(uid);
         const stats = await loadStats(uid, profile);
 
@@ -49,7 +46,7 @@ export default function AwardsPage() {
 
         // Load after synchronisation so new awards appear immediately.
         const unlocked = await unlockedMap(uid);
-        const displayName = resolveDisplayName(profile, auth.user);
+        const displayName = resolveDisplayName(profile, user);
 
         if (alive) {
           setData({ stats, unlocked, displayName });

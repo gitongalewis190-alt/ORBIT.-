@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { currentUser } from '../lib/session';
 import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges } from '../lib/stats';
 import { play } from '../lib/sound';
@@ -20,11 +20,11 @@ export default function DayRings() {
     let alive = true;
     (async () => {
       try {
-        const { data: u } = await supabase.auth.getUser();
-        if (!u.user) return;
-        const profile = await getProfile(u.user.id);
-        const stats = await loadStats(u.user.id, profile);
-        await syncBadges(u.user.id, stats);
+        const user = await currentUser();
+        if (!user) return;
+        const profile = await getProfile(user.id);
+        const stats = await loadStats(user.id, profile);
+        await syncBadges(user.id, stats);
         if (!alive) return;
         setData({ stats, profile });
       } catch (e) {

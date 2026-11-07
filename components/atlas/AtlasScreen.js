@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { currentUser } from '../../lib/session';
 import { toast } from '../../lib/toast';
 import { play } from '../../lib/sound';
 import {
@@ -49,11 +49,11 @@ export default function AtlasScreen({ focusId = null }) {
   }
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: auth }) => {
-      if (!auth.user) return;
-      setUid(auth.user.id);
+    currentUser().then(async (user) => {
+      if (!user) return;
+      setUid(user.id);
       try {
-        await refresh(auth.user.id);
+        await refresh(user.id);
       } catch (e) {
         setError(e.message);
       }
