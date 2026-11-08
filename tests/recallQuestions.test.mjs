@@ -1,6 +1,6 @@
 // Run: esbuild tests/recallQuestions.test.mjs --bundle --platform=node --format=cjs --outfile=/tmp/rq.cjs && node /tmp/rq.cjs
 import assert from 'node:assert/strict';
-import { buildQuestions, kindsFor, pickQuestion, gradeQuestion, sentencesOf } from '../lib/recallQuestions';
+import { buildQuestions, kindsFor, pickQuestion, gradeQuestion, sentencesOf } from '../lib/recallQuestions.js';
 
 let passed = 0;
 const check = (name, fn) => { fn(); passed++; console.log('  ok  ' + name); };

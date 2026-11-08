@@ -554,3 +554,49 @@ dialog.orbit-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
 
 /* Dragging across the bar must not start a native link or image drag, which would cancel the pointer. */
 .obar a, .obar svg { -webkit-user-drag: none; user-drag: none; -webkit-user-select: none; user-select: none; }
+
+.search-control, .menu-trigger { min-width: 44px; min-height: 44px; }
+.family-strip { display: flex; gap: var(--space-2); overflow-x: auto; padding: var(--space-2) 18px; max-width: 1120px; margin: 0 auto; }
+.family-strip a, .related-strip a { min-height: 44px; display: inline-flex; align-items: center; }
+.nav-row { display: flex; flex-direction: column; gap: 2px; min-height: 44px; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-m); text-decoration: none; color: inherit; background: var(--surface); }
+.hub-grid { display: grid; gap: var(--space-3); }
+.related-strip { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+.orbit-rail { display: none; }
+.menu-panel, .palette-panel, .evidence-drawer { background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--elev-2); border-radius: var(--radius-l); }
+.orbit-menu, .orbit-palette, .evidence-root { position: fixed; inset: 0; z-index: 40; }
+.evidence-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.28); border: 0; }
+.menu-panel { position: relative; width: min(360px, 88vw); height: 100%; overflow: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.palette-panel { position: relative; margin: 10vh auto 0; width: min(640px, calc(100% - 24px)); padding: var(--space-3); }
+.palette-input { width: 100%; min-height: 44px; }
+.evidence-drawer { position: absolute; left: 0; right: 0; bottom: 0; max-height: 85vh; overflow: auto; padding: var(--space-4); }
+.evidence-numbers { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+body:has(.orbit-editor) .orbit-menu,
+body:has(.orbit-editor) .orbit-rail,
+body:has(.orbit-editor) .orbit-palette,
+body:has(.orbit-editor) .family-strip { display: none; }
+@media (max-width: 379px) { .print-control { display: none; } }
+@media (min-width: 768px) {
+  .hub-grid { grid-template-columns: 1fr 1fr; }
+  .evidence-drawer { left: auto; width: 420px; top: 0; max-height: none; height: 100%; }
+}
+@media (min-width: 1024px) {
+  .menu-trigger { display: none; }
+  .obar { display: none; }
+  .topbar, .wrap, .family-strip { max-width: 1120px; }
+  .orbit-rail { display: flex; flex-direction: column; gap: var(--space-2); position: fixed; left: 0; top: 0; bottom: 0; width: 280px; padding: var(--space-4); background: var(--surface); border-right: 1px solid var(--line); z-index: 5; overflow: auto; }
+  .topbar, .wrap, .family-strip, .offline-banner { margin-left: 280px; }
+}
+@media (min-width: 1440px) {
+  .topbar, .wrap, .family-strip { max-width: 1280px; }
+}
+@media (max-width: 1279px) and (min-width: 1024px) {
+  .orbit-rail { width: 72px; }
+  .rail-label, .rail-search { font-size: 0; }
+  .topbar, .wrap, .family-strip, .offline-banner { margin-left: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-panel, .palette-panel, .evidence-drawer, .family-strip, .nav-row { transition: none; animation: none; }
+}
+@media (max-height: 500px) {
+  .topbar { padding-top: calc(4px + env(safe-area-inset-top)); }
+}

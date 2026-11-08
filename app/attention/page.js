@@ -7,6 +7,7 @@ import { currentUser } from '../../lib/session';
 import { attend, ATTENTION } from '../../lib/attention';
 import Dictate from '../../components/Dictate';
 import { toast } from '../../lib/toast';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 const DRAFT_KEY = 'orbit.draft.attention';
 
@@ -92,6 +93,7 @@ export default function AttentionPage() {
     <div className="fade-in attention-page" style={{ maxWidth: '100%', overflowX: 'hidden', paddingBottom: 120 }}>
       <Link href="/study" className="muted" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, fontSize: 15, textDecoration: 'none' }}>Study</Link>
       <h1 style={{ fontSize: '1.4rem' }}>{ATTENTION}</h1>
+      <RelatedStrip ids={['journal-capture', 'assist-settings']} />
       <p className="muted">Your journal, in one conversation.</p>
       <div className="attention-log" aria-live="polite">
         {messages.length === 0 && <p className="muted">Ask when you wrote something, or start a message with shorten.</p>}

@@ -31,7 +31,7 @@ const packed = packBackup({
   recall: [{ entry_id: 'j1', question: 'What?', answer: 'Kept.', score: 80 }],
   assignments: [{ id: 'a1', topic_id: 't1', assigned_on: '2026-03-01', topics: { title: 'no' } }],
 });
-assert.equal(packed.version, 5);
+assert.equal(packed.version, 6);
 assert.equal(packed.profile.user_id, undefined);
 assert.equal(packed.journal[0].topics, undefined);
 assert.equal(packed.custom_topics[0].subfield_id, 's1');
@@ -39,6 +39,37 @@ assert.equal(packed.custom_sections[0].field_id, 'f1');
 assert.equal(packed.custom_sections[0].fields, undefined);
 assert.equal(packed.recall[0].answer, 'Kept.');
 assert.equal(normalizeBackup(packed).journal[0].created_at, '2026-03-01T08:00:00.000Z');
+
+const v5 = {
+  format: 'orbit-backup',
+  version: 5,
+  journal: [{ id: 'j1', body: 'Kept.', created_at: '2026-03-01T08:00:00.000Z' }],
+  reviews: [{ topic_id: 't1', due_on: '2026-04-01', interval_days: 3, ease: 2.5, reps: 1 }],
+};
+const restored = normalizeBackup(v5);
+assert.equal(restored.journal[0].body, 'Kept.');
+assert.equal(restored.reviews[0].interval_days, 3);
+assert.deepEqual(restored.review_events, []);
+
+const event = {
+  id: 'e1', topic_id: 't1', reviewed_at: '2026-03-01T00:00:00.000Z', confidence: 4,
+  grade: 3, observed_recall: 1, elapsed_days: 2, stability_before: 1, difficulty_before: 5,
+  k_used: 1, stability_after: 2, difficulty_after: 5, derived: false,
+};
+const round = packBackup({
+  profile: { display_name: 'Lewis' },
+  journal: [{ id: 'j1', body: 'Kept.', created_at: '2026-03-01T08:00:00.000Z' }],
+  reviews: [{ topic_id: 't1', due_on: '2026-04-01', interval_days: 1, ease: 2.5, reps: 0, stability: 4, difficulty: 5, last_reviewed_on: '2026-03-01' }],
+  review_events: [event, { id: 'bad', topic_id: 't1', reviewed_at: '2026-03-02', grade: 9, observed_recall: 1, k_used: 1, stability_after: 1, difficulty_after: 1 }],
+});
+assert.equal(round.version, 6);
+assert.equal(round.reviews[0].stability, 4);
+assert.equal(round.reviews[0].last_reviewed_on, '2026-03-01');
+assert.equal(round.review_events.length, 1);
+assert.equal(round.review_events[0].k_used, 1);
+const again = normalizeBackup(round);
+assert.equal(again.review_events[0].stability_after, 2);
+assert.equal(again.reviews[0].difficulty, 5);
 
 const entries = [
   { id: 'a', topic_id: 'tech', topic_title: 'Technology', body: 'I did a shift on technology and networks.', created_at: '2026-04-01', word_count: 8, confidence: 2 },

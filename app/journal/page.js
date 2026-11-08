@@ -22,6 +22,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import { averageWords, assistPrefs, nextAdvice } from '../../lib/assist';
 import { queueAutoBackup } from '../../lib/backupSync';
 import { scheduleAtlas } from '../../lib/atlas/repository';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 const FONT_CLASS = { serif: 'f-serif', mono: 'f-mono' };
@@ -272,6 +273,7 @@ export default function Journal() {
   return (
     <div className="fade-in">
       <h1>Journal</h1>
+      <RelatedStrip ids={['review-now', 'recall-quiz', 'attention', 'assist-settings', 'topics']} />
       {err && <p className="err">{err}</p>}
       {draftNote && <p className="muted">{draftNote}</p>}
 

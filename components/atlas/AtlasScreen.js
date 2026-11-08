@@ -31,6 +31,16 @@ export default function AtlasScreen({ focusId = null }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [view, setView] = useState(focusId ? 'universe' : 'overview');
+  useEffect(() => {
+    const known = new Set(VIEWS.map(([key]) => key));
+    const apply = () => {
+      const key = window.location.hash.replace('#', '');
+      if (known.has(key)) setView(key);
+    };
+    apply();
+    window.addEventListener('hashchange', apply);
+    return () => window.removeEventListener('hashchange', apply);
+  }, []);
   const [selectedId, setSelectedId] = useState(focusId);
   const [query, setQuery] = useState('');
   const [pathFrom, setPathFrom] = useState('');
@@ -115,7 +125,7 @@ export default function AtlasScreen({ focusId = null }) {
           </div>
           <div className="seg" role="tablist" aria-label="Atlas sections">
             {VIEWS.map(([key, label]) => (
-              <button key={key} type="button" role="tab" aria-selected={view === key} className={view === key ? 'on' : ''} onClick={() => setView(key)}>{label}</button>
+              <button key={key} type="button" role="tab" aria-selected={view === key} className={view === key ? 'on' : ''} onClick={() => { setView(key); history.replaceState(null, '', `#${key}`); }}>{label}</button>
             ))}
           </div>
 

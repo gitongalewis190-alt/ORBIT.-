@@ -6,6 +6,7 @@ import { currentUser } from '../../lib/session';
 import { loadResonance, loadWeaves, resonancePhrase, saveWeave } from '../../lib/resonance';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 export default function ResonancePage() {
   const [field, setField] = useState(null);
@@ -111,6 +112,7 @@ export default function ResonancePage() {
   return (
     <div className="fade-in">
       <h1>Resonance</h1>
+      <RelatedStrip ids={['atlas', 'journal-capture', 'rings']} />
       <p className="muted">Conceptual gravity between what you have already learned.</p>
 
       {error && <p className="err">{error}</p>}

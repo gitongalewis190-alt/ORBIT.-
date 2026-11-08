@@ -1,6 +1,6 @@
 // Run: esbuild tests/circles.test.mjs --bundle --platform=node --format=cjs --outfile=/tmp/circles.cjs && node /tmp/circles.cjs
 import assert from 'node:assert/strict';
-import { awardProgress, awardByKey, chainOf } from '../lib/awards';
+import { awardProgress, awardByKey, chainOf } from '../lib/awards.js';
 
 let passed = 0;
 const check = (name, fn) => { fn(); passed++; console.log('  ok  ' + name); };

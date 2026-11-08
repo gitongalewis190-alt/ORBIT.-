@@ -1,11 +1,11 @@
 // Logic tests for the pure modules: autocorrect, spring, tab geometry and duration wording.
 // Run with esbuild, which the app uses for bundling: esbuild tests/logic.test.mjs --bundle --platform=node --outfile=/tmp/logic.mjs && node /tmp/logic.mjs
 import assert from 'node:assert/strict';
-import { autocorrectInput, correctWord, atSentenceStart } from '../lib/autocorrect';
-import { stepSpring, settled, SPRING } from '../lib/spring';
-import { activeTabIndex, tabCentre, barPath, NAV, tabIndexAt } from '../lib/tabs';
-import { dayLabel, minutesLabel } from '../lib/format';
-import { prettyDate } from '../lib/dates';
+import { autocorrectInput, correctWord, atSentenceStart } from '../lib/autocorrect.js';
+import { stepSpring, settled, SPRING } from '../lib/spring.js';
+import { activeTabIndex, tabCentre, barPath, NAV, tabIndexAt } from '../lib/tabs.js';
+import { dayLabel, minutesLabel } from '../lib/format.js';
+import { prettyDate } from '../lib/dates.js';
 
 const typed = (value, cursor, ch) => autocorrectInput(value, cursor, ch);
 let passed = 0;

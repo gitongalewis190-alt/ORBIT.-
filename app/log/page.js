@@ -7,6 +7,7 @@ import Skeleton from '../../components/Skeleton';
 import LogStats from '../../components/LogStats';
 import BackLink from '../../components/BackLink';
 import { highlightSegments, normalise, queryTokens } from '../../lib/search';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 const LABELS = {
   generated: 'Topic generated',
@@ -100,6 +101,7 @@ export default function Logs() {
     <div className="fade-in">
       <BackLink />
       <h1>Logs</h1>
+      <RelatedStrip ids={['recall-model', 'stats', 'journal-capture']} />
       <p className="muted">Statistics first, then every decision Orbit made and every change you made.</p>
 
       <LogStats />

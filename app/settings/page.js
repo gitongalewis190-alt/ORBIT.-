@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
@@ -123,6 +124,16 @@ export default function Settings() {
   const [p, setP] = useState(null);
   const [autoFix, setAutoFix] = useState(true);
   const [view, setView] = useState(null);
+  useEffect(() => {
+    const known = ['profile', 'appearance', 'sound', 'learning', 'assist', 'study', 'export', 'storage', 'help', 'reset', 'delete'];
+    const open = () => {
+      const key = window.location.hash.replace('#', '');
+      if (known.includes(key)) setView(key);
+    };
+    open();
+    window.addEventListener('hashchange', open);
+    return () => window.removeEventListener('hashchange', open);
+  }, []);
   const [flow, setFlow] = useState(null); // { action: 'signout' | 'reset' | 'delete', step: 1 | 2 }
   const [confirmText, setConfirmText] = useState('');
   const [deleteText, setDeleteText] = useState('');
@@ -287,6 +298,7 @@ export default function Settings() {
 
       const saved = await saveProfile(uid, { ...DEFAULT_PROFILE });
       clearDraft(PROFILE_DRAFT);
+      try { localStorage.removeItem('orbit.nav.recent.v1'); } catch { /* storage is optional */ }
       savedRef.current = saved;
       setP(saved);
       applyTheme(saved.theme);
@@ -461,7 +473,7 @@ export default function Settings() {
           <div className="card">
             <p className="muted" style={{ marginTop: 0 }}>The searchable manual explains every screen, rule and smart note.</p>
             <div className="row" style={{ marginTop: 0, alignItems: 'center' }}>
-              <a className="btn accent" href="/guide">Open the guide</a>
+              <Link className="btn accent" href="/guide">Open the guide</Link>
               <span className="muted">Version {APP_VERSION}</span>
             </div>
           </div>
@@ -506,6 +518,9 @@ export default function Settings() {
       {view === null ? (
         <>
           <h1>Settings</h1>
+          <div className="row">
+            <Link className="btn" href="/inspect">Under the hood</Link>
+          </div>
           {p ? <p className="muted">{email}</p> : err ? <p className="err">{err}</p> : <Skeleton lines={1} label="Loading profile" />}
           <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map((c, i) => (

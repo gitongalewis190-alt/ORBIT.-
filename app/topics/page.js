@@ -11,6 +11,7 @@ import { searchTopics, highlightSegments } from '../../lib/search';
 import Skeleton from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import BackLink from '../../components/BackLink';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 const MARKS = [
   ['all', 'All'],
@@ -41,6 +42,10 @@ export default function Topics() {
   const [err, setErr] = useState('');
 
   const [q, setQ] = useState('');
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get('q');
+    if (initial) setQ(initial);
+  }, []);
   const [mark, setMark] = useState('all');
   const [fieldFilter, setFieldFilter] = useState('all');
   const [level, setLevel] = useState('all');
@@ -220,6 +225,7 @@ export default function Topics() {
     <div className="fade-in">
       <BackLink />
       <h1>Topics</h1>
+      <RelatedStrip ids={['topic-generation', 'journal-capture']} />
       <p className="muted">{filtered.length} of {topics.length} topics shown</p>
 
       <div className="search-box">

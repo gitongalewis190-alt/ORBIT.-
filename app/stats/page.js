@@ -1,5 +1,7 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import StatsView from '../../components/StatsView';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
 import { today, prettyDate } from '../../lib/dates';
@@ -18,7 +20,7 @@ const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Master
 const parseTags = text =>
   [...new Set(text.split(',').map(t => t.trim().toLowerCase().replace(/\s+/g, '-')).filter(Boolean))].slice(0, 8);
 
-export default function Journal() {
+function LegacyJournal() {
   const [uid, setUid] = useState(null);
   const [profile, setProfile] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -312,5 +314,19 @@ export default function Journal() {
         </div>
       ))}
     </div>
+  );
+}
+
+function StatsGate() {
+  const params = useSearchParams();
+  if (params.get('view') === 'legacy') return <LegacyJournal />;
+  return <StatsView />;
+}
+
+export default function StatsPage() {
+  return (
+    <Suspense fallback={null}>
+      <StatsGate />
+    </Suspense>
   );
 }

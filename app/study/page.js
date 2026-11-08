@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import './study.css';
+import { HUBS, recordById } from '../../lib/navMap';
 
 const ROWS = [
   { href: '/attention', title: 'Attention', line: 'Ask your journal, or shorten a draft.' },
@@ -37,6 +38,24 @@ export default function StudyPage() {
           </Link>
         ))}
       </div>
+      {Object.entries(HUBS.study).map(([cluster, ids]) => (
+        <section key={cluster}>
+          <h2>{cluster}</h2>
+          <div className="study-list">
+            {ids.map(id => {
+              const row = recordById(id);
+              if (!row?.route) return null;
+              if (ROWS.some(item => item.href === row.route)) return null;
+              return (
+                <Link key={id} href={row.route} className="study-row">
+                  <strong>{row.title}</strong>
+                  <span>{row.description}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

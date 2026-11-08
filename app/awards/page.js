@@ -13,6 +13,7 @@ import AwardsGallery from '../../components/AwardsGallery';
 import BenefitsPanel from '../../components/BenefitsPanel';
 import Skeleton from '../../components/Skeleton';
 import BackLink from '../../components/BackLink';
+import { RelatedStrip } from '../../components/MenuDrawer';
 
 function resolveDisplayName(profile, user) {
   const candidates = [
@@ -69,6 +70,7 @@ export default function AwardsPage() {
       <div className="fade-in">
         <BackLink />
         <h1>Awards</h1>
+        <RelatedStrip ids={['stats', 'logs', 'benefits']} />
         <p className="err">{error}</p>
       </div>
     );
@@ -79,6 +81,7 @@ export default function AwardsPage() {
       <div className="fade-in">
         <BackLink />
         <h1>Awards</h1>
+        <RelatedStrip ids={['stats', 'logs', 'benefits']} />
         <Skeleton lines={4} label="Loading your collection" />
       </div>
     );
@@ -90,6 +93,7 @@ export default function AwardsPage() {
     <div className="fade-in">
       <BackLink />
       <h1>Your awards</h1>
+      <RelatedStrip ids={['stats', 'logs', 'benefits']} />
       <p className="muted">
         A collection of milestones earned through your learning.
       </p>

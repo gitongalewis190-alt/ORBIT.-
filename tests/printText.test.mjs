@@ -1,9 +1,9 @@
 // Run with env set: NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... esbuild tests/printText.test.mjs --bundle --platform=node --format=cjs --outfile=/tmp/printText.cjs && node /tmp/printText.cjs
 import assert from 'node:assert/strict';
-import { plainText } from '../lib/richtext';
-import { clean, pageDims, pickColour, configurePage, richRuns } from '../lib/export';
-import { customRange } from '../lib/printRecord';
-import { RETENTION_OPTIONS, expiresAt, DEFAULT_PRINT } from '../lib/printSettings';
+import { plainText } from '../lib/richtext.js';
+import { clean, pageDims, pickColour, configurePage, richRuns } from '../lib/export.js';
+import { customRange } from '../lib/printRecord.js';
+import { RETENTION_OPTIONS, expiresAt, DEFAULT_PRINT } from '../lib/printSettings.js';
 
 let passed = 0;
 const check = (name, fn) => { fn(); passed++; console.log('  ok  ' + name); };

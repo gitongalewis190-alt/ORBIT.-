@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { supabase } from '../lib/supabase';
@@ -32,13 +33,17 @@ import TabBar from './TabBar';
 import Skeleton from './Skeleton';
 import PrintSheet from './PrintSheet';
 import { activeTabIndex } from '../lib/tabs';
+import { familyForPath, RECORDS, PRIMARY, HUBS } from '../lib/navMap';
+
+const CommandPalette = dynamic(() => import('./CommandPalette'), { ssr: false });
+const MenuDrawer = dynamic(() => import('./MenuDrawer'), { ssr: false });
 
 const TABS = [
   ['/', 'Today'],
   ['/topics', 'Topics'],
   ['/journal', 'Journal'],
-  ['/awards', 'Awards'],
-  ['/log', 'Logs'],
+  ['/study', 'Study'],
+  ['/progress', 'Progress'],
 ];
 
 // Chooses the sound for a click.
@@ -66,11 +71,18 @@ export default function Shell({ children }) {
   const uidRef = useRef(null);
   const returnTo = useRef('/');
   const [printOpen, setPrintOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   // Any screen can open the print settings sheet with one event.
   useEffect(() => {
     const open = () => setPrintOpen(true);
     window.addEventListener('orbit:open-print', open);
-    return () => window.removeEventListener('orbit:open-print', open);
+    const flush = () => { flushQueue(); };
+    window.addEventListener('orbit:flush-queue', flush);
+    return () => {
+      window.removeEventListener('orbit:open-print', open);
+      window.removeEventListener('orbit:flush-queue', flush);
+    };
   }, []);
 
   // Sends saved offline entries to Supabase when a connection returns.
@@ -325,11 +337,53 @@ export default function Shell({ children }) {
     };
   }, []);
 
-  // Remember the screen they were on, so a recovered session returns there
-  // instead of always dumping them on Today after the landing animation.
   useEffect(() => {
     if (path && path !== '/welcome' && path !== '/login') returnTo.current = path;
+    setMenuOpen(false);
+    if (!path || path === '/welcome' || path === '/login') return;
+    const row = RECORDS.find(item => item.route && item.route.split('#')[0].split('?')[0] === path && item.risk !== 'destructive');
+    if (!row) return;
+    try {
+      const raw = localStorage.getItem('orbit.nav.recent.v1');
+      const list = raw ? JSON.parse(raw) : [];
+      const next = [row.id, ...(Array.isArray(list) ? list : []).filter(id => id !== row.id)].slice(0, 5);
+      localStorage.setItem('orbit.nav.recent.v1', JSON.stringify(next));
+    } catch {
+      // storage is optional
+    }
   }, [path]);
+
+  useEffect(() => {
+    const chord = { at: 0 };
+    const onKey = (event) => {
+      const tag = event.target?.tagName;
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable || event.target?.closest?.('.orbit-editor');
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen(true);
+        return;
+      }
+      if (typing) return;
+      if (event.key === '/') {
+        event.preventDefault();
+        setPaletteOpen(true);
+        return;
+      }
+      if (event.key === '?') {
+        event.preventDefault();
+        setPaletteOpen(true);
+        return;
+      }
+      if (event.key === 'g') { chord.at = Date.now(); return; }
+      if (chord.at && Date.now() - chord.at < 1200) {
+        const dest = { t: '/', j: '/journal', s: '/study', p: '/progress', i: '/inspect' }[event.key];
+        if (dest) { event.preventDefault(); router.push(dest); }
+        chord.at = 0;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [router]);
 
   // The welcome drawing and the sign-in form are outside the signed-in shell.
   const door = path === '/login' || path === '/welcome';
@@ -409,7 +463,19 @@ export default function Shell({ children }) {
         <div className="topbar-actions">
           <button
             type="button"
-            className="gear"
+            className="gear search-control"
+            aria-label="Search Orbit"
+            data-sound="open"
+            onClick={() => setPaletteOpen(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16.5 20 20.5" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="gear print-control"
             aria-label="Download PDF record"
             title="Download PDF record"
             data-sound="open"
@@ -450,6 +516,19 @@ export default function Shell({ children }) {
               />
             </svg>
           </Link>
+          <button
+            type="button"
+            className="gear menu-trigger"
+            aria-label="Menu"
+            aria-expanded={menuOpen}
+            aria-controls="orbit-menu"
+            data-sound="open"
+            onClick={() => setMenuOpen(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -459,6 +538,29 @@ export default function Shell({ children }) {
           and sync when you reconnect.
         </div>
       )}
+
+      {activeTabIndex(TABS, path) < 0 && (
+        <nav className="family-strip" aria-label={familyForPath(path) || 'Section'}>
+          <span>{familyForPath(path)}</span>
+          {RECORDS.filter(item => item.family === familyForPath(path) && item.route && item.risk !== 'destructive').slice(0, 8).map(item => (
+            <Link key={item.id} href={item.route} aria-current={item.route.split('#')[0] === path ? 'page' : undefined} data-sound="nav">{item.title}</Link>
+          ))}
+        </nav>
+      )}
+
+      <aside className="orbit-rail" aria-label="Sections">
+        <Link href="/" className="brand" data-sound="nav">Orbit</Link>
+        <button type="button" className="btn rail-search" aria-label="Search Orbit" data-sound="open" onClick={() => setPaletteOpen(true)}>Search Orbit</button>
+        {PRIMARY.map(item => (
+          <Link key={item.id} href={item.route} aria-current={item.route === path ? 'page' : undefined} data-sound="nav"><span className="rail-label">{item.title}</span></Link>
+        ))}
+        <h2 className="rail-label">Study</h2>
+        {Object.values(HUBS.study).flat().slice(0, 8).map(id => {
+          const row = RECORDS.find(item => item.id === id);
+          if (!row?.route || row.risk === 'destructive') return null;
+          return <Link key={id} href={row.route} data-sound="nav"><span className="rail-label">{row.title}</span></Link>;
+        })}
+      </aside>
 
       <div className="wrap">
         {children}
@@ -471,6 +573,8 @@ export default function Shell({ children }) {
       />
 
       <PrintSheet open={printOpen} onClose={() => setPrintOpen(false)} />
+      <MenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} onSearch={() => { setMenuOpen(false); setPaletteOpen(true); }} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
       <Toaster />
       <AwardUnlock />

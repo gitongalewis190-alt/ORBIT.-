@@ -26,5 +26,11 @@ export default function manifest() {
 
     categories: ['education', 'productivity'],
     prefer_related_applications: false,
+    shortcuts: [
+      { name: 'Log what I learned', short_name: 'Journal', url: '/journal' },
+      { name: 'Recall quiz', short_name: 'Recall', url: '/recall' },
+      { name: 'Keystone', short_name: 'Keystone', url: '/keystone' },
+      { name: 'Under the hood', short_name: 'Inspect', url: '/inspect' },
+    ],
   };
 }

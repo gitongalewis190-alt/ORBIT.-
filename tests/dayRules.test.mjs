@@ -1,6 +1,6 @@
 // Run: esbuild tests/dayRules.test.mjs --bundle --platform=node --format=cjs --outfile=/tmp/dayRules.cjs && node /tmp/dayRules.cjs
 import assert from 'node:assert/strict';
-import { canChangeTopic, changesToday, completesAssignment, OVERRIDES_PER_DAY } from '../lib/dayRules';
+import { canChangeTopic, changesToday, completesAssignment, OVERRIDES_PER_DAY } from '../lib/dayRules.js';
 
 let passed = 0;
 const check = (name, fn) => { fn(); passed++; console.log('  ok  ' + name); };

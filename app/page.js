@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { currentUser } from '../lib/session';
 import { buildContext } from '../lib/context';
@@ -35,6 +36,7 @@ export default function Today() {
   const [reveal, setReveal] = useState(null);
   const [err, setErr] = useState('');
   const [changes, setChanges] = useState(0);
+  const [reviewOrder, setReviewOrder] = useState('due');
   const busyRef = useRef(false);
   const busy = busyAction !== '';
 
@@ -199,19 +201,40 @@ export default function Today() {
     }
   }
 
-  const topic = assignment?.topics;
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('orbit.review.order');
+      if (saved === 'keystone' || saved === 'due') setReviewOrder(saved);
+    } catch { /* storage is optional */ }
+  }, []);
   const change = canChangeTopic({ assignment, overridesToday: changes });
+  const topic = assignment?.topics;
+  let orderedReviews = reviews;
+  if (reviewOrder === 'keystone') {
+    try {
+      const plan = JSON.parse(localStorage.getItem('orbit.keystone.plan') || '[]');
+      if (Array.isArray(plan) && plan.length) {
+        orderedReviews = [...reviews].sort((a, b) => {
+          const ia = plan.indexOf(a.topic_id);
+          const ib = plan.indexOf(b.topic_id);
+          return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || String(a.due_on).localeCompare(String(b.due_on));
+        });
+      }
+    } catch {
+      orderedReviews = reviews;
+    }
+  }
 
   return (
     <div className="fade-in">
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
       <div className="row" style={{ marginTop: 8 }}>
-        <a className="btn" href="/study">Study</a>
-        <a className="btn" href="/resonance">Resonance</a>
+        <Link className="btn" href="/study">Study</Link>
+        <Link className="btn" href="/resonance">Resonance</Link>
       </div>
       {err && <p className="err">{err}</p>}
-      <DayRings />
+      <div id="rings"><DayRings /></div>
 
       {reveal ? (
         <div className="card" style={{ marginTop: 16 }}>
@@ -279,12 +302,16 @@ export default function Today() {
         </div>
       )}
 
-      <h2>Reviews due</h2>
-      <div className="row" style={{ marginTop: 0 }}>
-        <a className="btn" href="/recall">Recall quiz</a>
-        <a className="btn accent" href="/log#recall-model">Recall model</a>
+      <h2 id="reviews-due">Reviews due</h2>
+      <div className="seg" role="group" aria-label="Review order">
+        <button type="button" data-sound="select" className={reviewOrder === 'due' ? 'on' : ''} onClick={() => { setReviewOrder('due'); localStorage.setItem('orbit.review.order', 'due'); }}>Due date</button>
+        <button type="button" data-sound="select" className={reviewOrder === 'keystone' ? 'on' : ''} onClick={() => { setReviewOrder('keystone'); localStorage.setItem('orbit.review.order', 'keystone'); }}>Keystone</button>
       </div>
-      {reviews.length ? reviews.map(r => (
+      <div className="row" style={{ marginTop: 0 }}>
+        <Link className="btn" href="/recall">Recall quiz</Link>
+        <Link className="btn accent" href="/log#recall-model">Recall model</Link>
+      </div>
+      {orderedReviews.length ? orderedReviews.map(r => (
         <div key={r.topic_id} className="card">
           <div>{r.topics.title}</div>
           <div className="muted">due {prettyDate(r.due_on)}</div>
@@ -296,6 +323,7 @@ export default function Today() {
 
       <button
         type="button"
+        id="more-for"
         className="btn more-today-toggle"
         aria-expanded={moreOpen}
         aria-controls="more-today"
@@ -305,9 +333,9 @@ export default function Today() {
       </button>
       {moreOpen && (
         <div id="more-today" className="more-today">
-          <SmartNotes />
+          <div id="smart-notes"><SmartNotes /></div>
           <BenefitsPanel />
-          <FocusTimer />
+          <div id="focus"><FocusTimer /></div>
         </div>
       )}
       <Onboarding />

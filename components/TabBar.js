@@ -23,6 +23,12 @@ const ICON = {
   '/log': (
     <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5zM10 20.5a2 2 0 0 0 4 0" />
   ),
+  '/study': (
+    <path d="M5 5.5h14v13H5zM8 9h8M8 12.5h5" />
+  ),
+  '/progress': (
+    <path d="M5 16.5 9 11l3 3 3-5 4 7.5" />
+  ),
 };
 
 // The navigation bar stays put. The marker sits on the current tab and does not

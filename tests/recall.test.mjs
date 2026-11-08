@@ -1,6 +1,6 @@
 // Recall tests. Run: esbuild tests/recall.test.mjs --bundle --platform=node --outfile=/tmp/recall.mjs && node /tmp/recall.mjs
 import assert from 'node:assert/strict';
-import { pickRecall, bandFor, ageInDays, heuristicReview, keyTerms, entryWeight, BANDS } from '../lib/recall';
+import { pickRecall, bandFor, ageInDays, heuristicReview, keyTerms, entryWeight, BANDS } from '../lib/recall.js';
 
 const DAY = 86400000;
 const NOW = Date.parse('2026-11-07T12:00:00Z');

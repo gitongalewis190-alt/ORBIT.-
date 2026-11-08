@@ -206,6 +206,7 @@ export default function RecallPage() {
               <p className="kicker">Score</p>
               <p style={{ fontSize: '2.2rem', lineHeight: 1, margin: '0 0 8px', fontWeight: 650 }}>{result.score}<span className="muted">/100</span></p>
               <p style={{ fontSize: 16, lineHeight: 1.5 }}>{result.comment}</p>
+              <p className="muted">Graded by {result.verifier === 'rules' || result.verifier === 'local' ? 'keyword check' : result.verifier}.</p>
               {result.weak && (
                 <>
                   <p>Go back to the concept first. Reread what you logged:</p>

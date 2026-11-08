@@ -142,6 +142,10 @@ export default function PrintSheet({ open, onClose }) {
           <Field label="Medals" value={opt.medals} onChange={v => set({ medals: v })} disabled={busy}>
             {MEDAL_RULES.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
           </Field>
+          <label className="switchrow">
+            <span>Include learning intelligence (sections 12 to 15)</span>
+            <button type="button" className={`switch ${opt.intelligence !== false ? 'on' : ''}`} aria-pressed={opt.intelligence !== false} data-sound="toggle" disabled={busy} onClick={() => set({ intelligence: opt.intelligence === false })}> </button>
+          </label>
         </div>
 
         <h3 style={{ fontSize: 15, margin: '14px 0 6px' }}>Keep the copy</h3>
