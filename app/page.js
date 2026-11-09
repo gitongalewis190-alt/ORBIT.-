@@ -14,7 +14,6 @@ import Reveal from '../components/Reveal';
 import DayRings from '../components/DayRings';
 import SmartNotes from '../components/SmartNotes';
 import BenefitsPanel from '../components/BenefitsPanel';
-import FocusTimer from '../components/FocusTimer';
 import Onboarding from '../components/Onboarding';
 import { canChangeTopic, changesToday } from '../lib/dayRules';
 
@@ -331,7 +330,6 @@ export default function Today() {
         </div>
       )}
 
-      <div id="focus" style={{ marginTop: 16 }}><FocusTimer /></div>
       <h2 id="reviews-due">Reviews due</h2>
       <div className="seg" role="group" aria-label="Review order">
         <button type="button" data-sound="select" className={reviewOrder === 'due' ? 'on' : ''} onClick={() => { setReviewOrder('due'); localStorage.setItem('orbit.review.order', 'due'); }}>Due date</button>
