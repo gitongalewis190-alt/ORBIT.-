@@ -30,6 +30,7 @@ import { queueAutoBackup } from '../lib/backupSync';
 import Toaster from './Toaster';
 import AwardUnlock from './AwardUnlock';
 import TabBar from './TabBar';
+import FamilyStrip from './FamilyStrip';
 import Skeleton from './Skeleton';
 import PrintSheet from './PrintSheet';
 import { activeTabIndex } from '../lib/tabs';
@@ -540,12 +541,7 @@ export default function Shell({ children }) {
       )}
 
       {activeTabIndex(TABS, path) < 0 && (
-        <nav className="family-strip" aria-label={familyForPath(path) || 'Section'}>
-          <span>{familyForPath(path)}</span>
-          {RECORDS.filter(item => item.family === familyForPath(path) && item.route && item.risk !== 'destructive').slice(0, 8).map(item => (
-            <Link key={item.id} href={item.route} aria-current={item.route.split('#')[0] === path ? 'page' : undefined} data-sound="nav">{item.title}</Link>
-          ))}
-        </nav>
+        <FamilyStrip path={path} />
       )}
 
       <aside className="orbit-rail" aria-label="Sections">

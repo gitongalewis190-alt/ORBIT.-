@@ -12,14 +12,27 @@ import Rings from './Rings';
 import { REFLECT_TARGET } from '../lib/rings';
 
 const RING_NAMES = { study: 'Study', journal: 'Journal', review: 'Review' };
+const VIEW_KEY = 'orbit.rings.view';
 
-// Shows today's three rings. The rings are the daily progress indicators:
-// Study (minutes against the daily target), Journal (words against the word goal),
-// Review (reviews done against reviews due). syncBadges() awards any new medals.
+// Today's rings. A switch chooses which set shows: Learn (the default, the required work) or Reflect
+// (optional, the reflection for today). Learn is the default view on Today.
 export default function DayRings() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState('learn');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === 'learn' || saved === 'reflect') setView(saved);
+    } catch {}
+  }, []);
+
+  function choose(next) {
+    setView(next);
+    try { localStorage.setItem(VIEW_KEY, next); } catch {}
+  }
 
   useEffect(() => {
     let alive = true;
@@ -39,7 +52,7 @@ export default function DayRings() {
     return () => { alive = false; };
   }, []);
 
-  // Celebrate each ring once per day, the first time it closes.
+  // Celebrate each Learn ring once per day, the first time it closes.
   useEffect(() => {
     if (!data) return;
     const day = data.stats.today;
@@ -53,7 +66,7 @@ export default function DayRings() {
     }
   }, [data]);
 
-  // Shares today's rings as a PNG card. Falls back to a download where the phone cannot share files.
+  // Shares today's Learn rings as a PNG card. Falls back to a download where the phone cannot share files.
   async function shareRings() {
     if (busy || !data) return;
     setBusy(true);
@@ -88,48 +101,55 @@ export default function DayRings() {
   if (err) return <p className="err">{err}</p>;
   if (!data) return null;
   const { stats, profile } = data;
-
   const reflect = stats.reflectToday;
+
   return (
-    <>
-      <div className="card day-rings">
-        <div className="kicker">Learn today</div>
-        <Rings study={stats.rings.study} journal={stats.rings.journal} review={stats.rings.review} />
-        <div className="muted" style={{ marginTop: 10 }}>
-          {stats.minutesToday} of {profile.daily_minutes} min · {stats.learnWordsToday} of {profile.word_goal} words ·
-          {' '}{stats.reviewsDoneToday} review{stats.reviewsDoneToday === 1 ? '' : 's'} done
-        </div>
-        <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-          <button className="btn sm" onClick={shareRings} disabled={busy}>{busy ? 'Preparing' : 'Share today’s rings'}</button>
-          <span className="tag">streak {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
-          <span className="tag">{stats.entriesWeek}/{profile.weekly_entry_goal} this week</span>
-        </div>
+    <div className="rings-switch">
+      <div className="seg" role="radiogroup" aria-label="Which rings to show">
+        <button type="button" role="radio" aria-checked={view === 'learn'} className={view === 'learn' ? 'on' : ''} onClick={() => choose('learn')}>Learn</button>
+        <button type="button" role="radio" aria-checked={view === 'reflect'} className={view === 'reflect' ? 'on' : ''} onClick={() => choose('reflect')}>Reflect</button>
       </div>
 
-      <div className="card day-rings">
-        <div className="kicker">Reflect today · optional</div>
-        {reflect.any ? (
-          <>
-            <Rings
-              study={stats.reflectRings.minutes}
-              journal={stats.reflectRings.words}
-              review={stats.reflectRings.revisit}
-              labels={['Time', 'Words', 'Revisit']}
-            />
-            <div className="muted" style={{ marginTop: 10 }}>
-              {reflect.minutes} of {REFLECT_TARGET.minutes} min · {reflect.words} of {REFLECT_TARGET.words} words ·
-              {' '}{reflect.revisits} earlier topic{reflect.revisits === 1 ? '' : 's'} revisited
-            </div>
-          </>
-        ) : (
-          <p className="muted" style={{ marginTop: 6 }}>
-            Not reflected today. Reflecting is optional and never replaces learning. Open Journal, switch to Reflect, and pick a topic to fill these rings.
-          </p>
-        )}
-        <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-          <span className="tag">{stats.reflectDays} reflect day{stats.reflectDays === 1 ? '' : 's'} closed</span>
+      {view === 'learn' ? (
+        <div className="card day-rings">
+          <div className="kicker">Learn today</div>
+          <Rings study={stats.rings.study} journal={stats.rings.journal} review={stats.rings.review} />
+          <div className="muted" style={{ marginTop: 10 }}>
+            {stats.minutesToday} of {profile.daily_minutes} min · {stats.learnWordsToday} of {profile.word_goal} words ·
+            {' '}{stats.reviewsDoneToday} review{stats.reviewsDoneToday === 1 ? '' : 's'} done
+          </div>
+          <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+            <button className="btn sm" onClick={shareRings} disabled={busy}>{busy ? 'Preparing' : 'Share today’s rings'}</button>
+            <span className="tag">streak {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
+            <span className="tag">{stats.entriesWeek}/{profile.weekly_entry_goal} this week</span>
+          </div>
         </div>
-      </div>
-    </>
+      ) : (
+        <div className="card day-rings">
+          <div className="kicker">Reflect today · optional</div>
+          {reflect.any ? (
+            <>
+              <Rings
+                study={stats.reflectRings.minutes}
+                journal={stats.reflectRings.words}
+                review={stats.reflectRings.revisit}
+                labels={['Time', 'Words', 'Revisit']}
+              />
+              <div className="muted" style={{ marginTop: 10 }}>
+                {reflect.minutes} of {REFLECT_TARGET.minutes} min · {reflect.words} of {REFLECT_TARGET.words} words ·
+                {' '}{reflect.revisits} earlier topic{reflect.revisits === 1 ? '' : 's'} revisited
+              </div>
+            </>
+          ) : (
+            <p className="muted" style={{ marginTop: 6 }}>
+              Not reflected today. Reflecting is optional and never replaces learning. Open Journal, switch to Reflect, and pick a topic to fill these rings.
+            </p>
+          )}
+          <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+            <span className="tag">{stats.reflectDays} reflect day{stats.reflectDays === 1 ? '' : 's'} closed</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

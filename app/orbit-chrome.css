@@ -607,12 +607,13 @@ body:has(.orbit-editor) .family-strip { display: none; }
 /* Journal memory: short preview, full entry on demand. */
 .entry-preview { margin: 8px 0; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* Section strip (e.g. Settings). It sits under the header in the page flow, never at the bottom. */
+/* Section strip (e.g. Settings). Under the header in the page flow, never at the bottom.
+   Boxes (default): a full-width rounded box per link. Chips: the override. */
 .family-strip {
   position: static;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   padding: 6px 18px 4px;
   background: none;
@@ -620,15 +621,25 @@ body:has(.orbit-editor) .family-strip { display: none; }
   backdrop-filter: none;
   overflow: visible;
 }
-.family-strip > span {
-  flex-basis: 100%;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 2px;
+.family-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.family-head > span { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.family-strip.boxes a {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
 }
-.family-strip a {
+.family-strip.chips { flex-direction: row; flex-wrap: wrap; }
+.family-strip.chips a {
   min-height: 40px;
   padding: 8px 14px;
   border: 1px solid var(--line);
@@ -639,8 +650,32 @@ body:has(.orbit-editor) .family-strip { display: none; }
   background: var(--surface);
   white-space: nowrap;
 }
-.family-strip a[aria-current="page"] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+.family-strip a[aria-current="page"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.family-head .seg { margin: 0; }
+
+/* Topic picker: results sit in the page flow, so nothing can clip or cover them on iPhone. */
+.picker-list {
+  position: static !important;
+  z-index: auto;
+  margin-top: 6px;
+  max-height: 280px;
+  box-shadow: none;
 }
+.picker-chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+.picker-chosen .picker-title { flex: 1; min-width: 0; }
+
+/* Log rows that open a topic. */
+a.log-row.log-link { display: block; color: inherit; text-decoration: none; }
+a.log-row.log-link:active { background: var(--accent-soft); }
+
+/* Today: the Learn / Reflect switch above the rings. */
+.rings-switch { display: grid; gap: 10px; }

@@ -264,19 +264,13 @@ export default function Settings() {
     setDeletePassword('');
   }
 
-  async function signOut() {
+  // Leaves at once. The session is cleared on this phone straight away; the server sign-out runs in the background.
+  function signOut() {
     if (!lock('signout')) return;
-    try {
-      play('bye');
-      applyTheme('system');
-      await supabase.auth.signOut();
-      router.replace('/login');
-    } catch (e) {
-      play('error');
-      toast(e.message, 'err');
-    } finally {
-      unlock();
-    }
+    play('bye');
+    applyTheme('system');
+    supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    router.replace('/login');
   }
 
   // Removes every personal record. The shared library, the account and printed copies stay.

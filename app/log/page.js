@@ -8,6 +8,9 @@ import LogStats from '../../components/LogStats';
 import BackLink from '../../components/BackLink';
 import { highlightSegments, normalise, queryTokens } from '../../lib/search';
 import { RelatedStrip } from '../../components/MenuDrawer';
+import Link from 'next/link';
+
+const ENTRY_EVENTS = ['journal_saved', 'entry_edited', 'entry_deleted', 'relearn'];
 
 const LABELS = {
   generated: 'Topic generated',
@@ -138,15 +141,28 @@ export default function Logs() {
             const detail = detailOf(r.payload);
             const segments = highlightSegments(label, q);
             return (
-              <div key={r.id} className="log-row" style={{ borderLeftColor: colourOf(key) }}>
-                <div className="log-title">
-                  {segments.map((seg, i) => (seg.hit ? <mark key={i} className="hit">{seg.text}</mark> : <span key={i}>{seg.text}</span>))}
-                  {r.topics?.title && <span className="muted"> · {r.topics.title}</span>}
-                </div>
-                <div className="muted log-meta">
-                  {r.created_at.slice(11, 16)}{detail ? ` · ${detail}` : ''}
-                </div>
-              </div>
+              (() => {
+                // A row about a topic opens that topic: entries open in the Journal, topic events in Topics.
+                const target = r.topic_id
+                  ? (ENTRY_EVENTS.includes(r.event) ? `/journal?review=${r.topic_id}` : `/topics?q=${encodeURIComponent(r.topics?.title ?? '')}`)
+                  : null;
+                const body = (
+                  <>
+                    <div className="log-title">
+                      {segments.map((seg, i) => (seg.hit ? <mark key={i} className="hit">{seg.text}</mark> : <span key={i}>{seg.text}</span>))}
+                      {r.topics?.title && <span className="muted"> · {r.topics.title}</span>}
+                    </div>
+                    <div className="muted log-meta">
+                      {r.created_at.slice(11, 16)}{detail ? ` · ${detail}` : ''}
+                    </div>
+                  </>
+                );
+                return target ? (
+                  <Link key={r.id} href={target} className="log-row log-link" style={{ borderLeftColor: colourOf(key) }} data-sound="nav">{body}</Link>
+                ) : (
+                  <div key={r.id} className="log-row" style={{ borderLeftColor: colourOf(key) }}>{body}</div>
+                );
+              })()
             );
           })}
         </section>
