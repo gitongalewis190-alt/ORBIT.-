@@ -36,6 +36,7 @@ export default function Today() {
   const [reveal, setReveal] = useState(null);
   const [err, setErr] = useState('');
   const [changes, setChanges] = useState(0);
+  const [swaps, setSwaps] = useState(0);
   const [reviewOrder, setReviewOrder] = useState('due');
   const busyRef = useRef(false);
   const busy = busyAction !== '';
@@ -78,6 +79,11 @@ export default function Today() {
       setErr(message);
       play('error');
     }
+    // Swaps made today, from the decision log: one swap per day is allowed on an accepted topic.
+    const sw = await supabase.from('decision_log').select('id', { count: 'exact', head: true })
+      .eq('user_id', uid).eq('event', 'swapped')
+      .gte('created_at', new Date(`${today()}T00:00:00+03:00`).toISOString());
+    setSwaps(sw.count ?? 0);
     setAssignment(a.data ?? null);
     setReviews(r.data ?? []);
     setFields(f.data ?? []);
@@ -149,6 +155,28 @@ export default function Today() {
     } finally {
       if (!revealed) endBusy();
     }
+  }
+
+  // Swap an accepted topic for another, before it is logged. One swap per day.
+  // The accepted topic is rejected, which keeps it out of today's list, and a new topic is drawn.
+  async function swap() {
+    if (!user || !assignment || busyRef.current || reveal) return;
+    if (assignment.status !== 'accepted') return;
+    if (swaps >= 1) return toast('You have already swapped today’s topic.', 'warn');
+    if (!beginBusy('swap')) return;
+    try {
+      const { error } = await supabase.from('assignments')
+        .update({ status: 'rejected' }).eq('id', assignment.id);
+      if (error) throw error;
+      await logDecision(user.id, 'swapped', assignment.topic_id);
+    } catch (e) {
+      play('error');
+      toast(e.message, 'err');
+      endBusy();
+      return;
+    }
+    endBusy();
+    await generate(null, 'swap');
   }
 
   async function accept() {
@@ -264,6 +292,11 @@ export default function Today() {
           ) : (
             <div className="row">
               <span className="muted">Status: {assignment.status}</span>
+              {assignment.status === 'accepted' && (
+                <button className="btn" onClick={swap} disabled={busy || swaps >= 1}>
+                  {busyAction === 'swap' ? 'Working' : swaps >= 1 ? 'Swapped today' : 'Swap topic'}
+                </button>
+              )}
               {assignment.status !== 'completed' && (
                 <a className="btn accent" href={`/journal?assignment=${assignment.id}`}>
                   Log what I learned
