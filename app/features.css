@@ -158,7 +158,8 @@
   inset: 0;
   z-index: 50;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  padding: 16px;
   justify-content: center;
   background: rgba(0, 0, 0, 0.35);
   animation: fadeIn 0.2s ease-out both;
@@ -168,17 +169,17 @@
   max-height: 92vh;
   overflow-y: auto;
   background: var(--surface);
-  border-radius: 22px 22px 0 0;
-  padding: 18px 20px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 22px;
+  padding: 18px 20px;
   text-align: center;
-  animation: sheetUp 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: sheetZoom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-@keyframes sheetUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes sheetZoom {
+  from { transform: scale(0.82); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 .sheet-medal {
-  width: min(240px, 70vw);
+  width: min(200px, 60vw);
   margin: 4px auto 6px;
 }
 .sheet-tier {
@@ -1120,3 +1121,14 @@ input, textarea, select {
   margin-top: 12px;
 }
 
+
+/* Rings calendar -------------------------------------------------- */
+.rings-calendar { margin-top: 10px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; text-align: center; }
+.cal-head span { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cal-day { aspect-ratio: 1; border-radius: 10px; border: 1px solid transparent; background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 0; cursor: pointer; }
+.cal-day:disabled { opacity: 0.35; cursor: default; }
+.cal-day.today { font-weight: 700; border-color: var(--muted); }
+.cal-day.done { background: var(--accent, #c0392b); color: #fff; }
+.cal-day.sel { outline: 2px solid var(--accent, #c0392b); outline-offset: 1px; }
+.cal-detail { margin-top: 12px; text-align: left; line-height: 1.5; }

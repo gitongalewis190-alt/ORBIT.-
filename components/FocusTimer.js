@@ -23,9 +23,10 @@ function clock(ms) {
 
 // A session is stored as: { mode: 'running' | 'paused', endAt, remainingMs, plannedMin }.
 // Storing the end time means a session keeps going if the app is closed.
-export default function FocusTimer() {
+export default function FocusTimer({ fixedMinutes = null, label = 'Focus timer' }) {
   const [uid, setUid] = useState(null);
-  const [planned, setPlanned] = useState(25);
+  const [planned, setPlanned] = useState(fixedMinutes ?? 25);
+  useEffect(() => { if (fixedMinutes) setPlanned(fixedMinutes); }, [fixedMinutes]);
   const [custom, setCustom] = useState([]);
   const [adding, setAdding] = useState(false);
   const [draftMin, setDraftMin] = useState('');
@@ -207,14 +208,14 @@ export default function FocusTimer() {
 
   return (
     <div className="card focus-card">
-      <div className="kicker">Focus</div>
+      <div className="kicker">{label}</div>
       <div className="focus-clock" aria-live="off">{clock(remainingMs)}</div>
       <div className="bar"><span style={{ width: `${progress}%` }} /></div>
       <div className="muted" style={{ textAlign: 'center', marginTop: 6 }}>
         {idle ? `Ready for ${planned} minutes` : sess.mode === 'running' ? 'Focusing' : 'Paused'}
       </div>
 
-      {idle && (
+      {idle && !fixedMinutes && (
         <div className="seg" style={{ marginTop: 12 }}>
           {[...PRESETS, ...unlockedPresets, ...custom.filter(v => !PRESETS.includes(v) && !unlockedPresets.includes(v))].map(p => (
             <button key={p} className={planned === p ? 'on' : ''} onClick={() => setPlanned(p)}>{p} min</button>
@@ -222,7 +223,7 @@ export default function FocusTimer() {
           <button className="chip-add" aria-label="Add a custom focus time" onClick={() => setAdding(v => !v)}>+</button>
         </div>
       )}
-      {idle && adding && (
+      {idle && !fixedMinutes && adding && (
         <div className="focus-add">
           <input
             type="number"

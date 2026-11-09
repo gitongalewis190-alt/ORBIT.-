@@ -5,7 +5,11 @@ import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges } from '../lib/stats';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
-import { prettyDate } from '../lib/dates';
+import { prettyDate, today } from '../lib/dates';
+import { supabase } from '../lib/supabase';
+import FocusTimer from './FocusTimer';
+import ReflectTimer from './ReflectTimer';
+import RingsCalendar from './RingsCalendar';
 import { progressCardBlob } from '../lib/card';
 import { downloadBlob } from '../lib/download';
 import Rings from './Rings';
@@ -21,6 +25,8 @@ export default function DayRings() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [view, setView] = useState('learn');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [learnTarget, setLearnTarget] = useState(null);
 
   useEffect(() => {
     try {
@@ -44,13 +50,23 @@ export default function DayRings() {
         const stats = await loadStats(user.id, profile);
         await syncBadges(user.id, stats);
         if (!alive) return;
-        setData({ stats, profile });
+        setData({ stats, profile, uid: user.id });
       } catch (e) {
         if (alive) setErr(e.message);
       }
     })();
     return () => { alive = false; };
   }, []);
+
+  // Today's accepted topic sets the learning timer's length.
+  useEffect(() => {
+    if (!data?.uid) return;
+    (async () => {
+      const { data: a } = await supabase.from('assignments').select('est_minutes,topics(title)')
+        .eq('user_id', data.uid).eq('assigned_on', today()).eq('status', 'accepted').maybeSingle();
+      setLearnTarget(a ? { minutes: a.est_minutes, title: a.topics?.title ?? '' } : null);
+    })();
+  }, [data?.uid]);
 
   // Celebrate each Learn ring once per day, the first time it closes.
   useEffect(() => {
@@ -167,7 +183,25 @@ export default function DayRings() {
         <button type="button" role="radio" aria-checked={view === 'learn'} className={view === 'learn' ? 'on' : ''} onClick={() => choose('learn')}>Learn</button>
         <button type="button" role="radio" aria-checked={view === 'reflect'} className={view === 'reflect' ? 'on' : ''} onClick={() => choose('reflect')}>Reflect</button>
       </div>
+      <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+        <button type="button" className="btn sm" onClick={() => setShowCalendar(s => !s)} aria-expanded={showCalendar}>
+          {showCalendar ? 'Hide calendar' : 'Open calendar'}
+        </button>
+      </div>
+      {showCalendar && <RingsCalendar uid={data.uid} profile={profile} onClose={() => setShowCalendar(false)} />}
       {view === 'learn' ? learnCard : reflectCard}
+      {view === 'learn' ? (
+        <>
+          {learnTarget && (
+            <p className="muted" style={{ textAlign: 'center', marginTop: 10 }}>
+              Today’s topic target: {learnTarget.minutes} minutes.
+            </p>
+          )}
+          <FocusTimer label="Learning timer" fixedMinutes={learnTarget?.minutes ?? null} />
+        </>
+      ) : (
+        <ReflectTimer />
+      )}
     </div>
   );
 }

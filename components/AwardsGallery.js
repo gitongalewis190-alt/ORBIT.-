@@ -91,7 +91,7 @@ function AwardSheet({ award, stats, earnedOn, unlocked, onClose }) {
             name={award.name}
             dateLabel={dateLabel}
             locked={!earned}
-            size={240}
+            size={200}
             interactive
             autoSpin={false}
           />
