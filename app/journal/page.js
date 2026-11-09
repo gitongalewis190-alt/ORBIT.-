@@ -79,10 +79,50 @@ export default function Journal() {
     setTimerRun(false);
     setTimerSec(0);
     // Reflection minutes are recorded for the swap trade-offs. They do not change the Learn ring.
-    if (isReflect && uid) await logDecision(uid, 'reflect_focus', topic?.id ?? null, { minutes: m });
+    if (isReflect && uid) {
+      await logDecision(uid, 'reflect_focus', topic?.id ?? null, { minutes: m });
+      await loadReflectToday(uid);
+    }
     toast(`${m} min added to Minutes spent.`, 'ok');
   }
   const [due, setDue] = useState(new Set());
+  const [confirmTimer, setConfirmTimer] = useState(false); // false | 'start' | 'resume'
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [reflectToday, setReflectToday] = useState([]);
+  const [pendingReflectRevoke, setPendingReflectRevoke] = useState(null);
+
+  // Today's reflection minutes, so a mistaken one can be revoked.
+  async function loadReflectToday(id) {
+    if (!id) return;
+    const { data } = await supabase.from('decision_log').select('id,payload,created_at')
+      .eq('user_id', id).eq('event', 'reflect_focus')
+      .gte('created_at', `${today()}T00:00:00+03:00`).order('created_at');
+    setReflectToday(data ?? []);
+  }
+
+  function discardTimer() {
+    setTimerRun(false);
+    setTimerSec(0);
+    setConfirmDiscard(false);
+    play('close');
+    toast('Timer discarded. Nothing was logged.', 'info');
+  }
+
+  async function revokeReflect(row) {
+    if (!uid) return;
+    try {
+      const { error } = await supabase.from('decision_log').delete().eq('id', row.id).eq('user_id', uid);
+      if (error) throw error;
+      play('close');
+      toast(`Revoked ${row.payload?.minutes ?? 0} reflection min.`, 'info', 4200);
+      await loadReflectToday(uid);
+    } catch (e) {
+      play('error');
+      toast(`Could not revoke: ${e.message}`, 'err', 5000);
+    } finally {
+      setPendingReflectRevoke(null);
+    }
+  }
 
   const words = useMemo(() => wordCount(plainText(body)), [body]);
   const goal = profile?.word_goal ?? 150;
@@ -98,6 +138,7 @@ export default function Journal() {
       if (!user) return;
       const id = user.id;
       setUid(id);
+      loadReflectToday(id);
       const p = await getProfile(id);
       setProfile(p);
 
@@ -421,13 +462,76 @@ export default function Journal() {
         ))}
       </div>
 
-      <div className="row">
-        <button type="button" className="btn sm" onClick={() => setTimerRun(r => !r)} aria-pressed={timerRun}>
-          {timerRun ? 'Pause timer' : timerSec ? 'Resume timer' : `Start ${isReflect ? 'reflect' : 'learn'} timer`}
-        </button>
-        <span className="muted" aria-live="off">{clock(timerSec)}</span>
-        {timerSec > 0 && !timerRun && <button type="button" className="btn sm" onClick={useTimer}>Use this time</button>}
+      <div className="timer-block" style={{ marginTop: 8 }}>
+        <div className="kicker">{isReflect ? 'Reflection timer' : 'Learning timer'}</div>
+        <p className="muted" style={{ margin: '4px 0 8px', lineHeight: 1.5 }}>
+          {isReflect
+            ? 'Counts reflection minutes toward your swap trade-offs. It does not change the Learn ring.'
+            : 'Fills Minutes spent when you save this entry.'}
+        </p>
+        <div className="row">
+          {!timerRun && timerSec === 0 && (
+            <button type="button" className="btn sm accent" onClick={() => setConfirmTimer('start')}>
+              {isReflect ? 'Start reflection timer' : 'Start learning timer'}
+            </button>
+          )}
+          {timerRun && <button type="button" className="btn sm" onClick={() => setTimerRun(false)}>Pause timer</button>}
+          {!timerRun && timerSec > 0 && <button type="button" className="btn sm accent" onClick={() => setConfirmTimer('resume')}>Resume timer</button>}
+          <span className="muted" aria-live="off">{clock(timerSec)}</span>
+          {timerSec > 0 && !timerRun && <button type="button" className="btn sm" onClick={useTimer}>Use this time</button>}
+          {timerSec > 0 && <button type="button" className="btn sm danger" onClick={() => setConfirmDiscard(true)}>Discard timer</button>}
+        </div>
+        {isReflect && reflectToday.length > 0 && (
+          <div className="timer-log" style={{ marginTop: 10 }}>
+            <div className="kicker">Reflection minutes logged today</div>
+            {reflectToday.map(row => (
+              <div key={row.id} className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+                <span>{row.payload?.minutes ?? 0} min</span>
+                <button type="button" className="btn sm danger" onClick={() => setPendingReflectRevoke(row)}>Revoke</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmTimer}
+        title={confirmTimer === 'resume' ? 'Resume the timer?' : `Start the ${isReflect ? 'reflection' : 'learning'} timer?`}
+        confirmLabel="Agree and continue"
+        onCancel={() => setConfirmTimer(false)}
+        onConfirm={() => { setConfirmTimer(false); setTimerRun(true); }}
+      >
+        <p style={{ margin: 0 }}>
+          {isReflect
+            ? 'When you use this time, it is logged as reflection minutes for your swap trade-offs.'
+            : 'When you save, these minutes are added to Minutes spent on this entry.'}
+        </p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmDiscard}
+        title="Discard this timer?"
+        confirmLabel="Discard"
+        danger
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={discardTimer}
+      >
+        <p style={{ margin: 0 }}>The time on the clock will not be logged. This cannot be undone.</p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={!!pendingReflectRevoke}
+        title="Revoke these reflection minutes?"
+        confirmLabel="Revoke"
+        danger
+        onCancel={() => setPendingReflectRevoke(null)}
+        onConfirm={() => revokeReflect(pendingReflectRevoke)}
+      >
+        <p style={{ margin: 0 }}>
+          {pendingReflectRevoke ? `${pendingReflectRevoke.payload?.minutes ?? 0} minutes` : ''} will be removed from your swap trade-offs for today.
+        </p>
+      </ConfirmDialog>
+
       <input type="number" value={mins} onChange={e => setMins(e.target.value)} placeholder="Minutes spent" />
 
       <div className="row">
