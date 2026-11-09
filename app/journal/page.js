@@ -23,6 +23,7 @@ import { averageWords, assistPrefs, nextAdvice } from '../../lib/assist';
 import { queueAutoBackup } from '../../lib/backupSync';
 import { scheduleAtlas } from '../../lib/atlas/repository';
 import { RelatedStrip } from '../../components/MenuDrawer';
+import { ruleFor, blockFor, noteFor, kindChangeBlock } from '../../lib/topicRules';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
 const PREVIEW_CHARS = 220;
@@ -62,6 +63,8 @@ export default function Journal() {
   const [draftNote, setDraftNote] = useState('');
   const [topicsLoading, setTopicsLoading] = useState(true);
   const [topicsErr, setTopicsErr] = useState('');
+  const [learned, setLearned] = useState(new Set());
+  const [due, setDue] = useState(new Set());
 
   const words = useMemo(() => wordCount(plainText(body)), [body]);
   const goal = profile?.word_goal ?? 150;
@@ -150,6 +153,22 @@ export default function Journal() {
     saveDraft(uid, { body, points, tagText, conf, mins, font });
   }, [uid, body, points, tagText, conf, mins, font]);
 
+  // Every topic you have learned (Learn entries), and every topic whose review is due.
+  async function fetchLearnedAndDue(id) {
+    const learnedIds = new Set();
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from('journal_entries').select('topic_id')
+        .eq('user_id', id).eq('entry_kind', 'research').order('id').range(from, from + 999);
+      if (error) throw error;
+      for (const r of data) if (r.topic_id) learnedIds.add(r.topic_id);
+      if (data.length < 1000) break;
+    }
+    const { data: dueRows, error: dErr } = await supabase.from('reviews').select('topic_id')
+      .eq('user_id', id).lte('due_on', today());
+    if (dErr) throw dErr;
+    return { learned: learnedIds, due: new Set((dueRows ?? []).map(r => r.topic_id)) };
+  }
+
   async function load(id, p = profile) {
     const { data, error } = await supabase.from('journal_entries')
       .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,entry_kind,research_entry_id,editor_font,topics(title,subfields(field_id))')
@@ -157,6 +176,13 @@ export default function Journal() {
     if (error) return setErr(error.message);
     setErr('');
     setEntries(data ?? []);
+    try {
+      const st = await fetchLearnedAndDue(id);
+      setLearned(st.learned);
+      setDue(st.due);
+    } catch (e) {
+      setErr(e.message || 'Could not load what you have learned.');
+    }
     if (p) {
       try {
         const s = await loadStats(id, p);
@@ -168,8 +194,21 @@ export default function Journal() {
     }
   }
 
+  // Choosing a topic sets the mode to match it: a learned topic goes to Reflect, a new one to Learn.
+  function pickTopic(t) {
+    setTopic(t);
+    if (t) setMode(ruleFor(t.id, { learned, due }).mode);
+  }
+
+  function statusOf(t) {
+    const r = ruleFor(t.id, { learned, due });
+    return r.due ? 'Due for review' : r.learned ? 'Learned' : 'New';
+  }
+
   function validate() {
     if (!topic) return 'Choose a topic first: search its name and tap it in the list.';
+    const block = blockFor(isReflect ? 'reflect' : 'learn', ruleFor(topic.id, { learned, due }));
+    if (block) return block;
     if (words < 5) return 'Write at least a few words, in your own explanation.';
     if (conf === null) return 'Rate your confidence from 0 to 5.';
     return '';
@@ -283,6 +322,30 @@ export default function Journal() {
     await load(uid);
   }
 
+  // Moves an entry between Learn and Reflect, so a reflection saved as Learn can be put right.
+  async function flipKind(entry) {
+    const next = entry.entry_kind === 'reflection' ? 'research' : 'reflection';
+    try {
+      const { data: others, error: oErr } = await supabase.from('journal_entries').select('id')
+        .eq('user_id', uid).eq('topic_id', entry.topic_id).eq('entry_kind', 'research')
+        .neq('id', entry.id).limit(1);
+      if (oErr) throw oErr;
+      const block = kindChangeBlock(next, { otherResearch: others.length, due: due.has(entry.topic_id) });
+      if (block) { play('error'); return toast(block, 'err', 5000); }
+      const patch = next === 'reflection'
+        ? { entry_kind: 'reflection', research_entry_id: others[0].id }
+        : { entry_kind: 'research', research_entry_id: null };
+      const { error } = await supabase.from('journal_entries').update(patch).eq('id', entry.id).eq('user_id', uid);
+      if (error) throw error;
+      play('save');
+      toast(next === 'reflection' ? 'Moved to Reflect. Today’s rings are updated.' : 'Moved to Learn. Today’s rings are updated.', 'ok');
+      await load(uid);
+    } catch (e) {
+      play('error');
+      toast(e.message, 'err', 5000);
+    }
+  }
+
   const filtered = entries.filter(e => {
     if (!memorySearch.trim()) return true;
     const q = memorySearch.toLowerCase();
@@ -307,16 +370,18 @@ export default function Journal() {
       <TopicPicker
         topics={topics}
         value={topic}
-        onPick={setTopic}
+        onPick={pickTopic}
+        statusOf={statusOf}
         loading={topicsLoading}
         error={topicsErr}
         onRetry={loadTopics}
       />
-      <p className="muted" style={{ marginTop: 4 }}>
-        {isReflect
-          ? 'Reflecting counts toward today, on any topic, including ones you already studied.'
-          : 'Learning writes new research on a topic. Use Reflect to revisit one you studied.'}
-      </p>
+      {topic && blockFor(mode, ruleFor(topic.id, { learned, due })) && (
+        <p role="alert" className="err" style={{ marginTop: 6 }}>{blockFor(mode, ruleFor(topic.id, { learned, due }))}</p>
+      )}
+      {topic && noteFor(mode, ruleFor(topic.id, { learned, due })) && (
+        <p className="muted" style={{ marginTop: 6 }}>{noteFor(mode, ruleFor(topic.id, { learned, due }))}</p>
+      )}
 
       <RichEditor
         value={body}
@@ -366,6 +431,7 @@ export default function Journal() {
                 </button>
               )}
               <button className="btn sm" onClick={() => setEditing(e)}>Edit</button>
+              <button className="btn sm" onClick={() => flipKind(e)}>{e.entry_kind === 'reflection' ? 'Make it Learn' : 'Make it Reflect'}</button>
               <button className="btn sm" onClick={() => relearn(e)}>Review again</button>
               <button className="btn sm danger" onClick={() => setPendingDelete(e)}>Delete</button>
             </div>

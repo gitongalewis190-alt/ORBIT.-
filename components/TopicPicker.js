@@ -11,7 +11,7 @@ import { searchTopics } from '../lib/search';
 //   loading   true while the library is still loading
 //   error     message when the library failed to load
 //   onRetry   reloads the library after an error
-export default function TopicPicker({ topics = [], value = null, onPick, onChange, loading = false, error = '', onRetry, placeholder = 'Search your topics' }) {
+export default function TopicPicker({ topics = [], value = null, onPick, onChange, statusOf, loading = false, error = '', onRetry, placeholder = 'Search your topics' }) {
   const pick = onPick ?? onChange;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -107,7 +107,7 @@ export default function TopicPicker({ topics = [], value = null, onPick, onChang
             >
               <span className="picker-dot" style={{ background: fieldColor(t.fieldId) }} aria-hidden="true" />
               <span className="picker-text">
-                <span className="picker-title">{t.title}</span>
+                <span className="picker-title">{t.title}{statusOf ? <span className="picker-tag">{statusOf(t)}</span> : null}</span>
                 <span className="picker-sub">{t.field}{t.section ? ` · ${t.section}` : ''}</span>
               </span>
             </button>
