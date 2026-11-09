@@ -285,6 +285,8 @@ body:has(.orbit-editor) .offline-banner { visibility: hidden; }
 body:has(.unlock) .obar,
 body:has(dialog[open]) .obar,
 body:has(.orbit-editor) .obar { display: none; }
+body:has(.orbit-palette) .obar,
+body:has(.orbit-menu) .obar { display: none; }
 
 /* Page content scrolls underneath the bar and is never hidden behind it at rest. */
 .wrap { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); }
@@ -461,9 +463,10 @@ select, option { background: var(--surface); color: var(--ink); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top, 0px) + 24px) 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
-  overflow-y: auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  overflow: hidden;
 }
+.unlock .unlock-medal { width: min(240px, 70vw, 34dvh); }
 .unlock .unlock-title { font-size: clamp(28px, 8vw, 44px); text-align: center; }
 
 /* Formatting toolbar. */
@@ -600,3 +603,6 @@ body:has(.orbit-editor) .family-strip { display: none; }
 @media (max-height: 500px) {
   .topbar { padding-top: calc(4px + env(safe-area-inset-top)); }
 }
+
+/* Journal memory: short preview, full entry on demand. */
+.entry-preview { margin: 8px 0; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }

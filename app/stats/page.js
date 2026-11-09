@@ -13,6 +13,8 @@ import { wordCount, loadStats } from '../../lib/stats';
 import { commitEntry } from '../../lib/journal';
 import { enqueue, isNetworkError, loadDraft, saveDraft, clearDraft } from '../../lib/offline';
 import { logDecision } from '../../lib/log';
+import { plainText } from '../../lib/richtext';
+import { searchTopics } from '../../lib/search';
 import BackLink from '../../components/BackLink';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
@@ -187,9 +189,7 @@ function LegacyJournal() {
     load(uid, profile);
   }
 
-  const matches = search.trim()
-    ? topics.filter(t => t.title.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 12)
-    : [];
+  const matches = search.trim() ? searchTopics(topics, search).slice(0, 12) : [];
 
   const memoryList = entries.filter(e => {
     const q = memorySearch.trim().toLowerCase();
@@ -292,6 +292,11 @@ function LegacyJournal() {
           <div className="muted">
             {prettyDate(e.created_at.slice(0, 10))} · confidence {e.confidence ?? '-'} · {e.word_count ?? 0} words
           </div>
+          {open?.id !== e.id && e.body && (
+            <p className="muted" style={{ margin: '6px 0 0', fontSize: 14, lineHeight: 1.5 }}>
+              {(() => { const t = plainText(e.body); return t.length > 160 ? t.slice(0, 160).trimEnd() + '…' : t; })()}
+            </p>
+          )}
           {e.tags?.length > 0 && (
             <div style={{ marginTop: 4 }}>
               {e.tags.map(t => <span key={t} className="tag">{t}</span>)}

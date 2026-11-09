@@ -5,6 +5,9 @@ import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges } from '../lib/stats';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
+import { prettyDate } from '../lib/dates';
+import { progressCardBlob } from '../lib/card';
+import { downloadBlob } from '../lib/download';
 import Rings from './Rings';
 
 const RING_NAMES = { study: 'Study', journal: 'Journal', review: 'Review' };
@@ -15,6 +18,7 @@ const RING_NAMES = { study: 'Study', journal: 'Journal', review: 'Review' };
 export default function DayRings() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -48,6 +52,38 @@ export default function DayRings() {
     }
   }, [data]);
 
+  // Shares today's rings as a PNG card. Falls back to a download where the phone cannot share files.
+  async function shareRings() {
+    if (busy || !data) return;
+    setBusy(true);
+    try {
+      const { stats, profile } = data;
+      const blob = await progressCardBlob({
+        name: profile.full_name || profile.display_name || 'Orbit learner',
+        date: prettyDate(stats.today),
+        streak: stats.streak,
+        words: stats.wordsTotal,
+        entries: stats.entries,
+        rings: stats.rings,
+      });
+      const file = new File([blob], 'orbit-today.png', { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'My Orbit rings today' });
+      } else {
+        downloadBlob(blob, 'orbit-today.png');
+        toast('Today’s rings saved to your downloads.', 'ok');
+      }
+      play('export');
+    } catch (e) {
+      if (e?.name !== 'AbortError') {
+        play('error');
+        toast(e.message || 'Could not share today’s rings.', 'err', 5000);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (err) return <p className="err">{err}</p>;
   if (!data) return null;
   const { stats, profile } = data;
@@ -61,6 +97,7 @@ export default function DayRings() {
         {' '}{stats.reviewsDoneToday} review{stats.reviewsDoneToday === 1 ? '' : 's'} done
       </div>
       <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+        <button className="btn sm" onClick={shareRings} disabled={busy}>{busy ? 'Preparing' : 'Share today’s rings'}</button>
         <span className="tag">streak {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
         <span className="tag">{stats.entriesWeek}/{profile.weekly_entry_goal} this week</span>
       </div>
