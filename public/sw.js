@@ -1,7 +1,7 @@
 // Orbit offline cache. Caches the app shell and static files so the app opens
 // without a connection. Database requests always go to the network. Saved
 // entries are queued on the phone by lib/offline.js and synced by the shell.
-const VERSION = 'orbit-v4';
+const VERSION = 'orbit-v5';
 const SHELL = ['/', '/journal', '/stats', '/topics', '/log', '/settings', '/login', '/study', '/progress', '/recall', '/atlas', '/awards', '/attention', '/resonance', '/guide', '/inspect', '/keystone', '/parallax'];
 
 self.addEventListener('install', event => {
