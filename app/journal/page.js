@@ -1,6 +1,6 @@
 'use client';
 import FullEditor from '../../components/FullEditor';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
 import { today, prettyDate } from '../../lib/dates';
@@ -8,7 +8,7 @@ import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 import { fetchAllTopics } from '../../lib/context';
 import { getProfile } from '../../lib/profile';
-import { wordCount, loadStats } from '../../lib/stats';
+import { wordCount, loadStats, pageOf } from '../../lib/stats';
 import { commitEntry } from '../../lib/journal';
 import { enqueue, isNetworkError, loadDraft, saveDraft, clearDraft } from '../../lib/offline';
 import { logDecision } from '../../lib/log';
@@ -64,6 +64,22 @@ export default function Journal() {
   const [topicsLoading, setTopicsLoading] = useState(true);
   const [topicsErr, setTopicsErr] = useState('');
   const [learned, setLearned] = useState(new Set());
+  const [timerSec, setTimerSec] = useState(0);
+  const [timerRun, setTimerRun] = useState(false);
+  const tickRef = useRef(null);
+  useEffect(() => {
+    if (!timerRun) return undefined;
+    tickRef.current = setInterval(() => setTimerSec(s => s + 1), 1000);
+    return () => clearInterval(tickRef.current);
+  }, [timerRun]);
+  const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  function useTimer() {
+    const m = Math.max(1, Math.round(timerSec / 60));
+    setMins(String(m));
+    setTimerRun(false);
+    setTimerSec(0);
+    toast(`${m} min added to Minutes spent.`, 'ok');
+  }
   const [due, setDue] = useState(new Set());
 
   const words = useMemo(() => wordCount(plainText(body)), [body]);
@@ -170,9 +186,9 @@ export default function Journal() {
   }
 
   async function load(id, p = profile) {
-    const { data, error } = await supabase.from('journal_entries')
+    const { data, error } = await pageOf(() => supabase.from('journal_entries')
       .select('id,topic_id,body,key_points,confidence,minutes_spent,word_count,tags,created_at,entry_kind,research_entry_id,editor_font,topics(title,subfields(field_id))')
-      .eq('user_id', id).order('created_at', { ascending: false }).limit(200);
+      .eq('user_id', id).order('created_at', { ascending: false }).order('id'));
     if (error) return setErr(error.message);
     setErr('');
     setEntries(data ?? []);
@@ -400,6 +416,13 @@ export default function Journal() {
         ))}
       </div>
 
+      <div className="row">
+        <button type="button" className="btn sm" onClick={() => setTimerRun(r => !r)} aria-pressed={timerRun}>
+          {timerRun ? 'Pause timer' : timerSec ? 'Resume timer' : `Start ${isReflect ? 'reflect' : 'learn'} timer`}
+        </button>
+        <span className="muted" aria-live="off">{clock(timerSec)}</span>
+        {timerSec > 0 && !timerRun && <button type="button" className="btn sm" onClick={useTimer}>Use this time</button>}
+      </div>
       <input type="number" value={mins} onChange={e => setMins(e.target.value)} placeholder="Minutes spent" />
 
       <div className="row">

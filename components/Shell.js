@@ -25,6 +25,16 @@ import {
 } from '../lib/offline';
 
 import { commitEntry } from '../lib/journal';
+import { supabase as db } from '../lib/supabase';
+
+// A queued entry saved offline may be a Learn entry on a topic already learned. It is saved as a reflection.
+async function asReflection(uid, payload) {
+  if (payload.entry_kind === 'reflection' || !payload.topic_id) return payload;
+  const { data } = await db.from('journal_entries').select('id')
+    .eq('user_id', uid).eq('topic_id', payload.topic_id).eq('entry_kind', 'research').limit(1);
+  if (data && data.length) return { ...payload, entry_kind: 'reflection', research_entry_id: data[0].id };
+  return payload;
+}
 import { scheduleAtlas } from '../lib/atlas/repository';
 import { queueAutoBackup } from '../lib/backupSync';
 import Toaster from './Toaster';
@@ -103,7 +113,8 @@ export default function Shell({ children }) {
 
     for (const item of items) {
       try {
-        await commitEntry(uid, item.payload);
+        const payload = await asReflection(uid, item.payload);
+        await commitEntry(uid, payload);
         scheduleAtlas(uid, item.payload.id);
         synced++;
       } catch (e) {
