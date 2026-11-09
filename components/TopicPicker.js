@@ -5,7 +5,9 @@ import { searchTopics } from '../lib/search';
 
 // A themed topic search. Type to filter, use the arrow keys to move, Enter to choose,
 // and Escape to close. Each result is marked with its field colour.
-export default function TopicPicker({ topics, onPick, placeholder = 'Search your topics' }) {
+// Accepts onPick (preferred) or onChange, so callers that use either name work.
+export default function TopicPicker({ topics, value = null, onPick, onChange, placeholder = 'Search your topics' }) {
+  const pick = onPick ?? onChange;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -30,7 +32,7 @@ export default function TopicPicker({ topics, onPick, placeholder = 'Search your
   }, []);
 
   function choose(topic) {
-    onPick(topic);
+    pick?.(topic);
     setQuery('');
     setOpen(false);
   }
@@ -62,7 +64,7 @@ export default function TopicPicker({ topics, onPick, placeholder = 'Search your
         aria-autocomplete="list"
         aria-label="Search your topics"
         value={query}
-        placeholder={placeholder}
+        placeholder={value?.title ? `Selected: ${value.title}. Search to change` : placeholder}
         onFocus={() => setOpen(true)}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onKeyDown={onKeyDown}

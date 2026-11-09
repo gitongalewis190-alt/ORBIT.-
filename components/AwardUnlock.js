@@ -64,7 +64,10 @@ export default function AwardUnlock() {
   }, []);
 
   const current = queue[0];
-  const medalSize = typeof window === 'undefined' ? 280 : Math.min(window.innerWidth - 40, 400);
+  // Fit the medal to the visible screen: width and height both limit it, so the card never needs scrolling.
+  const medalSize = typeof window === 'undefined'
+    ? 280
+    : Math.max(140, Math.min(window.innerWidth - 40, window.innerHeight * 0.34, 400));
 
   useEffect(() => {
     if (current) play('badge');

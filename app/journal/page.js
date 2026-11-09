@@ -25,6 +25,7 @@ import { scheduleAtlas } from '../../lib/atlas/repository';
 import { RelatedStrip } from '../../components/MenuDrawer';
 
 const CONFIDENCE_WORD = ['Blank', 'Barely', 'Shaky', 'Partial', 'Solid', 'Mastered'];
+const PREVIEW_CHARS = 220;
 const FONT_CLASS = { serif: 'f-serif', mono: 'f-mono' };
 
 const parseTags = text =>
@@ -49,6 +50,7 @@ export default function Journal() {
   const [mode, setMode] = useState('learn');
   const [benefitIds, setBenefitIds] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [openIds, setOpenIds] = useState({});
   const [pendingDelete, setPendingDelete] = useState(null);
   useEffect(() => { setBenefitIds(readBenefits()); }, []);
   const [busy, setBusy] = useState(false);
@@ -228,16 +230,17 @@ export default function Journal() {
     toast('Added to today’s reviews.', 'info');
   }
 
-  // The entry before or after this one in the memory list, for the editor's Previous and Next buttons.
-  function neighbour(step, e) {
-    const list = filtered;
-    const i = list.findIndex(x => x.id === e.id);
+  // Previous and Next inside the editor move through the entries currently listed.
+  function neighbourJump(step) {
+    if (!editing) return null;
+    const i = filtered.findIndex(x => x.id === editing.id);
     if (i < 0) return null;
-    const n = list[i + step];
-    return n || null;
+    const n = filtered[i + step];
+    return n ? () => setEditing(n) : null;
   }
 
   async function saveEdit(entry, text) {
+    if (!entry?.id || !uid) { play('error'); return toast('Could not find this entry. Close and try again.', 'err'); }
     const { error } = await supabase.from('journal_entries').update({
       body: text,
       word_count: wordCount(plainText(text)),
@@ -282,7 +285,7 @@ export default function Journal() {
         <button type="button" className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
       </div>
 
-      <TopicPicker topics={topics} value={topic} onChange={setTopic} />
+      <TopicPicker topics={topics} value={topic} onPick={setTopic} />
 
       <RichEditor
         value={body}
@@ -313,24 +316,41 @@ export default function Journal() {
       <h2>Memory</h2>
       <input value={memorySearch} onChange={e => setMemorySearch(e.target.value)} placeholder="Search entries" />
 
-      {filtered.map(e => (
-        <div key={e.id} className="card">
-          <div className="muted">{e.topics?.title || 'No topic'} · {prettyDate(e.created_at?.slice(0, 10))}</div>
-          <div dangerouslySetInnerHTML={{ __html: renderRich(e.body) }} />
-          <div className="row">
-            <button className="btn sm" onClick={() => setEditing(e)}>Edit</button>
-            <button className="btn sm" onClick={() => relearn(e)}>Review again</button>
-            <button className="btn sm danger" onClick={() => setPendingDelete(e)}>Delete</button>
+      {filtered.map(e => {
+        const full = plainText(e.body || '');
+        const long = full.length > PREVIEW_CHARS;
+        const expanded = !!openIds[e.id];
+        const shown = long && !expanded ? full.slice(0, PREVIEW_CHARS).trimEnd() + '…' : null;
+        return (
+          <div key={e.id} className="card">
+            <div className="muted">{e.topics?.title || 'No topic'} · {prettyDate(e.created_at?.slice(0, 10))}</div>
+            {shown !== null
+              ? <p className="entry-preview">{shown}</p>
+              : <div dangerouslySetInnerHTML={{ __html: renderRich(e.body) }} />}
+            <div className="row">
+              {long && (
+                <button className="btn sm" aria-expanded={expanded}
+                  onClick={() => setOpenIds(s => ({ ...s, [e.id]: !s[e.id] }))}>
+                  {expanded ? 'Show less' : 'Read full entry'}
+                </button>
+              )}
+              <button className="btn sm" onClick={() => setEditing(e)}>Edit</button>
+              <button className="btn sm" onClick={() => relearn(e)}>Review again</button>
+              <button className="btn sm danger" onClick={() => setPendingDelete(e)}>Delete</button>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {editing && (
         <FullEditor
-          entry={editing}
-          onSave={saveEdit}
+          key={editing.id}
+          title={`${editing.topics?.title || 'No topic'} · ${prettyDate(editing.created_at?.slice(0, 10))}`}
+          value={editing.body || ''}
+          onSave={text => saveEdit(editing, text)}
           onClose={() => setEditing(null)}
-          neighbour={neighbour}
+          onPrev={neighbourJump(-1)}
+          onNext={neighbourJump(1)}
         />
       )}
 

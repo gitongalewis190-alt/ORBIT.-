@@ -30,7 +30,7 @@ export default function AtlasScreen({ focusId = null }) {
   const [uid, setUid] = useState(null);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [view, setView] = useState(focusId ? 'universe' : 'overview');
+  const [view, setView] = useState('universe');
   useEffect(() => {
     const known = new Set(VIEWS.map(([key]) => key));
     const apply = () => {

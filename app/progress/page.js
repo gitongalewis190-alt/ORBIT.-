@@ -9,24 +9,33 @@ import { loadStats } from '../../lib/stats';
 
 export default function ProgressPage() {
   const [summary, setSummary] = useState(null);
+  const [err, setErr] = useState('');
+
   useEffect(() => {
-    currentUser().then(async (user) => {
-      if (!user) return;
-      try {
+    let alive = true;
+    currentUser()
+      .then(async (user) => {
+        if (!user) return;
         const profile = await getProfile(user.id);
         const stats = await loadStats(user.id, profile);
-        setSummary(stats);
-      } catch {
-        setSummary(null);
-      }
-    });
+        if (alive) setSummary(stats);
+      })
+      .catch((e) => {
+        if (alive) setErr(e?.message || 'Progress could not load. Check your connection and try again.');
+      });
+    return () => { alive = false; };
   }, []);
+
+  // `earned` is a Set of badge keys, so its size is the count. Rendering the Set itself throws.
+  const awards = summary?.earned?.size ?? 0;
+
   return (
     <div className="fade-in">
       <h1>Progress</h1>
+      {err && <div className="card err" role="alert">{err}</div>}
       <div className="card">
-        <p>Streak {summary?.streak ?? '—'}</p>
-        <p className="muted">Awards earned {summary?.awards ?? summary?.earned ?? '—'}</p>
+        <p>Streak {summary ? `${summary.streak} day${summary.streak === 1 ? '' : 's'}` : '—'}</p>
+        <p className="muted">Awards earned {summary ? awards : '—'}</p>
         <Link href="/#rings">Today's rings</Link>
       </div>
       <div className="hub-grid">
