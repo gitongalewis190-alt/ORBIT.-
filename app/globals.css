@@ -399,7 +399,7 @@ input[type='range'] {
 }
 
 /* Bottom navigation (plain nav elements only; the sculpted bar is styled in orbit-chrome.css) */
-nav:not(.obar) {
+nav:not(.obar):not(.family-strip) {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -412,7 +412,7 @@ nav:not(.obar) {
   padding: 9px 4px calc(9px + env(safe-area-inset-bottom));
   z-index: 10;
 }
-nav:not(.obar) a {
+nav:not(.obar):not(.family-strip) a {
   color: var(--muted);
   text-decoration: none;
   font-size: 12px;
@@ -420,7 +420,7 @@ nav:not(.obar) a {
   border-radius: 8px;
   transition: color 0.15s ease, background 0.15s ease;
 }
-nav:not(.obar) a.on { color: var(--accent); background: var(--accent-soft); }
+nav:not(.obar):not(.family-strip) a.on { color: var(--accent); background: var(--accent-soft); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

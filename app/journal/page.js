@@ -60,6 +60,8 @@ export default function Journal() {
   const [streak, setStreak] = useState(0);
   const [wordsToday, setWordsToday] = useState(0);
   const [draftNote, setDraftNote] = useState('');
+  const [topicsLoading, setTopicsLoading] = useState(true);
+  const [topicsErr, setTopicsErr] = useState('');
 
   const words = useMemo(() => wordCount(plainText(body)), [body]);
   const goal = profile?.word_goal ?? 150;
@@ -115,18 +117,31 @@ export default function Journal() {
       }
 
       await load(id, p);
-      const { data: tp, error } = await fetchAllTopics();
-      if (!error) {
-        setTopics(tp.map(t => ({
-          id: t.id,
-          title: t.title,
-          field: t.subfields?.fields?.name ?? '',
-          fieldId: t.subfields?.field_id ?? '',
-          section: t.subfields?.name ?? '',
-        })));
-      }
-    });
+    }).catch(e => setErr(e?.message || 'Could not load your journal.'));
   }, []);
+
+  // The topic library loads on its own, so a failure elsewhere can never leave the picker empty.
+  async function loadTopics() {
+    setTopicsLoading(true);
+    setTopicsErr('');
+    try {
+      const { data: tp, error } = await fetchAllTopics();
+      if (error) throw error;
+      setTopics((tp ?? []).map(t => ({
+        id: t.id,
+        title: t.title,
+        field: t.subfields?.fields?.name ?? '',
+        fieldId: t.subfields?.field_id ?? '',
+        section: t.subfields?.name ?? '',
+      })));
+    } catch (e) {
+      setTopicsErr(e?.message || 'check your connection, then try again.');
+    } finally {
+      setTopicsLoading(false);
+    }
+  }
+
+  useEffect(() => { loadTopics(); }, []);
 
   // Autosave the draft on this phone as you type.
   useEffect(() => {
@@ -143,14 +158,18 @@ export default function Journal() {
     setErr('');
     setEntries(data ?? []);
     if (p) {
-      const s = await loadStats(id, p);
-      setStreak(s.streak);
-      setWordsToday(s.wordsToday);
+      try {
+        const s = await loadStats(id, p);
+        setStreak(s.streak);
+        setWordsToday(s.wordsToday);
+      } catch {
+        // The streak is a summary. A failure here should not hide the entries.
+      }
     }
   }
 
   function validate() {
-    if (!topic) return 'Pick a topic first.';
+    if (!topic) return 'Choose a topic first: search its name and tap it in the list.';
     if (words < 5) return 'Write at least a few words, in your own explanation.';
     if (conf === null) return 'Rate your confidence from 0 to 5.';
     return '';
@@ -285,7 +304,19 @@ export default function Journal() {
         <button type="button" className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
       </div>
 
-      <TopicPicker topics={topics} value={topic} onPick={setTopic} />
+      <TopicPicker
+        topics={topics}
+        value={topic}
+        onPick={setTopic}
+        loading={topicsLoading}
+        error={topicsErr}
+        onRetry={loadTopics}
+      />
+      <p className="muted" style={{ marginTop: 4 }}>
+        {isReflect
+          ? 'Reflecting counts toward today, on any topic, including ones you already studied.'
+          : 'Learning writes new research on a topic. Use Reflect to revisit one you studied.'}
+      </p>
 
       <RichEditor
         value={body}
