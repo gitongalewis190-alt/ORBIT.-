@@ -54,7 +54,7 @@ export default function MenuDrawer({ open, onClose, onSearch }) {
     ['Study', Object.values(HUBS.study).flat()],
     ['Progress', HUBS.progress],
     ['Data and backup', RECORDS.filter(row => row.cluster === 'Data and backup' && row.risk !== 'destructive').map(row => row.id)],
-    ['Settings and help', ['settings', 'guide', 'inspect']],
+    ['Settings and help', ['settings', 'trial-mode', 'guide', 'inspect']],
   ];
   return (
     <div className="orbit-menu">

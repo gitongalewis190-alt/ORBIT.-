@@ -4,6 +4,7 @@ import './orbit-chrome.css';
 import './orbit-ink.css';
 import Shell from '../components/Shell';
 import TrialBanner from '../components/TrialBanner';
+import DeletionBanner from '../components/DeletionBanner';
 import { THEME_BOOT_SCRIPT } from '../lib/theme';
 
 export const metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <TrialBanner />
+        <DeletionBanner />
         <Shell>{children}</Shell>
       </body>
     </html>
