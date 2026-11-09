@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "seed": "node scripts/build-library.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",

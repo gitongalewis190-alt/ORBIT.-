@@ -521,13 +521,14 @@ export default function Settings() {
           <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map((c, i) => (
               <div key={c.key} className={`setting-life${c.danger ? ' is-danger' : ''}`} style={{ animationDelay: `${i * 0.45}s` }}>
-                {c.href ? (
-                  <a href={c.href} style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }}>{c.title}</a>
-                ) : (
-                  <button type="button" style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }} onClick={() => setView(c.key)} disabled={busy}>
-                    {c.title}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }}
+                  onClick={() => (c.href ? router.push(c.href) : setView(c.key))}
+                  disabled={busy}
+                >
+                  {c.title}
+                </button>
               </div>
             ))}
           </nav>
