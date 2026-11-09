@@ -73,11 +73,13 @@ export default function Journal() {
     return () => clearInterval(tickRef.current);
   }, [timerRun]);
   const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  function useTimer() {
+  async function useTimer() {
     const m = Math.max(1, Math.round(timerSec / 60));
     setMins(String(m));
     setTimerRun(false);
     setTimerSec(0);
+    // Reflection minutes are recorded for the swap trade-offs. They do not change the Learn ring.
+    if (isReflect && uid) await logDecision(uid, 'reflect_focus', topic?.id ?? null, { minutes: m });
     toast(`${m} min added to Minutes spent.`, 'ok');
   }
   const [due, setDue] = useState(new Set());

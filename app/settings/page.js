@@ -15,6 +15,7 @@ import ProfileDetails from '../../components/ProfileDetails';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Skeleton from '../../components/Skeleton';
 import BackLink from '../../components/BackLink';
+import TrialToggle from '../../components/TrialToggle';
 import { APP_VERSION } from '../../lib/version';
 import { readAssist, writeAssist, ASSIST_DEFAULTS } from '../../lib/assist';
 import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
@@ -508,6 +509,7 @@ export default function Settings() {
 
   return (
     <div className="fade-in settings settings-page">
+      <TrialToggle />
       <BackLink />
       {view === null ? (
         <>

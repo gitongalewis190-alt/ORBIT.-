@@ -3,6 +3,7 @@ import './features.css';
 import './orbit-chrome.css';
 import './orbit-ink.css';
 import Shell from '../components/Shell';
+import TrialBanner from '../components/TrialBanner';
 import { THEME_BOOT_SCRIPT } from '../lib/theme';
 
 export const metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Outfit:wght@300;500&display=swap" rel="stylesheet" />
       </head>
       <body>
+        <TrialBanner />
         <Shell>{children}</Shell>
       </body>
     </html>

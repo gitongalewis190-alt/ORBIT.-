@@ -681,3 +681,54 @@ a.log-row.log-link:active { background: var(--accent-soft); }
 .rings-switch { display: grid; gap: 10px; }
 .picker-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11px; font-weight: 500; color: var(--muted); vertical-align: middle; }
 .closed-line { text-align: center; font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* Earned awards: light green with a slow glint. */
+.award-cell.earned {
+  background: linear-gradient(135deg, #e6f7e9, #f5fff6 60%, #d4f2dc) !important;
+  border-color: #8fd19e !important;
+  position: relative;
+  overflow: hidden;
+}
+.award-cell.earned::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.85) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: award-glint 3.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes award-glint { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+
+/* Confetti after an earned swap. */
+.confetti-host { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 9999; }
+.confetti-piece {
+  position: absolute;
+  top: -14px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0.95;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  60% { transform: translate3d(calc(var(--dx) * 0.8), 70vh, 0) rotate(calc(var(--rot) * 0.6)); }
+  100% { transform: translate3d(var(--dx), 110vh, 0) rotate(var(--rot)); opacity: 0; }
+}
+
+/* Trial mode banner, shown at the top of every screen while on. */
+.trial-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 8px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff3c4;
+  color: #6b4d00;
+  border-bottom: 1px solid #e0c46a;
+}

@@ -8,6 +8,7 @@ import { pageOf } from '../lib/stats';
 import { toast } from '../lib/toast';
 import { play } from '../lib/sound';
 import { drawChallenge, verifyChallenge, swapsLeft, MAX_EARNED_PER_DAY } from '../lib/challenges';
+import { confetti } from '../lib/confetti';
 
 const DAY_EVENTS = ['swapped', 'swap_earned', 'challenge_started', 'challenge_passed', 'challenge_cancelled'];
 
@@ -77,7 +78,10 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
       const entries = await pageOf(() => supabase.from('journal_entries')
         .select('topic_id,entry_kind,word_count,body,tags,created_at')
         .eq('user_id', uid).gte('created_at', c.startedAt));
-      const focusSince = state.focusTotal - (c.focusBaseline ?? 0);
+      // Trade-off 2 counts minutes on the reflection timer since the challenge started.
+      const rf = await supabase.from('decision_log').select('payload')
+        .eq('user_id', uid).eq('event', 'reflect_focus').gte('created_at', c.startedAt);
+      const focusSince = (rf.data ?? []).reduce((t, r) => t + (Number(r.payload?.minutes) || 0), 0);
       const res = verifyChallenge(c, { entries: entries.data ?? [], focusSince });
       setLastLabel(res.label);
       if (res.passed) {
@@ -85,6 +89,7 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
         await logDecision(uid, 'swap_earned', null, { challengeId: c.id });
         play('success');
         toast('Passed. One swap earned.', 'ok', 4200);
+        confetti();
         setOpen(false);
       } else {
         toast(`Not yet: ${res.label}.`, 'warn', 4200);
@@ -117,9 +122,9 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
 
   const left = swapsLeft({ earned: state.earned, swapped: state.swapped });
   const c = state.active;
-  const focusSince = c ? state.focusTotal - (c.focusBaseline ?? 0) : 0;
   const link = c && c.params.topicId ? `/journal?review=${c.params.topicId}&mode=reflect&challenge=${c.id}`
     : c && c.params.a ? `/journal?review=${c.params.a}&mode=reflect&challenge=${c.id}`
+    : c ? `/journal?mode=reflect&challenge=${c.id}`
     : null;
 
   let button;
@@ -140,11 +145,9 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
         <div className="card swap-challenge" style={{ flexBasis: '100%', marginTop: 10 }}>
           <div className="kicker">Earn a swap · trade-off</div>
           <p style={{ margin: '8px 0', lineHeight: 1.5 }}>{c.text}</p>
-          <p className="muted" style={{ margin: '4px 0 10px' }}>{lastLabel || verifyChallenge(c, { entries: [], focusSince }).label}</p>
+          <p className="muted" style={{ margin: '4px 0 10px' }}>{lastLabel || verifyChallenge(c, { entries: [], focusSince: 0 }).label}</p>
           <div className="row">
-            {c.kind === 'focus_minutes'
-              ? <span className="muted">Use the focus timer on Today. Progress updates when you check.</span>
-              : <Link className="btn accent" href={link}>Open Journal</Link>}
+            <Link className="btn accent" href={link}>Open Journal</Link>
             <button type="button" className="btn" onClick={check} disabled={working}>Check progress</button>
             <button type="button" className="btn" onClick={() => setOpen(false)}>Not now</button>
             <button type="button" className="btn danger" onClick={cancel} disabled={working}>Cancel challenge</button>
