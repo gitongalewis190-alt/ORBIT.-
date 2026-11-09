@@ -9,6 +9,7 @@ import { prettyDate } from '../lib/dates';
 import { progressCardBlob } from '../lib/card';
 import { downloadBlob } from '../lib/download';
 import Rings from './Rings';
+import { REFLECT_TARGET } from '../lib/rings';
 
 const RING_NAMES = { study: 'Study', journal: 'Journal', review: 'Review' };
 
@@ -88,19 +89,47 @@ export default function DayRings() {
   if (!data) return null;
   const { stats, profile } = data;
 
+  const reflect = stats.reflectToday;
   return (
-    <div className="card day-rings">
-      <div className="kicker">Today</div>
-      <Rings study={stats.rings.study} journal={stats.rings.journal} review={stats.rings.review} />
-      <div className="muted" style={{ marginTop: 10 }}>
-        {stats.minutesToday} of {profile.daily_minutes} min · {stats.wordsToday} of {profile.word_goal} words ·
-        {' '}{stats.reviewsDoneToday} review{stats.reviewsDoneToday === 1 ? '' : 's'} done
+    <>
+      <div className="card day-rings">
+        <div className="kicker">Learn today</div>
+        <Rings study={stats.rings.study} journal={stats.rings.journal} review={stats.rings.review} />
+        <div className="muted" style={{ marginTop: 10 }}>
+          {stats.minutesToday} of {profile.daily_minutes} min · {stats.learnWordsToday} of {profile.word_goal} words ·
+          {' '}{stats.reviewsDoneToday} review{stats.reviewsDoneToday === 1 ? '' : 's'} done
+        </div>
+        <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+          <button className="btn sm" onClick={shareRings} disabled={busy}>{busy ? 'Preparing' : 'Share today’s rings'}</button>
+          <span className="tag">streak {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
+          <span className="tag">{stats.entriesWeek}/{profile.weekly_entry_goal} this week</span>
+        </div>
       </div>
-      <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-        <button className="btn sm" onClick={shareRings} disabled={busy}>{busy ? 'Preparing' : 'Share today’s rings'}</button>
-        <span className="tag">streak {stats.streak} day{stats.streak === 1 ? '' : 's'}</span>
-        <span className="tag">{stats.entriesWeek}/{profile.weekly_entry_goal} this week</span>
+
+      <div className="card day-rings">
+        <div className="kicker">Reflect today · optional</div>
+        {reflect.any ? (
+          <>
+            <Rings
+              study={stats.reflectRings.minutes}
+              journal={stats.reflectRings.words}
+              review={stats.reflectRings.revisit}
+              labels={['Time', 'Words', 'Revisit']}
+            />
+            <div className="muted" style={{ marginTop: 10 }}>
+              {reflect.minutes} of {REFLECT_TARGET.minutes} min · {reflect.words} of {REFLECT_TARGET.words} words ·
+              {' '}{reflect.revisits} earlier topic{reflect.revisits === 1 ? '' : 's'} revisited
+            </div>
+          </>
+        ) : (
+          <p className="muted" style={{ marginTop: 6 }}>
+            Not reflected today. Reflecting is optional and never replaces learning. Open Journal, switch to Reflect, and pick a topic to fill these rings.
+          </p>
+        )}
+        <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+          <span className="tag">{stats.reflectDays} reflect day{stats.reflectDays === 1 ? '' : 's'} closed</span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
