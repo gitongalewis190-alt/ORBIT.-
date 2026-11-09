@@ -170,7 +170,6 @@ nav.settings-catalogue {
 .setting-stage {
   border-radius: 22px;
   padding: 4px 2px 8px;
-  animation: setting-breathe 7s ease-in-out infinite;
 }
 
 @keyframes setting-breathe {
@@ -608,7 +607,7 @@ body:has(.orbit-editor) .family-strip { display: none; }
 .entry-preview { margin: 8px 0; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Section strip (e.g. Settings). Under the header in the page flow, never at the bottom.
-   Boxes (default): a full-width rounded box per link. Chips: the override. */
+   One layout only: a full-width box per link, stacked. A link is marked only after it has been tapped. */
 .family-strip {
   position: static;
   display: flex;
@@ -623,7 +622,7 @@ body:has(.orbit-editor) .family-strip { display: none; }
 }
 .family-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .family-head > span { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.family-strip.boxes a {
+.family-strip a {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -638,20 +637,7 @@ body:has(.orbit-editor) .family-strip { display: none; }
   font-weight: 500;
   text-decoration: none;
 }
-.family-strip.chips { flex-direction: row; flex-wrap: wrap; }
-.family-strip.chips a {
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 14px;
-  color: var(--ink);
-  text-decoration: none;
-  background: var(--surface);
-  white-space: nowrap;
-}
-.family-strip a[aria-current="page"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.family-head .seg { margin: 0; }
+.family-strip a.picked { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 
 /* Topic picker: results sit in the page flow, so nothing can clip or cover them on iPhone. */
 .picker-list {
