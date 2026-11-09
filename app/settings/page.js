@@ -19,6 +19,7 @@ import TrialToggle from '../../components/TrialToggle';
 import { APP_VERSION } from '../../lib/version';
 import { readAssist, writeAssist, ASSIST_DEFAULTS } from '../../lib/assist';
 import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
+import { pendingDeletion, requestDeletion, keepAccount, exportEverything, daysLeft, deletionDate, DELETION_WINDOW_DAYS } from '../../lib/accountDeletion';
 
 const PROFILE_DRAFT = 'settings-profile';
 const PROFILE_KEYS = ['display_name', 'age', 'daily_minutes', 'word_goal', 'weekly_entry_goal', 'timezone'];
@@ -74,6 +75,7 @@ const RESET_TABLES = ['decision_log', 'journal_entries', 'reviews', 'topic_contr
 
 // The catalogue. Each entry opens its own page. Danger rows are red-labelled and sit at the end.
 const CATALOGUE = [
+  { key: 'trial', title: 'Trial mode' },
   { key: 'profile', title: 'Profile' },
   { key: 'appearance', title: 'Appearance' },
   { key: 'sound', title: 'Sound' },
@@ -126,7 +128,7 @@ export default function Settings() {
   const [autoFix, setAutoFix] = useState(true);
   const [view, setView] = useState(null);
   useEffect(() => {
-    const known = ['profile', 'appearance', 'sound', 'learning', 'assist', 'study', 'export', 'storage', 'help', 'reset', 'delete'];
+    const known = ['trial', 'profile', 'appearance', 'sound', 'learning', 'assist', 'study', 'export', 'storage', 'help', 'reset', 'delete'];
     const open = () => {
       const key = window.location.hash.replace('#', '');
       if (known.includes(key)) setView(key);
@@ -139,6 +141,8 @@ export default function Settings() {
   const [confirmText, setConfirmText] = useState('');
   const [deleteText, setDeleteText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
+  const [pendingDel, setPendingDel] = useState(null);
+  const [exported, setExported] = useState('');
   const [busyAction, setBusyAction] = useState('');
   const [err, setErr] = useState('');
   const busy = busyAction !== '';
@@ -162,6 +166,7 @@ export default function Settings() {
       if (!alive || !user) return;
       setUid(user.id);
       setEmail(user.email ?? '');
+      pendingDeletion(user.id).then(row => { if (alive) setPendingDel(row); }).catch(() => {});
       try {
         const loaded = await getProfile(user.id);
         if (!alive) return;
@@ -310,8 +315,41 @@ export default function Settings() {
     }
   }
 
-  // Permanently deletes the account and every record in it.
-  // Deleting asks for the account password again, so a stray tap can never remove data.
+  // Saves the whole account as JSON or PDF. Starting deletion needs one saved copy.
+  async function saveExport(kind) {
+    if (!lock('export')) return;
+    try {
+      await exportEverything(uid, kind);
+      setExported(kind);
+      play('export');
+      toast(`Saved everything as ${kind.toUpperCase()}.`, 'ok', 4000);
+    } catch (e) {
+      play('error');
+      toast(`Could not save the export: ${e.message}`, 'err', 6000);
+    } finally {
+      unlock();
+    }
+  }
+
+  // Keeps a pending account: cancels the scheduled deletion.
+  async function cancelPendingDeletion() {
+    if (!lock('keep')) return;
+    try {
+      await keepAccount();
+      setPendingDel(null);
+      play('save');
+      toast('Deletion cancelled. Your account is kept.', 'ok', 4500);
+      window.dispatchEvent(new Event('orbit:account-deletion'));
+    } catch (e) {
+      play('error');
+      toast(e.message, 'err', 6000);
+    } finally {
+      unlock();
+    }
+  }
+
+  // Starts the 60 day window. Nothing is removed now. The account is removed on the date shown
+  // unless it is kept first. The password is asked again, so a stray tap never starts it.
   async function deleteAccount() {
     if (deleteText !== 'DELETE') {
       play('error');
@@ -332,11 +370,12 @@ export default function Settings() {
         toast('That password is not right. Nothing was deleted.', 'err', 5000);
         return;
       }
-      const { error } = await supabase.rpc('delete_my_account');
-      if (error) throw error;
+      await requestDeletion();
       clearDraft(PROFILE_DRAFT);
+      window.dispatchEvent(new Event('orbit:account-deletion'));
       await supabase.auth.signOut();
       play('bye');
+      toast(`Deletion scheduled. Sign in within ${DELETION_WINDOW_DAYS} days to keep your account.`, 'info', 7000);
       router.replace('/login');
     } catch (e) {
       play('error');
@@ -463,6 +502,8 @@ export default function Settings() {
         return <AssistSettings />;
       case 'storage':
         return <div className="card"><StorageMeter /></div>;
+      case 'trial':
+        return <TrialToggle />;
       case 'help':
         return (
           <div className="card">
@@ -491,15 +532,32 @@ export default function Settings() {
       case 'delete':
         return (
           <div className="card">
-            <p className="muted" style={{ marginTop: 0 }}>
-              Permanently deletes your sign-in and every record tied to it, including the PDF copies in your document
-              log. You will not be able to sign back in to this data. Use Reset if you only want a clean start.
-            </p>
-            <div className="row" style={{ marginTop: 0 }}>
-              <button className="btn danger" onClick={() => setFlow({ action: 'delete', step: 1 })} disabled={busy}>
-                {busyAction === 'delete' ? 'Working' : 'Delete my account'}
-              </button>
-            </div>
+            {pendingDel ? (
+              <>
+                <p style={{ marginTop: 0 }}>
+                  This account is scheduled for deletion on {deletionDate(pendingDel.scheduled_for)}.
+                  {' '}{daysLeft(pendingDel.scheduled_for)} days left. Everything is kept until then.
+                </p>
+                <div className="row" style={{ marginTop: 0 }}>
+                  <button className="btn accent" onClick={cancelPendingDeletion} disabled={busy}>
+                    {busyAction === 'keep' ? 'Working' : 'Keep my account'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="muted" style={{ marginTop: 0 }}>
+                  Deleting starts a {DELETION_WINDOW_DAYS} day window. Your data is kept for those {DELETION_WINDOW_DAYS} days,
+                  and you can keep the account at any time by signing in. After that the account and every record in it are
+                  removed permanently. You must save a copy of your data before you start. Use Reset if you only want a clean start.
+                </p>
+                <div className="row" style={{ marginTop: 0 }}>
+                  <button className="btn danger" onClick={() => { setExported(''); setFlow({ action: 'delete', step: 1 }); }} disabled={busy}>
+                    {busyAction === 'delete' ? 'Working' : 'Delete my account'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         );
       default:
@@ -513,7 +571,6 @@ export default function Settings() {
       {view === null ? (
         <>
           <h1>Settings</h1>
-          <TrialToggle />
           <div className="row">
             <Link className="btn" href="/inspect">Under the hood</Link>
           </div>
@@ -607,28 +664,37 @@ export default function Settings() {
       {/* Delete account */}
       <ConfirmDialog
         open={step('delete') === 1}
-        title="Delete your account?"
+        title="Save everything first"
         danger
         confirmLabel="Continue"
+        canConfirm={!!exported}
+        busy={busy}
         onConfirm={() => setFlow({ action: 'delete', step: 2 })}
         onCancel={closeFlow}
       >
         <p style={{ marginTop: 0 }}>
-          This permanently deletes your sign-in, your profile, every journal entry, every progress record and every PDF copy
-          in your document log. It cannot be undone, and you will not be able to sign back in to this data.
+          Save a complete copy of your journal, progress, awards, topics and log before deleting. Continue unlocks once a copy is saved.
         </p>
+        <div className="row" style={{ marginTop: 0 }}>
+          <button className="btn" onClick={() => saveExport('json')} disabled={busy}>Save all as JSON</button>
+          <button className="btn" onClick={() => saveExport('pdf')} disabled={busy}>Save all as PDF</button>
+        </div>
+        <p className="muted">{exported ? `Saved as ${exported.toUpperCase()}. You can continue.` : 'Nothing saved yet.'}</p>
       </ConfirmDialog>
       <ConfirmDialog
         open={step('delete') === 2}
-        title="Final check before deleting"
+        title="Start the 60 day window"
         danger
-        confirmLabel="Delete my account"
+        confirmLabel="Start deletion"
         busy={busy}
         canConfirm={deleteText === 'DELETE' && !!deletePassword}
         onConfirm={deleteAccount}
         onCancel={closeFlow}
       >
-        <p style={{ marginTop: 0 }}>Type DELETE in capitals, then enter your account password. Nothing is removed until both are right.</p>
+        <p style={{ marginTop: 0 }}>
+          Type DELETE in capitals, then enter your account password. The account is removed on the date shown after
+          {' '}{DELETION_WINDOW_DAYS} days. Sign in before then and choose Keep my account to stop it.
+        </p>
         <div className="kicker">Type DELETE</div>
         <input placeholder="DELETE" value={deleteText} autoComplete="off" autoCapitalize="characters"
           onChange={e => setDeleteText(e.target.value)} />

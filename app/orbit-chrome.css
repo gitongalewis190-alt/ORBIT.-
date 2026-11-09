@@ -720,6 +720,25 @@ a.log-row.log-link:active { background: var(--accent-soft); }
 }
 
 /* Trial mode banner, shown at the top of every screen while on. */
+.deletion-banner {
+  position: sticky;
+  top: 0;
+  z-index: 49;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #3a1d14;
+  background: #f9e4dc;
+  border-bottom: 1px solid #b34a3c;
+}
+.deletion-banner-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.deletion-banner-text strong { font-weight: 600; }
+.deletion-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
 .trial-banner {
   position: sticky;
   top: 0;
