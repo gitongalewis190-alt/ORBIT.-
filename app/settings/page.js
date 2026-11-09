@@ -509,11 +509,11 @@ export default function Settings() {
 
   return (
     <div className="fade-in settings settings-page">
-      <TrialToggle />
       <BackLink />
       {view === null ? (
         <>
           <h1>Settings</h1>
+          <TrialToggle />
           <div className="row">
             <Link className="btn" href="/inspect">Under the hood</Link>
           </div>

@@ -9,6 +9,15 @@ import { toast } from '../lib/toast';
 import { play } from '../lib/sound';
 import { drawChallenge, verifyChallenge, swapsLeft, MAX_EARNED_PER_DAY } from '../lib/challenges';
 import { confetti } from '../lib/confetti';
+import ConfirmDialog from './ConfirmDialog';
+
+// A padlock, shown when no more swaps can be made today.
+const Padlock = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 6 }}>
+    <rect x="4" y="11" width="16" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </svg>
+);
 
 const DAY_EVENTS = ['swapped', 'swap_earned', 'challenge_started', 'challenge_passed', 'challenge_cancelled'];
 
@@ -18,6 +27,8 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
   const [state, setState] = useState({ swapped: 0, earned: 0, active: null, focusTotal: 0, ready: false });
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState(false);
+  const [confirmEarn, setConfirmEarn] = useState(false);
+  const [confirmFree, setConfirmFree] = useState(false);
   const [lastLabel, setLastLabel] = useState('');
   const dayStart = () => new Date(`${today()}T00:00:00+03:00`).toISOString();
 
@@ -129,18 +140,42 @@ export default function SwapControl({ uid, assignment, onFreeSwap, busy }) {
 
   let button;
   if (left > 0) {
-    button = <button type="button" className="btn" onClick={onFreeSwap} disabled={busy || working}>Swap topic</button>;
+    button = <button type="button" className="btn" onClick={() => setConfirmFree(true)} disabled={busy || working}>Swap topic</button>;
   } else if (c) {
     button = <button type="button" className="btn" onClick={() => setOpen(o => !o)}>{open ? 'Hide challenge' : 'Continue challenge'}</button>;
   } else if (state.earned >= MAX_EARNED_PER_DAY) {
-    button = <button type="button" className="btn" disabled>Swap limit reached today</button>;
+    button = <button type="button" className="btn" disabled aria-label="Swap limit reached today"><Padlock />Swap limit reached</button>;
   } else {
-    button = <button type="button" className="btn" onClick={startChallenge} disabled={working || busy}>{working ? 'Working' : 'Earn a swap'}</button>;
+    button = <button type="button" className="btn" onClick={() => setConfirmEarn(true)} disabled={working || busy}>{working ? 'Working' : 'Earn a swap'}</button>;
   }
 
   return (
     <>
       {button}
+      <ConfirmDialog
+        open={confirmFree}
+        title="Swap this topic?"
+        confirmLabel="Agree and continue"
+        busy={busy}
+        onCancel={() => setConfirmFree(false)}
+        onConfirm={() => { setConfirmFree(false); onFreeSwap(); }}
+      >
+        <p style={{ margin: 0, lineHeight: 1.5 }}>
+          Your accepted topic will be replaced with a new one. You get one free swap a day. Once it is used, a swap is earned by passing a trade-off.
+        </p>
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={confirmEarn}
+        title="Earn a swap?"
+        confirmLabel="Agree and continue"
+        busy={working}
+        onCancel={() => setConfirmEarn(false)}
+        onConfirm={async () => { setConfirmEarn(false); await startChallenge(); }}
+      >
+        <p style={{ margin: 0, lineHeight: 1.5 }}>
+          You will get one trade-off, chosen at random from the ones you can do today. Pass it to earn one swap. You can cancel it at any time.
+        </p>
+      </ConfirmDialog>
       {c && open && (
         <div className="card swap-challenge" style={{ flexBasis: '100%', marginTop: 10 }}>
           <div className="kicker">Earn a swap · trade-off</div>

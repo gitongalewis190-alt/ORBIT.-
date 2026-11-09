@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { currentUser } from '../lib/session';
 import { play } from '../lib/sound';
@@ -8,6 +8,7 @@ import { today } from '../lib/dates';
 import { getProfile } from '../lib/profile';
 import { loadStats, syncBadges } from '../lib/stats';
 import { readBenefits } from '../lib/benefits';
+import ConfirmDialog from './ConfirmDialog';
 
 const PRESETS = [25, 45, 60];
 const CUSTOM_KEY = 'orbit.focus.custom';
@@ -62,7 +63,19 @@ export default function FocusTimer() {
   const [sess, setSess] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
+  const [confirmStart, setConfirmStart] = useState(false);
+  const [todays, setTodays] = useState([]);
+  const [pendingRevoke, setPendingRevoke] = useState(null);
   const finishing = useRef(false);
+
+  // Today's logged focus sessions, so a mistaken one can be revoked.
+  const loadToday = useCallback(async (id) => {
+    if (!id) return;
+    const { data } = await supabase.from('focus_sessions').select('id,minutes,created_at')
+      .eq('user_id', id).eq('day', today()).order('created_at');
+    setTodays(data ?? []);
+  }, []);
+  useEffect(() => { loadToday(uid); }, [uid, loadToday]);
 
   useEffect(() => {
     currentUser().then((user) => {
@@ -118,6 +131,24 @@ export default function FocusTimer() {
     setNow(t);
   }
 
+  async function revoke(row) {
+    if (!uid || busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('focus_sessions').delete().eq('id', row.id).eq('user_id', uid);
+      if (error) throw error;
+      play('close');
+      toast(`Revoked ${row.minutes} min. It no longer counts toward your study ring.`, 'info', 4200);
+      await loadToday(uid);
+    } catch (e) {
+      play('error');
+      toast(`Could not revoke: ${e.message}`, 'err', 5000);
+    } finally {
+      setPendingRevoke(null);
+      setBusy(false);
+    }
+  }
+
   function pause() {
     const t = Date.now();
     persist({ ...sess, mode: 'paused', remainingMs: Math.max(0, sess.endAt - t) });
@@ -142,6 +173,7 @@ export default function FocusTimer() {
       const profile = await getProfile(uid);
       const stats = await loadStats(uid, profile);
       await syncBadges(uid, stats);
+      loadToday(uid);
       if (completed) {
         play('focusdone');
         toast(`Focus complete. ${minutes} min added to your study ring.`, 'ok', 4200);
@@ -207,12 +239,46 @@ export default function FocusTimer() {
       )}
 
       <div className="row" style={{ justifyContent: 'center' }}>
-        {idle && <button className="btn accent" onClick={begin} disabled={busy || !uid}>Start focus</button>}
+        {idle && <button className="btn accent" onClick={() => setConfirmStart(true)} disabled={busy || !uid}>Start focus</button>}
         {sess?.mode === 'running' && <button className="btn" onClick={pause} disabled={busy}>Pause</button>}
-        {sess?.mode === 'paused' && <button className="btn accent" onClick={begin} disabled={busy}>Resume</button>}
+        {sess?.mode === 'paused' && <button className="btn accent" onClick={() => setConfirmStart(true)} disabled={busy}>Resume</button>}
         {sess && <button className="btn" onClick={finishNow} disabled={busy}>Log time so far</button>}
-        {sess && <button className="btn danger" onClick={cancel} disabled={busy}>Cancel</button>}
+        {sess && <button className="btn danger" onClick={cancel} disabled={busy}>Discard timer</button>}
       </div>
+
+      {todays.length > 0 && (
+        <div className="timer-log" style={{ marginTop: 14, textAlign: 'left' }}>
+          <div className="kicker">Focus logged today</div>
+          {todays.map(row => (
+            <div key={row.id} className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+              <span>{row.minutes} min</span>
+              <button type="button" className="btn sm danger" onClick={() => setPendingRevoke(row)} disabled={busy}>Revoke</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={confirmStart}
+        title={sess ? 'Resume the focus timer?' : `Start a ${planned} minute focus timer?`}
+        confirmLabel="Agree and continue"
+        onCancel={() => setConfirmStart(false)}
+        onConfirm={() => { setConfirmStart(false); begin(); }}
+      >
+        <p style={{ margin: 0 }}>The timer runs in the background. If you finish or stop it, the minutes are logged to today's study ring.</p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={!!pendingRevoke}
+        title="Revoke this focus session?"
+        confirmLabel="Revoke"
+        danger
+        busy={busy}
+        onCancel={() => setPendingRevoke(null)}
+        onConfirm={() => revoke(pendingRevoke)}
+      >
+        <p style={{ margin: 0 }}>{pendingRevoke ? `${pendingRevoke.minutes} minutes` : ''} will be removed from today's study ring. This cannot be undone.</p>
+      </ConfirmDialog>
     </div>
   );
 }
