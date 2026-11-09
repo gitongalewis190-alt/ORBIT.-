@@ -6,6 +6,7 @@ import { currentUser } from '../lib/session';
 import { buildContext } from '../lib/context';
 import { selectTopic, pickMode, adaptLevel, shuffle } from '../lib/selector';
 import { today, prettyDate } from '../lib/dates';
+import SwapControl from '../components/SwapControl';
 import { logDecision } from '../lib/log';
 import { play } from '../lib/sound';
 import { toast } from '../lib/toast';
@@ -162,7 +163,6 @@ export default function Today() {
   async function swap() {
     if (!user || !assignment || busyRef.current || reveal) return;
     if (assignment.status !== 'accepted') return;
-    if (swaps >= 1) return toast('You have already swapped today’s topic.', 'warn');
     if (!beginBusy('swap')) return;
     try {
       const { error } = await supabase.from('assignments')
@@ -292,11 +292,7 @@ export default function Today() {
           ) : (
             <div className="row">
               <span className="muted">Status: {assignment.status}</span>
-              {assignment.status === 'accepted' && (
-                <button className="btn" onClick={swap} disabled={busy || swaps >= 1}>
-                  {busyAction === 'swap' ? 'Working' : swaps >= 1 ? 'Swapped today' : 'Swap topic'}
-                </button>
-              )}
+              <SwapControl uid={user.id} assignment={assignment} onFreeSwap={swap} busy={busy} />
               {assignment.status !== 'completed' && (
                 <a className="btn accent" href={`/journal?assignment=${assignment.id}`}>
                   Log what I learned

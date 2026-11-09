@@ -126,6 +126,9 @@ export default function Journal() {
         const { data: t } = await supabase.from('topics').select('id,title').eq('id', rid).maybeSingle();
         if (t) setTopic(t);
       }
+      // A trade-off opens the reflection with its topic and mode already set.
+      const wantMode = params.get('mode');
+      if (wantMode === 'reflect' || wantMode === 'learn') setMode(wantMode);
       if (params.get('synthesis') === '1') {
         const prompt = params.get('prompt');
         if (prompt) {
