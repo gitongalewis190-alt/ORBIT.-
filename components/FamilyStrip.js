@@ -24,7 +24,16 @@ export default function FamilyStrip({ path }) {
           href={item.route}
           aria-current={item.route.split('#')[0] === path ? 'page' : undefined}
           className={picked === item.route ? 'picked' : undefined}
-          onClick={() => setPicked(item.route)}
+          onClick={e => {
+            setPicked(item.route);
+            // Same-page section links: Next does not fire hashchange, so set the hash and announce it.
+            const [target, hash] = item.route.split('#');
+            if (hash !== undefined && target === path) {
+              e.preventDefault();
+              if (window.location.hash === `#${hash}`) window.dispatchEvent(new HashChangeEvent('hashchange'));
+              else window.location.hash = hash;
+            }
+          }}
           data-sound="nav"
         >
           {item.title}

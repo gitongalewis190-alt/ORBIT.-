@@ -16,6 +16,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Skeleton from '../../components/Skeleton';
 import BackLink from '../../components/BackLink';
 import TrialToggle from '../../components/TrialToggle';
+import TrialSwitch from '../../components/TrialSwitch';
 import { APP_VERSION } from '../../lib/version';
 import { readAssist, writeAssist, ASSIST_DEFAULTS } from '../../lib/assist';
 import { clearDraft, readDraft, writeDraft } from '../../lib/drafts';
@@ -578,14 +579,14 @@ export default function Settings() {
           <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map((c, i) => (
               <div key={c.key} className={`setting-life${c.danger ? ' is-danger' : ''}`} style={{ animationDelay: `${i * 0.45}s` }}>
-                <button
+                {c.key === 'trial' ? <TrialSwitch /> : <button
                   type="button"
                   style={{ color: c.danger ? 'var(--text-danger)' : 'inherit' }}
                   onClick={() => (c.href ? router.push(c.href) : setView(c.key))}
                   disabled={busy}
                 >
                   {c.title}
-                </button>
+                </button>}
               </div>
             ))}
           </nav>
