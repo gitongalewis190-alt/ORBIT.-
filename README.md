@@ -70,3 +70,7 @@ Time budgets: beginner 30 min and 1 day, intermediate 45 min and 2 days, advance
 ## Reviews
 
 Saving an entry with confidence 0–5 schedules the next review with SM-2. A rating under 3 brings the topic back tomorrow. A rating of 4 or higher, after three or more successful reviews, moves the topic to Less, and the decision log records that it happened.
+
+## Access check
+
+This line confirms write access to the repository.
