@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { today, prettyDate, TZ } from '../lib/dates';
+import { today, prettyDate, addDays, TZ } from '../lib/dates';
 
 const WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -46,21 +46,31 @@ export function isCompleted(s, profile) {
 
 const EMPTY = { minutes: 0, words: 0, reflectMinutes: 0, reflectWords: 0, topics: new Set() };
 
+// Monday of the week containing an ISO day. Weeks start on Monday, as the grid does.
+const weekStartOf = iso => {
+  const dow = new Date(`${iso}T12:00:00Z`).getUTCDay();
+  return addDays(iso, -((dow + 6) % 7));
+};
+
 export default function RingsCalendar({ uid, profile, onClose }) {
+  const [mode, setMode] = useState('month'); // 'month' or 'week'
   const [ym, setYm] = useState(() => monthOf(today()));
+  const [wk, setWk] = useState(() => weekStartOf(today()));
   const [summary, setSummary] = useState({});
   const [sel, setSel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const todayIso = today();
 
+  // The range that is loaded depends on the view: a whole month, or the seven days of a week.
+  const from = mode === 'month' ? firstOf(ym) : wk;
+  const to = mode === 'month' ? lastOf(ym) : addDays(wk, 6);
+
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       setErr('');
-      const from = firstOf(ym);
-      const to = lastOf(ym);
       const [f, e, r] = await Promise.all([
         supabase.from('focus_sessions').select('day,minutes').eq('user_id', uid).gte('day', from).lte('day', to),
         supabase.from('journal_entries').select('created_at,word_count,entry_kind,topics(title)').eq('user_id', uid)
@@ -75,7 +85,7 @@ export default function RingsCalendar({ uid, profile, onClose }) {
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [uid, ym]);
+  }, [uid, from, to]);
 
   const cells = useMemo(() => {
     const first = new Date(`${firstOf(ym)}T00:00:00Z`).getUTCDay();
@@ -85,15 +95,49 @@ export default function RingsCalendar({ uid, profile, onClose }) {
     return [...Array(lead).fill(null), ...days];
   }, [ym]);
 
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(wk, i)), [wk]);
+
   const s = sel ? (summary[sel] ?? EMPTY) : null;
+  const thisWeek = weekStartOf(todayIso);
+
+  function go(step) {
+    setSel(null);
+    if (mode === 'month') setYm(shift(ym, step));
+    else setWk(addDays(wk, step * 7));
+  }
+
+  const nextDisabled = mode === 'month' ? ym >= monthOf(todayIso) : wk >= thisWeek;
+  const label = mode === 'month' ? monthLabel(ym) : `${prettyDate(wk)} to ${prettyDate(addDays(wk, 6))}`;
+
+  function dayButton(d) {
+    const done = isCompleted(summary[d], profile);
+    return (
+      <button
+        key={d}
+        type="button"
+        className={`cal-day${done ? ' done' : ''}${sel === d ? ' sel' : ''}${d === todayIso ? ' today' : ''}`}
+        disabled={d > todayIso}
+        onClick={() => setSel(d)}
+        aria-label={`${prettyDate(d)}${done ? ', completed' : ''}`}
+        aria-pressed={sel === d}
+      >
+        {Number(d.slice(8))}
+      </button>
+    );
+  }
 
   return (
     <div className="card rings-calendar">
+      <div className="seg" role="group" aria-label="Calendar view">
+        <button type="button" className={mode === 'month' ? 'on' : ''} onClick={() => { setMode('month'); setSel(null); }}>Month</button>
+        <button type="button" className={mode === 'week' ? 'on' : ''} onClick={() => { setMode('week'); setSel(null); }}>Week</button>
+      </div>
+
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <button type="button" className="btn sm" onClick={() => { setYm(shift(ym, -1)); setSel(null); }} aria-label="Previous month">‹</button>
-        <strong>{monthLabel(ym)}</strong>
-        <button type="button" className="btn sm" onClick={() => { setYm(shift(ym, 1)); setSel(null); }}
-          disabled={ym >= monthOf(todayIso)} aria-label="Next month">›</button>
+        <button type="button" className="btn sm" onClick={() => go(-1)} aria-label={mode === 'month' ? 'Previous month' : 'Previous week'}>‹</button>
+        <strong style={{ textAlign: 'center' }}>{label}</strong>
+        <button type="button" className="btn sm" onClick={() => go(1)} disabled={nextDisabled}
+          aria-label={mode === 'month' ? 'Next month' : 'Next week'}>›</button>
       </div>
 
       <div className="cal-grid cal-head">
@@ -101,24 +145,16 @@ export default function RingsCalendar({ uid, profile, onClose }) {
       </div>
 
       {loading ? (
-        <p className="muted" style={{ marginTop: 10 }}>Loading the month…</p>
+        <p className="muted" style={{ marginTop: 10 }}>{mode === 'month' ? 'Loading the month…' : 'Loading the week…'}</p>
       ) : err ? (
         <p className="err" style={{ marginTop: 10 }}>{err}</p>
+      ) : mode === 'month' ? (
+        <div className="cal-grid">
+          {cells.map((d, i) => (d == null ? <span key={`pad-${i}`} /> : dayButton(d)))}
+        </div>
       ) : (
         <div className="cal-grid">
-          {cells.map((d, i) => d == null ? <span key={`pad-${i}`} /> : (
-            <button
-              key={d}
-              type="button"
-              className={`cal-day${isCompleted(summary[d], profile) ? ' done' : ''}${sel === d ? ' sel' : ''}${d === todayIso ? ' today' : ''}`}
-              disabled={d > todayIso}
-              onClick={() => setSel(d)}
-              aria-label={`${prettyDate(d)}${isCompleted(summary[d], profile) ? ', completed' : ''}`}
-              aria-pressed={sel === d}
-            >
-              {Number(d.slice(8))}
-            </button>
-          ))}
+          {weekDays.map(d => dayButton(d))}
         </div>
       )}
 
