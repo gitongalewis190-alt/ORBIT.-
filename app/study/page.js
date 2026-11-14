@@ -7,9 +7,6 @@ import { HUBS, recordById } from '../../lib/navMap';
 
 const ROWS = [
   { href: '/attention', title: 'Attention', line: 'Ask your journal, or shorten a draft.' },
-  { href: '/recall', title: 'Recall', line: 'Answer a question from something you logged.' },
-  { href: '/log#recall-model', title: 'Recall model', line: 'See how likely the next review is to stick.' },
-  { href: '/atlas', title: 'Atlas', line: 'Map concepts, links, and what to practise.' },
 ];
 
 export default function StudyPage() {
@@ -27,29 +24,22 @@ export default function StudyPage() {
     <div className="fade-in study-page">
       <Link href="/" className="study-back">Back</Link>
       <h1>Study</h1>
-      <div className="study-list">
-        {ROWS.map(row => (
-          <Link key={row.href} href={row.href} className="study-row">
-            <strong>{row.title}</strong>
-            <span>{row.line}</span>
-            {row.href === '/attention' && attentionDraft ? (
-              <span className="study-status">Unsent draft on this phone</span>
-            ) : null}
-          </Link>
-        ))}
-      </div>
+      <p className="muted">Practice, connect, understand, or ask for help.</p>
       {Object.entries(HUBS.study).map(([cluster, ids]) => (
         <section key={cluster}>
           <h2>{cluster}</h2>
-          <div className="study-list">
+          <div className="hub-grid">
             {ids.map(id => {
               const row = recordById(id);
               if (!row?.route) return null;
-              if (ROWS.some(item => item.href === row.route)) return null;
+              const known = ROWS.find(item => item.href === row.route);
               return (
-                <Link key={id} href={row.route} className="study-row">
-                  <strong>{row.title}</strong>
-                  <span>{row.description}</span>
+                <Link key={id} href={row.route} className="nav-row">
+                  <strong>{known?.title || row.title}</strong>
+                  <span>{known?.line || row.description}</span>
+                  {row.route === '/attention' && attentionDraft ? (
+                    <span className="study-status">Unsent draft on this phone</span>
+                  ) : null}
                 </Link>
               );
             })}

@@ -456,10 +456,15 @@ export default function Journal() {
         })}
       </div>
 
-      <div className="seg">
+      <div className="seg" role="group" aria-label="Learn or reflect">
         <button type="button" className={mode === 'learn' ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
         <button type="button" className={mode === 'reflect' ? 'on' : ''} onClick={() => setMode('reflect')}>Reflect</button>
       </div>
+      <p className="muted" style={{ marginTop: 0 }}>
+        {isReflect
+          ? 'Reflect on a topic you have already learned. It does not replace today’s learning.'
+          : 'Learn records research on a topic. A learned topic switches this to Reflect.'}
+      </p>
 
       <TopicPicker
         topics={topics}
@@ -501,7 +506,12 @@ export default function Journal() {
             ? 'Counts reflection minutes toward your swap trade-offs. It does not change the Learn ring.'
             : 'Fills Minutes spent when you save this entry.'}
         </p>
-        <div className="row">
+        {timerRun && <p className="muted">The timer type stays put until you pause.</p>}
+        <div className="row timer-actions">
+          <div className="seg" role="group" aria-label="Timer type" style={{ margin: 0, flex: '1 1 180px' }}>
+            <button type="button" className={mode === 'learn' ? 'on' : ''} disabled={timerRun} onClick={() => setMode('learn')}>Learning</button>
+            <button type="button" className={mode === 'reflect' ? 'on' : ''} disabled={timerRun} onClick={() => setMode('reflect')}>Reflection</button>
+          </div>
           {!timerRun && timerSec === 0 && (
             <button type="button" className="btn sm accent" onClick={() => setConfirmTimer('start')}>
               {isReflect ? 'Start reflection timer' : 'Start learning timer'}
@@ -568,7 +578,7 @@ export default function Journal() {
 
       <div className="row">
         <button className="btn accent" onClick={save} disabled={busy}>
-          {busy ? 'Saving' : 'Save'}
+          {busy ? 'Saving' : 'Save entry'}
         </button>
         <span className="muted">{words} words · {pct}%</span>
       </div>

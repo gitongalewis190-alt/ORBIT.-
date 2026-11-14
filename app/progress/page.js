@@ -34,8 +34,10 @@ export default function ProgressPage() {
       <h1>Progress</h1>
       {err && <div className="card err" role="alert">{err}</div>}
       <div className="card">
-        <p>Streak {summary ? `${summary.streak} day${summary.streak === 1 ? '' : 's'}` : '—'}</p>
-        <p className="muted">Awards earned {summary ? awards : '—'}</p>
+        <p className="stat-num">{summary ? summary.streak : '—'}</p>
+        <p className="muted">day streak</p>
+        <p className="stat-num">{summary ? awards : '—'}</p>
+        <p className="muted">awards earned</p>
         <Link href="/#rings">Today's rings</Link>
       </div>
       <div className="hub-grid">

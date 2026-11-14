@@ -76,13 +76,13 @@ const RESET_TABLES = ['decision_log', 'journal_entries', 'reviews', 'topic_contr
 
 // The catalogue. Each entry opens its own page. Danger rows are red-labelled and sit at the end.
 const CATALOGUE = [
-  { key: 'trial', title: 'Trial mode' },
   { key: 'profile', title: 'Profile' },
   { key: 'appearance', title: 'Appearance' },
   { key: 'sound', title: 'Sound' },
   { key: 'learning', title: 'Journal' },
   { key: 'assist', title: 'Assist' },
   { key: 'study', title: 'Study', href: '/study' },
+  { key: 'trial', title: 'Trial mode' },
   { key: 'export', title: 'Backups' },
   { key: 'storage', title: 'Storage' },
   { key: 'help', title: 'Help' },

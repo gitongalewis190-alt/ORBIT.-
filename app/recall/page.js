@@ -203,7 +203,7 @@ export default function RecallPage() {
           )}
           {result && (
             <div className="card">
-              <p className="kicker">Score</p>
+              <p className="kicker">{result.weak || result.score < 60 ? 'Not yet' : result.score >= 80 ? 'Correct' : 'Partly correct'}</p>
               <p style={{ fontSize: '2.2rem', lineHeight: 1, margin: '0 0 8px', fontWeight: 650 }}>{result.score}<span className="muted">/100</span></p>
               <p style={{ fontSize: 16, lineHeight: 1.5 }}>{result.comment}</p>
               <p className="muted">Graded by {result.verifier === 'rules' || result.verifier === 'local' ? 'keyword check' : result.verifier}.</p>

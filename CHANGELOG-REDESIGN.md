@@ -7,9 +7,18 @@
 - Desktop rail default is collapsed at 72px and expands to 232px on hover or focus. Pending owner decision 2, default used: collapsed.
 - Search stays in the top bar. Pending owner decision 3.
 - Settings glyph no longer rotates. Pending owner decision 4, default used: no rotation. The sun-shaped mark was replaced with a gear outline.
-- Trial mode already sits first in Settings, which is more visible than "after Study". Left there. Pending owner decision 5.
 - Tablet and desktop share the vertical bar from 768px. Pending owner decision 6, default used: icon rail from 768px.
 - The plain left column (`.orbit-rail`) is gone. The sculpted bar is one component, horizontal on a phone and vertical from 768px, and it stays on every signed-in screen. Study links that were only in that column are still on the Study page, the menu, and search.
 - Browser-default blue links are reset. `.btn` and `.btn.accent` keep their names. Accent buttons are now the filled terracotta primary.
 - `lib/tabs.js` gained `barPathVertical` only. Existing bar maths is unchanged.
-- Not in this pass: rebuilding Today, Journal, Topics, Study, Progress and Settings layouts screen by screen. Logic in `lib/` was not changed.
+
+## 2026-11-14 — Screens: Today, Study, Journal, Recall, Progress, Settings
+
+- Phase: screens. Behaviour change: no.
+- Today leads with the topic. Log what I learned sits with Swap. Study and Resonance leave the heading and stay in the bar and the Study hub. The field chooser sits under “Choose today’s topic”. Reviews show a count. Rings stay open, below reviews, because the calendar lives inside them.
+- Study is four groups from the existing hub list. Nothing was dropped. The unsent Attention draft note stays on that card.
+- Settings order is Profile, Appearance, Sound, Journal, Assist, Study, Trial mode, Backups, Storage, Help, Reset, Delete. Trial mode sits after Study. Pending owner decision 5, default used: after Study.
+- Journal explains Learn and Reflect in one line. The same choice sits beside the timer and is blocked while it runs. The save button reads “Save entry”.
+- Recall still scores the same way. The result also says Correct, Partly correct, or Not yet from that score.
+- Progress shows the streak and the award count as numerals. Every progress link remains.
+- Not changed: database, grading providers, selection rules, timers’ stored minutes, Topics mark logic.

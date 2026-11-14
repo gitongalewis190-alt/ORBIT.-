@@ -15,6 +15,7 @@ import DayRings from '../components/DayRings';
 import SmartNotes from '../components/SmartNotes';
 import BenefitsPanel from '../components/BenefitsPanel';
 import Onboarding from '../components/Onboarding';
+import { fieldColor } from '../lib/palette';
 import { canChangeTopic, changesToday } from '../lib/dayRules';
 
 const WHY = {
@@ -65,7 +66,7 @@ export default function Today() {
     const t = today();
     const [a, r, f, c] = await Promise.all([
       supabase.from('assignments')
-        .select('id,topic_id,assigned_on,due_on,est_minutes,mode,status,topics(title,difficulty,subfields(name,fields(name)))')
+        .select('id,topic_id,assigned_on,due_on,est_minutes,mode,status,topics(title,difficulty,subfields(name,field_id,fields(name)))')
         .eq('user_id', uid).eq('assigned_on', t).neq('status', 'rejected')
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('reviews').select('topic_id,due_on,topics(title)')
@@ -252,23 +253,21 @@ export default function Today() {
     }
   }
 
+  const edge = fieldColor(topic?.subfields?.field_id);
+
   return (
     <div className="fade-in">
       <h1>Today</h1>
       <p className="muted">{prettyDate(today())}</p>
-      <div className="row" style={{ marginTop: 8 }}>
-        <Link className="btn" href="/study">Study</Link>
-        <Link className="btn" href="/resonance">Resonance</Link>
-      </div>
       {err && <p className="err">{err}</p>}
-      <div id="rings"><DayRings /></div>
 
+      <section aria-label="Now">
       {reveal ? (
         <div className="card" style={{ marginTop: 16 }}>
           <Reveal pool={reveal.pool} target={reveal.target} onDone={reveal.onDone} />
         </div>
       ) : assignment ? (
-        <div className="card fade-in">
+        <div className="card fade-in topic-hero" style={{ borderLeft: `4px solid ${edge}` }}>
           <div className="muted">{topic.subfields.fields.name} · {topic.subfields.name}</div>
           <h2 style={{ marginTop: 6, fontSize: 18 }}>{topic.title}</h2>
           <span className="tag">{topic.difficulty}</span>
@@ -291,12 +290,12 @@ export default function Today() {
           ) : (
             <div className="row">
               <span className="muted">Status: {assignment.status}</span>
-              <SwapControl uid={user.id} assignment={assignment} onFreeSwap={swap} busy={busy} />
               {assignment.status !== 'completed' && (
                 <a className="btn accent" href={`/journal?assignment=${assignment.id}`}>
                   Log what I learned
                 </a>
               )}
+              <SwapControl uid={user.id} assignment={assignment} onFreeSwap={swap} busy={busy} />
               {assignment.status === 'completed' && (
                 <>
                   <button className="btn" onClick={() => generate(null, 'another')} disabled={busy || !change.ok}>
@@ -310,6 +309,7 @@ export default function Today() {
         </div>
       ) : (
         <div className="card fade-in">
+          <h2 style={{ marginTop: 0 }}>Choose today's topic</h2>
           <p className="muted" style={{ marginTop: 0 }}>No topic yet for today.</p>
           <div className="row" style={{ marginTop: 0 }}>
             <button className="btn accent" onClick={() => generate(null, 'generate')} disabled={busy || !user || !!reveal}>
@@ -317,8 +317,8 @@ export default function Today() {
             </button>
           </div>
 
-          <h2>Manual field override</h2>
-          <select value={manualField} onChange={e => setManualField(e.target.value)}>
+          <label className="kicker" htmlFor="field-override">Field</label>
+          <select id="field-override" value={manualField} onChange={e => setManualField(e.target.value)} aria-label="Field">
             <option value="">Choose a field</option>
             {fields.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
@@ -329,15 +329,14 @@ export default function Today() {
           </div>
         </div>
       )}
+      </section>
 
-      <h2 id="reviews-due">Reviews due</h2>
+      <div className="zone-head">
+        <h2 id="reviews-due">Reviews due <span className="count-badge">{orderedReviews.length}</span></h2>
+      </div>
       <div className="seg" role="group" aria-label="Review order">
         <button type="button" data-sound="select" className={reviewOrder === 'due' ? 'on' : ''} onClick={() => { setReviewOrder('due'); localStorage.setItem('orbit.review.order', 'due'); }}>Due date</button>
         <button type="button" data-sound="select" className={reviewOrder === 'keystone' ? 'on' : ''} onClick={() => { setReviewOrder('keystone'); localStorage.setItem('orbit.review.order', 'keystone'); }}>Keystone</button>
-      </div>
-      <div className="row" style={{ marginTop: 0 }}>
-        <Link className="btn" href="/recall">Recall quiz</Link>
-        <Link className="btn accent" href="/log#recall-model">Recall model</Link>
       </div>
       {orderedReviews.length ? orderedReviews.map(r => (
         <div key={r.topic_id} className="card">
@@ -347,7 +346,13 @@ export default function Today() {
             <a className="btn sm" href={`/journal?review=${r.topic_id}`}>Review now</a>
           </div>
         </div>
-      )) : <p className="muted">Nothing due.</p>}
+      )) : <p className="muted">Nothing due. Log what you learned, and reviews will appear here.</p>}
+      <div className="row" style={{ marginTop: 0 }}>
+        <Link className="btn" href="/recall">Recall quiz</Link>
+        <Link className="btn" href="/log#recall-model">Recall model</Link>
+      </div>
+
+      <div id="rings"><DayRings /></div>
 
       <button
         type="button"
