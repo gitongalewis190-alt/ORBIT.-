@@ -1,0 +1,56 @@
+/* Orbit tokens. One source for colour, type, space, radius and motion.
+   Terracotta stays. Dark follows data-theme="dark" from lib/theme.js. */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #faf8f5;
+  --ink: #1c1b19;
+  --muted: #8a867f;
+  --line: #e8e5e0;
+  --accent: #c4623d;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6ebe5;
+  --danger: #b34a3c;
+  --danger-soft: #f7e9e6;
+  --ok: #3b7a6a;
+  --gold: #b08a2e;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-7: 32px; --space-8: 40px;
+  --text-xs: clamp(11px, 2.8vw, 12px); --text-sm: clamp(13px, 3.2vw, 14px);
+  --text-md: clamp(15px, 3.6vw, 16px); --text-lg: clamp(18px, 4vw, 22px);
+  --text-xl: clamp(24px, 5vw, 32px); --text-2xl: clamp(32px, 6vw, 44px);
+  --radius-s: 8px; --radius-m: 12px; --radius-l: 16px; --radius-hero: 22px; --radius-pill: 999px;
+  --elev-1: 0 1px 2px rgba(28,27,25,.06); --elev-2: 0 8px 24px rgba(28,27,25,.08); --elev-3: 0 16px 40px rgba(28,27,25,.12);
+  --dur-fast: 120ms; --dur-med: 200ms; --ease-out: cubic-bezier(.2,.8,.2,1);
+  --ring-track: #f1eee9;
+  --ring-1: #c4623d;
+  --ring-2: #3b7a6a;
+  --ring-3: #5a6bb5;
+  --bar: #c4623d;
+  --bar-track: #f1eee9;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #121212;
+  --surface: #1b1b1c;
+  --surface-2: #222224;
+  --ink: #f2efe9;
+  --muted: #9b968d;
+  --line: #2c2c2e;
+  --accent: #e07a52;
+  --accent-ink: #121212;
+  --accent-soft: #2e2019;
+  --danger: #d9705f;
+  --danger-soft: #2e1d1a;
+  --ok: #58b39a;
+  --gold: #d4b15a;
+  --elev-1: 0 1px 2px rgba(0,0,0,.3); --elev-2: 0 8px 24px rgba(0,0,0,.35); --elev-3: 0 16px 40px rgba(0,0,0,.45);
+  --ring-track: #262628;
+  --ring-1: #e07a52;
+  --ring-2: #58b39a;
+  --ring-3: #8c9ee6;
+  --bar: #e07a52;
+  --bar-track: #262628;
+  color-scheme: dark;
+}

@@ -1,7 +1,9 @@
+import './styles/tokens.css';
 import './globals.css';
 import './features.css';
 import './orbit-chrome.css';
 import './orbit-ink.css';
+import './styles/base.css';
 import Shell from '../components/Shell';
 import TrialBanner from '../components/TrialBanner';
 import DeletionBanner from '../components/DeletionBanner';

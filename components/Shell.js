@@ -44,7 +44,7 @@ import FamilyStrip from './FamilyStrip';
 import Skeleton from './Skeleton';
 import PrintSheet from './PrintSheet';
 import { activeTabIndex } from '../lib/tabs';
-import { familyForPath, RECORDS, PRIMARY, HUBS } from '../lib/navMap';
+import { RECORDS } from '../lib/navMap';
 
 const CommandPalette = dynamic(() => import('./CommandPalette'), { ssr: false });
 const MenuDrawer = dynamic(() => import('./MenuDrawer'), { ssr: false });
@@ -500,32 +500,14 @@ export default function Shell({ children }) {
 
           <Link
             href="/settings"
-            className="gear"
+            className={`gear${path.startsWith('/settings') ? ' on' : ''}`}
             aria-label="Settings"
+            aria-current={path.startsWith('/settings') ? 'page' : undefined}
             data-sound="open"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="3.2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-              />
-
-              <path
-                d="M12 2.8v2.6M12 18.6v2.6M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.8 12h2.6M18.6 12h2.6M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14.8 3.3 14.3 6a6 6 0 0 1 2.1 1.2l2.3-1 1.4 2.3-2 1.4a6 6 0 0 1 0 2.2l2 1.4-1.4 2.3-2.3-1a6 6 0 0 1-2.1 1.2l.5 2.7h-2.6l-.5-2.7a6 6 0 0 1-2.1-1.2l-2.3 1-1.4-2.3 2-1.4a6 6 0 0 1 0-2.2l-2-1.4 1.4-2.3 2.3 1A6 6 0 0 1 11.7 6L12.2 3.3z" />
+              <circle cx="12" cy="12" r="2.4" />
             </svg>
           </Link>
           <button
@@ -555,29 +537,12 @@ export default function Shell({ children }) {
         <FamilyStrip path={path} />
       )}
 
-      <aside className="orbit-rail" aria-label="Sections">
-        <Link href="/" className="brand" data-sound="nav">Orbit</Link>
-        <button type="button" className="btn rail-search" aria-label="Search Orbit" data-sound="open" onClick={() => setPaletteOpen(true)}>Search Orbit</button>
-        {PRIMARY.map(item => (
-          <Link key={item.id} href={item.route} aria-current={item.route === path ? 'page' : undefined} data-sound="nav"><span className="rail-label">{item.title}</span></Link>
-        ))}
-        <h2 className="rail-label">Study</h2>
-        {Object.values(HUBS.study).flat().slice(0, 8).map(id => {
-          const row = RECORDS.find(item => item.id === id);
-          if (!row?.route || row.risk === 'destructive') return null;
-          return <Link key={id} href={row.route} data-sound="nav"><span className="rail-label">{row.title}</span></Link>;
-        })}
-      </aside>
-
       <div className="wrap">
         {children}
       </div>
 
-      <TabBar
-        tabs={TABS}
-        path={path}
-        visible={activeTabIndex(TABS, path) >= 0}
-      />
+      <TabBar tabs={TABS} path={path} visible orientation="horizontal" />
+      <TabBar tabs={TABS} path={path} visible orientation="vertical" />
 
       <PrintSheet open={printOpen} onClose={() => setPrintOpen(false)} />
       <MenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} onSearch={() => { setMenuOpen(false); setPaletteOpen(true); }} />
