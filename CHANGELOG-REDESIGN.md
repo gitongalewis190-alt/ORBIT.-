@@ -22,3 +22,14 @@
 - Recall still scores the same way. The result also says Correct, Partly correct, or Not yet from that score.
 - Progress shows the streak and the award count as numerals. Every progress link remains.
 - Not changed: database, grading providers, selection rules, timers’ stored minutes, Topics mark logic.
+
+## 2026-11-14 — Closing pass
+
+- Phase: screens. Behaviour change: no.
+- Today shows the learning timer and the reflection timer together. Daily rings and the calendar sit in one closed section under them. Opening that section is the only extra step.
+- Topics keeps every filter. On a wide screen each field is a table: topic, section and level, mark. Phone stays a list.
+- Settings is one quiet list. Under the hood is a text link, not a second button. Sign out stays on its own row.
+- Journal confidence sits on the same row as Save entry.
+- Logs search and filters sit in one card. Awards uses the same numeral as Progress.
+- Sign-in keeps the drawing. The form is a single card on top of it.
+

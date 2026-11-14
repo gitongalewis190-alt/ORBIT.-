@@ -78,3 +78,103 @@ button:focus-visible,
 }
 .hub-grid .nav-row { min-height: 88px; }
 .timer-actions { align-items: center; }
+
+.timer-pair {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.timer-pair .card { margin-top: 0; }
+@media (min-width: 768px) {
+  .timer-pair { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+.rings-fold {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: 4px 14px 12px;
+}
+.rings-fold > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.rings-fold > summary::-webkit-details-marker { display: none; }
+
+.topic-toolbar { margin-top: 8px; }
+.topic-table-head { display: none; }
+.topic-group { margin: 0; }
+@media (min-width: 768px) {
+  .topic-group {
+    margin: 14px 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .topic-table-head,
+  .topic-group .topic-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+    gap: 8px 16px;
+    align-items: center;
+  }
+  .topic-table-head {
+    padding: 10px 12px 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .topic-group .topic-row {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    border-right: 0;
+    border-left-width: 4px;
+    border-top: 0;
+  }
+  .topic-group .catalogue-head { margin: 12px 12px 0; }
+}
+
+nav.settings-catalogue {
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.settings-page nav.settings-catalogue .setting-life {
+  animation: none;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.settings-page nav.settings-catalogue .setting-life:last-child { border-bottom: 0; }
+.settings-page nav.settings-catalogue .setting-life::before { animation: none; top: 0; bottom: 0; }
+.settings-page > .setting-life,
+.settings > .setting-life {
+  margin-top: 12px;
+  animation: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.save-row { align-items: center; }
+.save-confidence { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.log-toolbar { margin-top: 8px; }
+.log-toolbar h2 { margin-bottom: 8px; }
+
+.orbit-intro .login-card {
+  margin-top: min(42vh, 260px);
+  padding: 22px 18px 16px;
+  border: 1px solid #cfc6ba;
+  border-radius: 22px;
+}
+

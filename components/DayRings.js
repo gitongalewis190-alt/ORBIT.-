@@ -179,29 +179,31 @@ export default function DayRings() {
 
   return (
     <div className="rings-switch">
-      <div className="seg" role="radiogroup" aria-label="Which rings to show">
-        <button type="button" role="radio" aria-checked={view === 'learn'} className={view === 'learn' ? 'on' : ''} onClick={() => choose('learn')}>Learn</button>
-        <button type="button" role="radio" aria-checked={view === 'reflect'} className={view === 'reflect' ? 'on' : ''} onClick={() => choose('reflect')}>Reflect</button>
-      </div>
-      <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-        <button type="button" className="btn sm" onClick={() => setShowCalendar(s => !s)} aria-expanded={showCalendar}>
-          {showCalendar ? 'Hide calendar' : 'Open calendar'}
-        </button>
-      </div>
-      {showCalendar && <RingsCalendar uid={data.uid} profile={profile} onClose={() => setShowCalendar(false)} />}
-      {view === 'learn' ? learnCard : reflectCard}
-      {view === 'learn' ? (
-        <>
+      <div className="timer-pair">
+        <div>
           {learnTarget && (
-            <p className="muted" style={{ textAlign: 'center', marginTop: 10 }}>
+            <p className="muted" style={{ textAlign: 'center', margin: '0 0 8px' }}>
               Today’s topic target: {learnTarget.minutes} minutes.
             </p>
           )}
           <FocusTimer label="Learning timer" fixedMinutes={learnTarget?.minutes ?? null} />
-        </>
-      ) : (
+        </div>
         <ReflectTimer />
-      )}
+      </div>
+      <details className="rings-fold">
+        <summary>Daily rings and calendar</summary>
+        <div className="seg" role="radiogroup" aria-label="Which rings to show">
+          <button type="button" role="radio" aria-checked={view === 'learn'} className={view === 'learn' ? 'on' : ''} onClick={() => choose('learn')}>Learn</button>
+          <button type="button" role="radio" aria-checked={view === 'reflect'} className={view === 'reflect' ? 'on' : ''} onClick={() => choose('reflect')}>Reflect</button>
+        </div>
+        <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+          <button type="button" className="btn sm" onClick={() => setShowCalendar(s => !s)} aria-expanded={showCalendar}>
+            {showCalendar ? 'Hide calendar' : 'Open calendar'}
+          </button>
+        </div>
+        {showCalendar && <RingsCalendar uid={data.uid} profile={profile} onClose={() => setShowCalendar(false)} />}
+        {view === 'learn' ? learnCard : reflectCard}
+      </details>
     </div>
   );
 }

@@ -493,12 +493,6 @@ export default function Journal() {
       <input value={points} onChange={e => setPoints(e.target.value)} placeholder="Key points, one per line" />
       <input value={tagText} onChange={e => setTagText(e.target.value)} placeholder="Tags, comma separated" />
 
-      <div className="row">
-        {CONFIDENCE_WORD.map((w, i) => (
-          <button key={i} type="button" className={conf === i ? 'chip on' : 'chip'} onClick={() => setConf(i)}>{w}</button>
-        ))}
-      </div>
-
       <div className="timer-block" style={{ marginTop: 8 }}>
         <div className="kicker">{isReflect ? 'Reflection timer' : 'Learning timer'}</div>
         <p className="muted" style={{ margin: '4px 0 8px', lineHeight: 1.5 }}>
@@ -576,11 +570,16 @@ export default function Journal() {
 
       <input type="number" value={mins} onChange={e => setMins(e.target.value)} placeholder="Minutes spent" />
 
-      <div className="row">
+      <div className="row save-row">
         <button className="btn accent" onClick={save} disabled={busy}>
           {busy ? 'Saving' : 'Save entry'}
         </button>
         <span className="muted">{words} words · {pct}%</span>
+        <span className="save-confidence" role="group" aria-label="Confidence">
+          {CONFIDENCE_WORD.map((w, i) => (
+            <button key={i} type="button" className={conf === i ? 'chip on' : 'chip'} onClick={() => setConf(i)}>{w}</button>
+          ))}
+        </span>
       </div>
 
       <h2>Memory</h2>

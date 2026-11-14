@@ -577,9 +577,6 @@ export default function Settings() {
       {view === null ? (
         <>
           <h1>Settings</h1>
-          <div className="row">
-            <Link className="btn" href="/inspect">Under the hood</Link>
-          </div>
           {p ? <p className="muted">{email}</p> : err ? <p className="err">{err}</p> : <Skeleton lines={1} label="Loading profile" />}
           <nav className="settings-catalogue" aria-label="Settings catalogue">
             {CATALOGUE.map((c, i) => (
@@ -595,6 +592,7 @@ export default function Settings() {
               </div>
             ))}
           </nav>
+          <p className="muted" style={{ marginTop: 14 }}><Link href="/inspect">Under the hood</Link></p>
           <div className="setting-life" style={{ animationDelay: '4.6s' }}>
             <button type="button" onClick={() => setFlow({ action: 'signout', step: 1 })} disabled={busy}>
               {busyAction === 'signout' ? 'Working' : 'Sign out'}

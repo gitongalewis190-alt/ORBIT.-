@@ -228,6 +228,7 @@ export default function Topics() {
       <RelatedStrip ids={['topic-generation', 'journal-capture']} />
       <p className="muted">{filtered.length} of {topics.length} topics shown</p>
 
+      <div className="card topic-toolbar">
       <div className="search-box">
         <input
           type="search"
@@ -274,17 +275,23 @@ export default function Topics() {
           <button key={v} role="tab" aria-selected={sort === v} className={sort === v ? 'on' : ''} onClick={() => setSort(v)}>{l}</button>
         ))}
       </div>
+      </div>
 
       {filtered.length === 0 && <p className="muted">No topics match. Clear the search, or widen the filters.</p>}
 
       {groups.map(group => (
-        <section key={group.key}>
+        <section key={group.key} className="topic-group">
           {group.label && (
             <div className="catalogue-head" style={{ '--chip': group.colour }}>
               <span className="chip-dot" aria-hidden="true" />
               {group.label} · {group.items.length}
             </div>
           )}
+          <div className="topic-table-head" aria-hidden="true">
+            <span>Topic</span>
+            <span>Section and level</span>
+            <span>Mark</span>
+          </div>
           {group.items.map(t => {
             const m = markOf(t.id);
             return (

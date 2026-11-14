@@ -105,7 +105,7 @@ export default function AwardsPage() {
           alignItems: 'baseline',
           gap: 6,
         }}>
-          <strong style={{ fontSize: 32, fontWeight: 700 }}>
+          <strong className="stat-num">
             {earned}
           </strong>
           <span className="muted">

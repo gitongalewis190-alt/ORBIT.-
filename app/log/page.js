@@ -109,7 +109,8 @@ export default function Logs() {
 
       <LogStats />
 
-      <h2>Records</h2>
+      <div className="card log-toolbar">
+      <h2 style={{ marginTop: 0 }}>Records</h2>
       <input
         type="search"
         placeholder="Search records: topic, event, or detail"
@@ -124,6 +125,7 @@ export default function Logs() {
             {g.label}
           </button>
         ))}
+      </div>
       </div>
 
       {err && <p className="err">{err}</p>}
