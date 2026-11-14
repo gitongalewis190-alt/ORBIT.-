@@ -400,6 +400,7 @@ export default function Settings() {
     switch (view) {
       case 'profile':
         return (
+          <>
           <div className="card">
             <div className="kicker">Name</div>
             <input value={p.display_name ?? ''} placeholder="What should Orbit call you?" disabled={busy}
@@ -425,8 +426,12 @@ export default function Settings() {
                 {busyAction === 'profile' ? 'Saving' : 'Save profile'}
               </button>
             </div>
+          </div>
+          {/* Its own card, with its own single action: Save details. */}
+          <div style={{ marginTop: 12 }}>
             <ProfileDetails uid={uid} />
           </div>
+          </>
         );
       case 'appearance':
         return (

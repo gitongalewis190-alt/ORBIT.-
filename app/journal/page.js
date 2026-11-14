@@ -3,7 +3,7 @@ import FullEditor from '../../components/FullEditor';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { currentUser } from '../../lib/session';
-import { today, prettyDate } from '../../lib/dates';
+import { today, prettyDate, addDays } from '../../lib/dates';
 import { play } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 import { fetchAllTopics } from '../../lib/context';
@@ -41,6 +41,7 @@ export default function Journal() {
   const [memorySearch, setMemorySearch] = useState('');
   const [topic, setTopic] = useState(null);
   const [assignmentId, setAssignmentId] = useState(null);
+  const [backDay, setBackDay] = useState(''); // '' means today; otherwise a recent past day (YYYY-MM-DD)
   const [body, setBody] = useState('');
   const [font, setFont] = useState('sans');
   const [points, setPoints] = useState('');
@@ -262,6 +263,24 @@ export default function Journal() {
     if (t) setMode(ruleFor(t.id, { learned, due }).mode);
   }
 
+  // Choosing a past day pre-fills that day's assigned topic. Choosing today clears it.
+  async function pickBackDay(day) {
+    if (!day || day === today()) { setBackDay(''); return; }
+    setBackDay(day);
+    const { data, error } = await supabase.from('assignments')
+      .select('id,topic_id,topics(title)').eq('user_id', uid).eq('assigned_on', day)
+      .order('created_at').limit(1).maybeSingle();
+    if (error) { toast('Could not load that day’s topic.', 'err'); return; }
+    if (data?.topics) {
+      setAssignmentId(data.id);
+      pickTopic({ id: data.topic_id, title: data.topics.title });
+      toast(`Topic set to ${data.topics.title} for ${prettyDate(day)}.`, 'info');
+    } else {
+      setAssignmentId(null);
+      toast(`Nothing was assigned on ${prettyDate(day)}. Choose a topic.`, 'info');
+    }
+  }
+
   function statusOf(t) {
     const r = ruleFor(t.id, { learned, due });
     return r.due ? 'Due for review' : r.learned ? 'Learned' : 'New';
@@ -298,7 +317,8 @@ export default function Journal() {
       entry_kind: isReflect ? 'reflection' : 'research',
       research_entry_id: linkedResearch?.id ?? null,
       editor_font: font,
-      created_at: new Date().toISOString(),
+      // Back-dated entries are stamped at noon on the chosen day, so rings and streaks count that day.
+      created_at: backDay ? `${backDay}T12:00:00+03:00` : new Date().toISOString(),
     };
 
     setBusy(true);
@@ -335,7 +355,7 @@ export default function Journal() {
 
   function finishSave() {
     setBody(''); setPoints(''); setTagText(''); setConf(null); setMins('');
-    setTopic(null); setAssignmentId(null); setDraftNote('');
+    setTopic(null); setAssignmentId(null); setBackDay(''); setDraftNote('');
     clearDraft(uid);
   }
 
@@ -423,6 +443,18 @@ export default function Journal() {
       <RelatedStrip ids={['review-now', 'recall-quiz', 'attention', 'assist-settings', 'topics']} />
       {err && <p className="err">{err}</p>}
       {draftNote && <p className="muted">{draftNote}</p>}
+
+      <div className="seg" role="group" aria-label="Which day this entry is for">
+        <button type="button" className={!backDay ? 'on' : ''} onClick={() => pickBackDay(today())}>Today</button>
+        {[1, 2, 3].map(n => {
+          const d = addDays(today(), -n);
+          return (
+            <button key={d} type="button" className={backDay === d ? 'on' : ''} onClick={() => pickBackDay(d)}>
+              {new Date(d + 'T12:00:00+03:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' })}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="seg">
         <button type="button" className={mode === 'learn' ? 'on' : ''} onClick={() => setMode('learn')}>Learn</button>
